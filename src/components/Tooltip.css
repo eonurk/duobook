@@ -1,0 +1,24 @@
+.tooltip {
+	background-color: #333; /* Dark background */
+	color: #fff; /* White text */
+	padding: 6px 12px;
+	border-radius: 5px;
+	font-size: 0.9rem;
+	position: absolute; /* Required for positioning */
+	z-index: 1000; /* Ensure it's above other elements */
+	white-space: nowrap; /* Prevent wrapping */
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+	pointer-events: none; /* Prevent tooltip from interfering with mouse events */
+}
+
+/* Optional: Add a small triangle/arrow */
+.tooltip::after {
+	content: "";
+	position: absolute;
+	bottom: -5px; /* Position arrow at the bottom */
+	left: 50%;
+	transform: translateX(-50%);
+	border-width: 5px;
+	border-style: solid;
+	border-color: #333 transparent transparent transparent; /* Arrow pointing up */
+}

@@ -1,0 +1,51 @@
+.vocabulary-section {
+	margin: 2.5rem auto 1rem;
+	padding: 1.5rem 2rem;
+	max-width: 800px;
+	background-color: #fffaf0; /* Match page background */
+	border: 1px solid #eee8d5;
+	border-radius: 8px;
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
+}
+
+.vocabulary-title {
+	margin-top: 0;
+	margin-bottom: 1.5rem;
+	text-align: center;
+	color: #8b4513; /* Brown color */
+	font-size: 1.3rem;
+	border-bottom: 1px solid #eee8d5;
+	padding-bottom: 0.8rem;
+}
+
+.vocabulary-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	columns: 2; /* Display in two columns */
+	column-gap: 2rem;
+}
+
+.vocabulary-item {
+	margin-bottom: 0.8rem;
+	font-size: 1rem;
+	line-height: 1.5;
+	break-inside: avoid-column; /* Prevent items breaking across columns */
+}
+
+.vocab-word {
+	font-weight: bold;
+	color: #333;
+	margin-right: 0.5em;
+}
+
+.vocab-translation {
+	color: #586e75;
+}
+
+/* Responsive adjustments for columns */
+@media (max-width: 600px) {
+	.vocabulary-list {
+		columns: 1; /* Single column on smaller screens */
+	}
+}

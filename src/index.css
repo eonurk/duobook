@@ -1,0 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,700;1,6..12,400&display=swap");
+
+/* src/index.css */
+
+@import "tailwindcss";
+/* Only keep this if you actually use tw-animate-css and it's v4 compatible */
+/* @import "tw-animate-css"; */

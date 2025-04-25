@@ -1,0 +1,819 @@
+/* Global styles from index.css are inherited */
+
+/* App Structure & Layout */
+.App {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	background-color: #fdf6e3; /* Base background color */
+}
+
+.content-area {
+	flex-grow: 1;
+	padding: 2rem;
+	max-width: 1200px;
+	width: 100%;
+	margin: 1rem auto 0; /* Add top margin to compensate for removed header space */
+}
+
+.app-footer {
+	padding: 1rem 2rem;
+	text-align: center;
+	font-size: 0.9rem;
+	color: #93a1a1;
+	border-top: 1px solid #eee8d5;
+	margin-top: 2rem; /* Space above footer */
+}
+
+/* --- Feedback Elements --- */
+.error-message {
+	background-color: #fff0f0; /* Lighter red background */
+	color: #d0342c; /* Error red color */
+	border: 1px solid #ffbaba; /* Light red border */
+	padding: 1rem 1.5rem;
+	margin: 1rem auto; /* Centered margin */
+	border-radius: 6px;
+	max-width: 800px;
+	text-align: left; /* Align text left */
+	box-shadow: 0 2px 5px rgba(208, 52, 44, 0.1);
+}
+
+.error-message strong {
+	color: #b02a23; /* Darker red */
+	display: block;
+	margin-bottom: 0.3rem;
+}
+
+.loading-indicator {
+	text-align: center;
+	padding: 3rem 1rem;
+	font-size: 1.1rem;
+	color: #586e75;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+}
+
+.spinner {
+	border: 5px solid #f0eada; /* Lighter part of spinner */
+	border-top: 5px solid #cb4b16; /* Theme color */
+	border-radius: 50%;
+	width: 45px;
+	height: 45px;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+/* --- Component Specific Styles --- */
+
+/* InputForm Styles Refined */
+.input-form {
+	background-color: #fffaf0; /* Page background color */
+	padding: 2rem 2.5rem; /* More padding */
+	border-radius: 8px;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+	border: 1px solid #eee8d5;
+	max-width: 750px;
+	margin: 1rem auto;
+}
+
+.input-form h2 {
+	color: #8b4513;
+	margin-top: 0;
+	margin-bottom: 2rem;
+	text-align: center;
+	font-size: 1.6rem;
+}
+
+.input-form label {
+	display: block;
+	margin-bottom: 0.6rem;
+	font-weight: bold;
+	color: #586e75;
+	font-size: 1rem;
+}
+
+/* Flex container for language selects */
+.language-select-container {
+	display: flex;
+	gap: 1.5rem;
+	margin-bottom: 1.5rem;
+}
+.language-select-container > div {
+	flex: 1;
+}
+
+/* Style selects */
+.input-form select {
+	width: 100%;
+	padding: 0.8rem 1rem;
+	font-size: 1rem;
+	font-family: inherit;
+	border-radius: 5px;
+	border: 1px solid #d3c0a5;
+	background-color: #fdf6e3; /* Slightly different background */
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+	appearance: none;
+	background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23839496%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.8em top 50%;
+	background-size: 0.7em auto;
+	cursor: pointer;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-form select:focus {
+	outline: none;
+	border-color: #b58900;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06),
+		0 0 0 3px rgba(181, 137, 0, 0.25);
+}
+
+/* Style textarea */
+.input-form textarea {
+	width: 100%;
+	padding: 0.8rem 1rem;
+	margin-bottom: 1.5rem;
+	font-size: 1rem;
+	font-family: inherit;
+	border-radius: 5px;
+	border: 1px solid #d3c0a5;
+	background-color: #fdf6e3;
+	resize: vertical;
+	min-height: 120px;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-form textarea:focus {
+	outline: none;
+	border-color: #b58900;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06),
+		0 0 0 3px rgba(181, 137, 0, 0.25);
+}
+
+/* BookView Styles Refined */
+.book-view {
+	display: flex;
+	gap: 0;
+	padding: 1rem;
+	max-width: 1150px;
+	margin: 2rem auto;
+	background-color: #eee8d5; /* Book cover color */
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+	border-radius: 10px;
+	border: 1px solid #d3c0a5;
+	position: relative;
+}
+
+/* Book spine */
+.book-view::before {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 1rem;
+	bottom: 1rem;
+	width: 6px;
+	background-image: linear-gradient(
+		to right,
+		rgba(0, 0, 0, 0.05),
+		rgba(0, 0, 0, 0.15),
+		rgba(0, 0, 0, 0.05)
+	);
+	transform: translateX(-50%);
+	border-radius: 3px;
+}
+
+.page {
+	flex: 1;
+	padding: 2rem 2.5rem;
+	border: none;
+	background-color: #fffaf0; /* Page color */
+	height: 68vh;
+	overflow-y: auto;
+	text-align: left;
+	margin: 0 0.75rem; /* Visual gap between pages */
+	border-radius: 6px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+	/* Subtle texture */
+	/* background-image: url('...'); */
+}
+
+/* Style page headers */
+.page h3 {
+	margin-top: 0;
+	margin-bottom: 1.5rem;
+	color: #b58900;
+	border-bottom: 2px solid #eee8d5;
+	padding-bottom: 0.8rem;
+	font-size: 1.4rem;
+	text-align: center;
+	font-weight: bold;
+}
+
+/* Style page text */
+.page p {
+	margin-bottom: 1.3rem;
+	line-height: 1.75;
+	color: #333; /* Darker text */
+	font-size: 1.05rem;
+}
+
+/* Container for continuous story text */
+.story-content {
+	line-height: 1.8; /* Adjust line height for paragraph flow */
+}
+
+/* Base sentence styling */
+.sentence {
+	transition: opacity 0.4s ease, color 0.3s ease, background-color 0.3s ease;
+	border-radius: 3px;
+	/* Ensure consistent base font properties */
+	font-size: 1.05rem; /* Base size for sentences */
+	font-style: normal; /* Ensure not italic */
+	font-weight: normal; /* Base weight */
+	line-height: 1.8; /* Ensure consistent line height */
+}
+
+.target-sentence {
+	/* Base style for target sentences */
+	color: #333;
+}
+
+/* States for Target Sentences */
+.target-sentence.sentence-past {
+	opacity: 0.7; /* Fade out past sentences slightly */
+}
+.target-sentence.sentence-active {
+	background-color: #fff8d1;
+	padding: 0.1em 0.2em;
+	margin: -0.1em -0.2em; /* Prevent layout shift */
+	font-weight: 550; /* Keep active target slightly bolder */
+}
+.target-sentence.sentence-future {
+	opacity: 0.3; /* Hide future sentences */
+	pointer-events: none; /* Prevent interaction */
+}
+
+/* Source Sentence Styling */
+.source-sentence {
+	color: #586e75;
+	/* Removed explicit size/style difference */
+}
+
+/* Control visibility and appearance of source */
+
+/* Initially hidden before reveal */
+.source-sentence.sentence-not-revealed {
+	opacity: 0 !important; /* Force hide */
+	pointer-events: none;
+	user-select: none;
+	min-height: 1.2em; /* Reserve space */
+	display: inline-block;
+	vertical-align: top;
+}
+
+/* Base state once revealed (but maybe hidden by toggle) */
+.source-sentence.sentence-revealed {
+	opacity: 1; /* Default to visible once revealed */
+	color: #586e75;
+	min-height: 0;
+	display: inline;
+}
+
+/* Hidden by toggle (overrides revealed opacity) */
+.source-sentence.source-hidden-by-toggle {
+	opacity: 0 !important; /* Force hide if toggle is off (and not active) */
+	pointer-events: none;
+	user-select: none;
+}
+
+/* Explicitly visible (safe default) */
+.source-sentence.source-visible {
+	opacity: 1;
+}
+
+.source-sentence.sentence-active-source {
+	/* font-weight: 500; */ /* REMOVED - Keep source normal weight */
+	opacity: 1 !important;
+}
+
+/* Style for sentences when story is finished */
+.sentence-finished {
+	opacity: 0.6 !important;
+	background-color: transparent !important;
+	cursor: default !important;
+	font-weight: normal !important; /* Ensure finished sentences are normal weight */
+}
+.target-sentence.sentence-finished {
+	font-weight: normal; /* Reset font weight */
+}
+.sentence-finished .word-hoverable {
+	cursor: default;
+	background-color: transparent !important;
+	border-bottom: none !important;
+}
+/* Hide speaker button when finished */
+.sentence-finished .speak-button {
+	display: none;
+}
+
+/* Style for the optional Reveal Next button */
+.reveal-button {
+	padding: 0.7rem 1.5rem;
+	font-size: 1rem;
+	margin-top: 0.5rem; /* Smaller top margin */
+}
+
+/* Button Container */
+.button-container {
+	text-align: center;
+	margin-top: 2rem;
+}
+
+/* Button Styles Refined */
+.button {
+	padding: 0.9rem 2.2rem;
+	font-size: 1.1rem;
+	font-family: inherit; /* Use body font */
+	cursor: pointer;
+	border-radius: 6px;
+	border: none;
+	transition: background-color 0.2s ease, transform 0.1s ease,
+		box-shadow 0.2s ease;
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+	font-weight: bold;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+.button:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 5px 8px rgba(0, 0, 0, 0.15);
+}
+.button:active {
+	transform: translateY(0px);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button-primary {
+	background-color: #cb4b16;
+	color: white;
+}
+.button-primary:hover {
+	background-color: #e5591a;
+}
+.button-primary:disabled {
+	background-color: #cccccc; /* More distinct disabled state */
+	color: #888888;
+	cursor: not-allowed;
+	transform: none;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.button-secondary {
+	background-color: #839496;
+	color: #fdf6e3;
+}
+.button-secondary:hover {
+	background-color: #93a1a1;
+}
+
+/* --- InputForm Specific Elements --- */
+
+/* Add styles for input elements using classes */
+.input-select,
+.input-textarea {
+	width: 100%;
+	padding: 0.8rem 1rem;
+	font-size: 1rem;
+	font-family: inherit;
+	border-radius: 5px;
+	border: 1px solid #d3c0a5;
+	background-color: #fdf6e3; /* Slightly different background */
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-select {
+	appearance: none;
+	background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23839496%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.8em top 50%;
+	background-size: 0.7em auto;
+	cursor: pointer;
+	margin-bottom: 0; /* Remove margin from base style if needed */
+}
+
+.input-textarea {
+	resize: vertical;
+	min-height: 100px; /* Slightly smaller default */
+	margin-bottom: 1rem;
+}
+
+.input-select:focus,
+.input-textarea:focus {
+	outline: none;
+	border-color: #b58900;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06),
+		0 0 0 3px rgba(181, 137, 0, 0.25);
+}
+
+/* Slider Container Styles */
+.slider-container {
+	display: flex;
+	gap: 1.5rem;
+	margin-bottom: 1.5rem;
+}
+.slider-item {
+	flex: 1;
+}
+
+.slider-value {
+	font-weight: normal;
+	color: #cb4b16; /* Highlight color */
+	margin-left: 0.5em;
+	font-size: 0.95em;
+}
+
+/* Range Input (Slider) Styles */
+.input-range {
+	width: 100%;
+	height: 8px;
+	cursor: pointer;
+	appearance: none;
+	background: linear-gradient(to right, #cb4b16, #b58900); /* Gradient track */
+	background-color: #d3c0a5; /* Fallback */
+	border-radius: 5px;
+	outline: none;
+	margin-top: 0.5rem;
+	transition: opacity 0.2s;
+}
+
+.input-range:hover {
+	opacity: 0.9;
+}
+
+/* Thumb styles for Webkit browsers */
+.input-range::-webkit-slider-thumb {
+	appearance: none;
+	width: 20px;
+	height: 20px;
+	background: #8b4513; /* Brown thumb */
+	border-radius: 50%;
+	cursor: pointer;
+	border: 2px solid #fdf6e3; /* Light border around thumb */
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Thumb styles for Firefox */
+.input-range::-moz-range-thumb {
+	width: 18px;
+	height: 18px;
+	background: #8b4513;
+	border-radius: 50%;
+	cursor: pointer;
+	border: 2px solid #fdf6e3;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.submit-button {
+	margin-top: 1rem; /* Slightly less margin after last fieldset */
+	display: block; /* Make it block level */
+	width: 100%; /* Full width */
+	max-width: 300px; /* Limit max width */
+	margin-left: auto;
+	margin-right: auto;
+}
+
+/* --- Word Hover Styles --- */
+.word {
+	/* Base style for word spans */
+}
+
+.word-hoverable {
+	cursor: help; /* Indicate hover interaction */
+	background-color: rgba(
+		181,
+		137,
+		0,
+		0.08
+	); /* Faint highlight on hoverable words */
+	border-bottom: 1px dashed rgba(181, 137, 0, 0.3);
+	transition: background-color 0.2s ease;
+	padding: 0 1px; /* Tiny padding */
+	margin: 0 -1px; /* Counteract padding */
+	border-radius: 2px;
+}
+
+.word-hoverable:hover {
+	background-color: rgba(181, 137, 0, 0.2); /* Stronger highlight on hover */
+}
+
+/* Congratulatory Message */
+.congrats-message {
+	text-align: center;
+	font-size: 1.4rem;
+	font-weight: bold;
+	color: #2a7f2a; /* A nice green color */
+	background-color: #e8f5e9; /* Light green background */
+	padding: 1.5rem 2rem;
+	border-radius: 8px;
+	margin: 2rem auto;
+	max-width: 600px;
+	box-shadow: 0 4px 10px rgba(42, 127, 42, 0.15);
+	border: 1px solid #c8e6c9;
+}
+
+/* --- Progress Bar --- */
+.progress-container {
+	max-width: 1150px;
+	margin: 1.5rem auto 0.5rem; /* Reduced bottom margin */
+	padding: 0 1rem;
+	height: 16px; /* Set height for the bar itself */
+	position: relative;
+	background-color: #eee8d5; /* Add track background */
+	border-radius: 8px; /* Match bar radius */
+	overflow: hidden; /* Keep fill contained */
+}
+
+.progress-bar-fill {
+	height: 100%; /* Fill container height */
+	background: linear-gradient(to right, #b58900, #cb4b16);
+	border-radius: 8px; /* Ensure radius matches container */
+	transition: width 0.4s ease-out;
+	box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.1); /* Subtle inner shadow */
+}
+
+.progress-text {
+	position: absolute;
+	left: 50%; /* Center horizontally */
+	top: 50%; /* Center vertically */
+	transform: translate(-50%, -50%); /* Precise centering */
+	font-size: 0.8rem; /* Slightly smaller */
+	font-weight: bold;
+	color: #ffffff; /* White text */
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.4); /* Add shadow for readability */
+	line-height: 1; /* Ensure text fits */
+	/* Removed background/padding/border-radius */
+}
+
+/* --- Book View finished state (optional enhancement) --- */
+.book-view-finished {
+	/* Maybe slightly desaturate or overlay when finished? */
+	/* filter: grayscale(30%); */
+}
+
+/* --- Button Container for Multiple Buttons --- */
+.button-container-multiple {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 1rem; /* Space between buttons */
+}
+
+/* Add Tertiary Button Style */
+.button-tertiary {
+	background-color: #fdf6e3; /* Light background */
+	color: #657b83; /* Muted text */
+	border: 1px solid #d3c0a5;
+	box-shadow: none; /* Less prominent */
+}
+.button-tertiary:hover {
+	background-color: #eee8d5;
+	border-color: #b58900;
+	color: #586e75;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Form Section Grouping --- */
+.form-section {
+	border: 1px solid #d3c0a5;
+	border-radius: 6px;
+	padding: 1.5rem 2rem; /* Adjust padding */
+	margin-bottom: 2rem; /* Space between sections */
+	background-color: #fdf6e3; /* Slightly different bg for sections */
+}
+
+.form-section-title {
+	font-size: 1.2rem;
+	font-weight: bold;
+	color: #8b4513; /* Brown color */
+	margin-left: -0.5rem; /* Align with padding */
+	padding: 0 0.5rem;
+	/* background-color: #fffaf0; */ /* Optional: match form bg */
+}
+
+.form-label {
+	display: block;
+	margin-bottom: 0.6rem;
+	font-weight: bold;
+	color: #586e75;
+	font-size: 1rem;
+}
+
+/* Class to visually hide elements but keep for screen readers */
+.visually-hidden {
+	border: 0;
+	clip: rect(0 0 0 0);
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+	white-space: nowrap; /* Prevent line breaks */
+}
+
+.form-helper-text {
+	font-size: 0.9rem;
+	color: #839496; /* Muted color */
+	margin-top: 0.5rem;
+	margin-bottom: 0; /* Reset default margin */
+}
+
+/* Styling for Examples */
+.form-examples {
+	margin-top: 1rem; /* More space */
+	font-size: 0.9rem; /* Base size for this section */
+	color: #839496;
+}
+
+.examples-title {
+	font-weight: bold;
+	margin-right: 0.5em;
+	color: #586e75; /* Darker title */
+	display: block; /* Put title on its own line */
+	margin-bottom: 0.5rem;
+}
+
+/* Container for the example buttons */
+.example-buttons-container {
+	display: flex;
+	flex-wrap: wrap; /* Allow buttons to wrap */
+	gap: 0.5rem; /* Space between buttons */
+}
+
+/* Style for the example buttons */
+.example-button {
+	/* Inherit from .button but override */
+	padding: 0.3rem 0.8rem !important; /* Smaller padding, use important if needed */
+	font-size: 0.8rem !important; /* Smaller font */
+	font-weight: normal !important;
+	text-transform: none !important;
+	letter-spacing: normal !important;
+	box-shadow: none !important;
+	background-color: #eee8d5 !important; /* Use a subtle background */
+	color: #657b83 !important;
+	border: 1px solid #d3c0a5 !important;
+	transition: background-color 0.2s ease, border-color 0.2s ease,
+		color 0.2s ease !important;
+	white-space: normal !important; /* Allow text wrapping */
+	text-align: left !important; /* Align text left if wrapping */
+	flex-grow: 0 !important;
+	flex-shrink: 0 !important;
+	min-width: auto !important; /* Allow button to be small */
+}
+
+.example-button:hover {
+	background-color: #d3c0a5 !important; /* Darker background */
+	border-color: #b58900 !important;
+	color: #002b36 !important;
+	transform: none !important;
+	box-shadow: none !important;
+}
+
+/* --- Navigation Controls --- */
+.navigation-controls {
+	margin: 1.5rem auto 0;
+	max-width: 450px;
+	display: flex;
+	justify-content: center;
+	gap: 4rem; /* INCREASED gap significantly */
+}
+
+.nav-button {
+	min-width: 120px; /* Give buttons a minimum width */
+	font-size: 1rem; /* Slightly smaller nav buttons */
+	padding: 0.6rem 1.2rem;
+}
+
+.nav-button:disabled {
+	background-color: #cccccc !important; /* Ensure disabled styles apply */
+	color: #888888 !important;
+	cursor: not-allowed;
+	transform: none;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Action Buttons --- */
+.action-buttons {
+	margin-top: 1.5rem; /* Space above action buttons */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+	.content-area {
+		padding: 1rem;
+		margin-top: 0.5rem;
+	}
+	.input-form {
+		padding: 1.5rem;
+	}
+	.language-select-container {
+		flex-direction: column;
+		gap: 0;
+		margin-bottom: 1rem;
+	}
+	.input-form select {
+		margin-bottom: 1rem;
+	}
+	.book-view {
+		flex-direction: column;
+		padding: 0.5rem;
+		gap: 1rem;
+	}
+	.book-view::before {
+		display: none; /* Hide spine on mobile */
+	}
+	.page {
+		height: auto;
+		min-height: 45vh;
+		margin: 0;
+		padding: 1.5rem;
+	}
+	.page h3 {
+		font-size: 1.2rem;
+	}
+	.page p {
+		font-size: 1rem;
+	}
+	.story-content {
+		line-height: 1.7;
+	}
+	.source-sentence {
+		font-size: 0.95rem;
+	}
+	.reveal-button {
+		padding: 0.6rem 1.2rem;
+		font-size: 0.9rem;
+	}
+	.button {
+		padding: 0.8rem 1.8rem;
+		font-size: 1rem;
+	}
+	.slider-container {
+		flex-direction: column;
+		gap: 1rem; /* Adjust gap for column layout */
+		margin-bottom: 1.5rem;
+	}
+	.slider-item {
+		margin-bottom: 0.5rem; /* Add space between sliders */
+	}
+	.input-range {
+		margin-top: 0.3rem;
+	}
+	.target-sentence.sentence-active {
+		padding: 0.05em 0.1em;
+		margin: -0.05em -0.1em;
+	}
+	.progress-container {
+		height: 14px; /* Slightly smaller on mobile */
+		margin-top: 1rem;
+	}
+	.progress-text {
+		font-size: 0.75rem;
+	}
+	.button-container-multiple {
+		gap: 0.8rem;
+	}
+	.form-section {
+		padding: 1rem 1.2rem;
+		margin-bottom: 1.5rem;
+	}
+	.form-section-title {
+		font-size: 1.1rem;
+	}
+	.submit-button {
+		max-width: none; /* Full width on mobile */
+	}
+	.navigation-controls {
+		max-width: 100%; /* Full width on mobile */
+		margin-top: 1rem;
+		gap: 2rem; /* Adjust gap for mobile */
+	}
+	.nav-button {
+		min-width: 100px;
+		font-size: 0.9rem;
+		padding: 0.5rem 1rem;
+	}
+	.action-buttons {
+		margin-top: 1rem;
+	}
+}
