@@ -33,7 +33,7 @@ function MyStoriesPage() {
   }, [currentUser]);
 
   const handleStoryClick = (story) => {
-    navigate('/', { state: { selectedStory: story } });
+    navigate('/story/view', { state: { storyData: story.storyData, params: story.params } });
   };
 
   const formatTimestamp = (timestamp) => {
