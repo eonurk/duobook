@@ -112,19 +112,24 @@ function InputForm({ onSubmit, isLoading }) {
           />
           
           <div id="story-examples" className="form-examples">
-            <div className="example-buttons-container">
+            <ul className="example-list">
               {storyExamples.map((example, index) => (
-                <button
+                <li
                   key={index}
-                  type="button"
-                  className="button example-button"
-                  onClick={() => handleExampleClick(example)}
-                  disabled={isLoading}
+                  className="example-list-item"
+                  onClick={() => !isLoading && handleExampleClick(example)}
+                  role="button"
+                  tabIndex={isLoading ? -1 : 0}
+                  onKeyDown={(e) => {
+                    if (!isLoading && (e.key === 'Enter' || e.key === ' ')) {
+                      handleExampleClick(example);
+                    }
+                  }}
                 >
                   {example}
-                </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </fieldset>
 

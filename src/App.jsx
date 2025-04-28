@@ -5,13 +5,10 @@ import '@/App.css'; // Use alias
 import InputForm from '@/components/InputForm'; // Use alias
 import BookView from '@/components/BookView'; // Use alias
 import { useAuth } from '@/context/AuthContext'; // Use alias
-import Login from '@/components/Auth/Login'; // Use alias
-import Signup from '@/components/Auth/Signup'; // Use alias
 import Navbar from '@/components/Layout/Navbar'; // Use alias - Import Navbar
 import SiteFooter from '@/components/Layout/SiteFooter'; // Use alias - Import Footer
 import UserProfilePage from '@/components/User/UserProfilePage'; // Use alias
 import MyStoriesPage from '@/components/User/MyStoriesPage'; // Use alias
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Add Card imports
 
 // Initialize OpenAI Client
 // IMPORTANT: This key is exposed in the frontend bundle.
@@ -202,7 +199,7 @@ function App() {
 
       const completion = await openai.chat.completions.create({
         // Suggesting a more capable model
-        model: "gpt-4.1-mini", // CHANGED from gpt-4.1-nano (or use gpt-3.5-turbo if preferred/available)
+        model: "gpt-4.1-mini",
         messages: [
             { role: "system", content: `You are an assistant that generates bilingual stories in JSON format for ${difficulty} level learners.` },
             { role: "user", content: prompt }

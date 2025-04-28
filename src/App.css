@@ -492,11 +492,6 @@
 	margin-right: auto;
 }
 
-/* --- Word Hover Styles --- */
-.word {
-	/* Base style for word spans */
-}
-
 .word-hoverable {
 	cursor: help; /* Indicate hover interaction */
 	background-color: rgba(
@@ -562,12 +557,6 @@
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.4); /* Add shadow for readability */
 	line-height: 1; /* Ensure text fits */
 	/* Removed background/padding/border-radius */
-}
-
-/* --- Book View finished state (optional enhancement) --- */
-.book-view-finished {
-	/* Maybe slightly desaturate or overlay when finished? */
-	/* filter: grayscale(30%); */
 }
 
 /* --- Button Container for Multiple Buttons --- */
@@ -654,39 +643,48 @@
 }
 
 /* Container for the example buttons */
-.example-buttons-container {
-	display: flex;
-	flex-wrap: wrap; /* Allow buttons to wrap */
-	gap: 0.5rem; /* Space between buttons */
-}
+/* .example-buttons-container { ... removed ... } */
 
 /* Style for the example buttons */
-.example-button {
-	/* Inherit from .button but override */
-	padding: 0.3rem 0.8rem !important; /* Smaller padding, use important if needed */
-	font-size: 0.8rem !important; /* Smaller font */
-	font-weight: normal !important;
-	text-transform: none !important;
-	letter-spacing: normal !important;
-	box-shadow: none !important;
-	background-color: #eee8d5 !important; /* Use a subtle background */
-	color: #657b83 !important;
-	border: 1px solid #d3c0a5 !important;
-	transition: background-color 0.2s ease, border-color 0.2s ease,
-		color 0.2s ease !important;
-	white-space: normal !important; /* Allow text wrapping */
-	text-align: left !important; /* Align text left if wrapping */
-	flex-grow: 0 !important;
-	flex-shrink: 0 !important;
-	min-width: auto !important; /* Allow button to be small */
+/* .example-button { ... removed ... } */
+
+/* .example-button:hover { ... removed ... } */
+
+/* Styling for Examples List */
+.example-list {
+	list-style: none; /* Remove default bullet points */
+	padding: 0;
+	margin: 0.5rem 0 0 0; /* Adjust spacing */
+	display: flex; /* Use flexbox for layout */
+	flex-wrap: wrap; /* Allow items to wrap */
+	gap: 0.6rem; /* Space between items */
 }
 
-.example-button:hover {
-	background-color: #d3c0a5 !important; /* Darker background */
-	border-color: #b58900 !important;
-	color: #002b36 !important;
-	transform: none !important;
-	box-shadow: none !important;
+.example-list-item {
+	background-color: #eee8d5; /* Match old button style */
+	color: #657b83;
+	border: 1px solid #d3c0a5;
+	padding: 0.4rem 0.8rem;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.2s ease, border-color 0.2s ease,
+		color 0.2s ease;
+	font-size: 0.9rem;
+	flex-grow: 0;
+	flex-shrink: 1;
+	/* Multi-line truncation */
+	display: -webkit-box; /* Required for line-clamp */
+	overflow: hidden; /* Hide the overflowing text */
+	-webkit-box-orient: vertical; /* Set box orientation */
+	-webkit-line-clamp: 2; /* Limit to 2 lines */
+}
+
+.example-list-item:hover,
+.example-list-item:focus {
+	background-color: #d3c0a5; /* Darker hover/focus */
+	border-color: #b58900;
+	color: #002b36;
+	outline: none; /* Remove default focus outline if desired */
 }
 
 /* --- Navigation Controls --- */
@@ -815,5 +813,17 @@
 	}
 	.action-buttons {
 		margin-top: 1rem;
+		flex-direction: column;
+		gap: 0.8rem;
+	}
+
+	/* Adjust example buttons for mobile */
+	/* .example-buttons-container { ... removed ... } */
+	/* .example-button { ... removed ... } */
+
+	/* Adjust example list items for mobile */
+	.example-list-item {
+		font-size: 0.75rem; /* Smaller font on mobile */
+		padding: 0.3rem 0.6rem; /* Adjust padding slightly */
 	}
 }
