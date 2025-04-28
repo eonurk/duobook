@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from '@/firebaseConfig'; // Use alias
 import { Button } from "@/components/ui/button"; // Use alias
 import { Input } from "@/components/ui/input"; // Use alias
@@ -10,6 +10,9 @@ function Login({ onSuccess }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isResetting, setIsResetting] = useState(false); // State for password reset loading
+  const [resetMessage, setResetMessage] = useState(''); // State for success/error messages for reset
+  const [resetError, setResetError] = useState(''); // State for reset error message specifically
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -35,6 +38,33 @@ function Login({ onSuccess }) {
     }
   };
 
+  const handlePasswordReset = async () => {
+    if (!email) {
+      setResetError("Please enter your email address first.");
+      setResetMessage(''); // Clear any previous success message
+      return;
+    }
+    setError(null); // Clear login errors
+    setResetError('');
+    setResetMessage('');
+    setIsResetting(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetMessage("Password reset email sent! Check your inbox.");
+      setResetError('');
+    } catch (err) {
+      console.error("Password Reset Error:", err);
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
+        setResetError("Could not find an account with that email address.");
+      } else {
+        setResetError("Failed to send password reset email. Please try again.");
+      }
+      setResetMessage('');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     // Use grid layout and Tailwind classes like the example
     <div className="grid gap-6">
@@ -49,7 +79,7 @@ function Login({ onSuccess }) {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={isLoading || isResetting} // Disable if logging in or resetting
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -60,14 +90,29 @@ function Login({ onSuccess }) {
             <Input
               id="password"
               type="password"
-              disabled={isLoading}
+              disabled={isLoading || isResetting} // Disable if logging in or resetting
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <div className="text-right text-sm mt-1"> {/* Container for the link */}
+              <button 
+                type="button" 
+                onClick={handlePasswordReset} 
+                disabled={isResetting || isLoading} // Disable if busy
+                className="text-blue-600 hover:underline disabled:text-gray-400 disabled:no-underline"
+              >
+                {isResetting ? "Sending..." : "Forgot Password?"}
+              </button>
+            </div>
           </div>
+          {/* Display Reset Messages */}
+          {resetMessage && <p className="text-sm text-green-600 dark:text-green-400">{resetMessage}</p>}
+          {resetError && <p className="text-sm text-red-600 dark:text-red-400">{resetError}</p>}
+          {/* Display Login Error */}
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>} 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          
+          <Button type="submit" className="w-full bg-amber-300 py-4" disabled={isLoading || isResetting}>
             {isLoading ? "Logging in..." : "Login"}
           </Button>
         </div>

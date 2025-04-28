@@ -70,7 +70,7 @@ function Signup({ onSuccess }) {
              />
            </div>
            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-           <Button type="submit" className="w-full" disabled={isLoading}>
+           <Button type="submit" className="w-full bg-amber-300 py-4" disabled={isLoading}>
              {isLoading ? "Creating Account..." : "Create Account"}
            </Button>
          </div>
