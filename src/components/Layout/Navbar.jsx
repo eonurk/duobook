@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext'; // Use alias
 import { Button } from '@/components/ui/button'; // Import shadcn Button
 import Login from '@/components/Auth/Login';
 import Signup from '@/components/Auth/Signup';
+import { Flame, Star, Sparkles } from 'lucide-react'; // Use consistent icons
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/card"; // Import Card components
 
 function Navbar() {
-  const { currentUser } = useAuth();
+  const { currentUser, userProgress } = useAuth();
   const navigate = useNavigate();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
@@ -46,11 +47,27 @@ function Navbar() {
               DuoBook
             </Link>
           </div>
-          <nav className="flex items-center gap-2 ml-auto">
+          <nav className="flex items-center gap-4 ml-auto">
             {currentUser ? (
               <>
-                <span className="text-sm text-muted-foreground hidden sm:inline-block mr-2">{currentUser.email}</span>
-                <Button variant="outline" size="sm" asChild>
+                <div className="hidden md:flex items-center space-x-4 border-r pr-4 mr-2">
+                  <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors" title={`${userProgress?.streak || 0} Day Streak`}>
+                    <Flame className="h-4 w-4 mr-1 text-orange-400" />
+                    <span className="text-sm font-medium">{userProgress?.streak || 0}</span>
+                  </div>
+                  <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors" title={`Level ${userProgress?.level || 1}`}>
+                    <Star className="h-4 w-4 mr-1 text-yellow-400" />
+                    <span className="text-sm font-medium">{userProgress?.level || 1}</span>
+                  </div>
+                  <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors" title={`${userProgress?.xpPoints || 0} Experience Points`}>
+                    <Sparkles className="h-4 w-4 mr-1 text-teal-400" />
+                    <span className="text-sm font-medium">{userProgress?.xpPoints || 0}</span>
+                  </div>
+                </div>
+                <Button variant="link" size="sm" asChild className="px-0 text-foreground/70 hover:text-foreground">
+                  <Link to="/progress" >Progress</Link>
+                </Button>
+                <Button variant="link" size="sm" asChild className="px-0 text-foreground/70 hover:text-foreground">
                   <Link to="/my-stories">My Stories</Link>
                 </Button>
                 <Button variant="outline" size="sm" asChild>

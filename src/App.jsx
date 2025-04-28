@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import OpenAI from 'openai';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import '@/App.css'; // Use alias
 import InputForm from '@/components/InputForm'; // Use alias
 import BookView from '@/components/BookView'; // Use alias
 import { useAuth } from '@/context/AuthContext'; // Use alias
+import { auth } from '@/firebaseConfig'; // Import auth directly
 import Navbar from '@/components/Layout/Navbar'; // Use alias - Import Navbar
 import SiteFooter from '@/components/Layout/SiteFooter'; // Use alias - Import Footer
 import UserProfilePage from '@/components/User/UserProfilePage'; // Use alias
 import MyStoriesPage from '@/components/User/MyStoriesPage'; // Use alias
+import UserProgressDashboard from '@/components/User/UserProgressDashboard'; // Import ProgressDashboard
+import Achievements from '@/components/Gamification/Achievements'; // Import Achievements component
 import DuoBookExplain from '@/assets/duobook-explain.jpg'; // Use alias
 import PrivacyPolicy from '@/pages/PrivacyPolicy'; // Import PrivacyPolicy
 import TermsOfService from '@/pages/TermsOfService'; // Import TermsOfService
@@ -167,8 +170,17 @@ function MainAppView({ generateStory }) {
 
 function App() {
   const { loading } = useAuth();
-
+  const [firebaseError, setFirebaseError] = useState(false);
   const navigate = useNavigate();
+
+  // Check Firebase initialization
+  useEffect(() => {
+    // Simple check if Firebase auth is available
+    if (!auth) {
+      console.error("Firebase Authentication is not initialized");
+      setFirebaseError(true);
+    }
+  }, []);
 
   const generateStory = async (description, sourceLang, targetLang, difficulty, storyLength) => {
     if (!openai) {
@@ -249,7 +261,7 @@ function App() {
       }
 
       // --- SUCCESS: Navigate to the story view ---
-      navigate('/story/view', { state: { storyData: parsedStory, params } });
+      navigate('/view', { state: { storyData: parsedStory, params } });
 
     } catch (error) {
       console.error("Error generating story:", error);
@@ -266,28 +278,53 @@ function App() {
     );
   }
 
+  // Show error if Firebase failed to initialize
+  if (firebaseError) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen p-4 text-center">
+        <h1 className="text-2xl font-bold text-red-600 mb-4">Firebase Connection Error</h1>
+        <p className="mb-4">There was a problem connecting to Firebase. Please check:</p>
+        <ul className="list-disc text-left mb-6">
+          <li className="ml-8">Your internet connection</li>
+          <li className="ml-8">Firebase project configuration in the .env file</li>
+          <li className="ml-8">Firebase console to ensure your project is active</li>
+        </ul>
+        <button 
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" 
+          onClick={() => window.location.reload()}
+        >
+          Retry Connection
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar /> {/* Render Navbar */}
-      <Routes>
-        {/* Main view: Show InputForm or Example */}
-        <Route path="/" element={<MainAppView generateStory={generateStory} />} />
-
-        {/* Story viewing page (receives state via navigation) */}
-        <Route path="/story/view" element={<StoryViewPage />} />
-
-        {/* Protected Routes */}
-        <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
-        <Route path="/my-stories" element={<ProtectedRoute><MyStoriesPage /></ProtectedRoute>} />
-
-        {/* Add new routes here */}
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms-of-service" element={<TermsOfService />} />
-
-        {/* Optional: Redirect any unknown paths back to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      <SiteFooter /> {/* Render Footer */}
+    <div className="app flex flex-col min-h-screen">
+      {!loading && (
+        <>
+          <Navbar />
+          
+          {/* Achievements Component (for popups) */}
+          <Achievements />
+          
+          <Routes>
+            <Route path="/" element={<MainAppView generateStory={generateStory} />} />
+            <Route path="/view" element={<StoryViewPage />} />
+            
+            {/* User Profile and Progress Routes */}
+            <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
+            <Route path="/my-stories" element={<ProtectedRoute><MyStoriesPage /></ProtectedRoute>} />
+            <Route path="/progress" element={<ProtectedRoute><UserProgressDashboard /></ProtectedRoute>} />
+            
+            {/* Legal Pages */}
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+          </Routes>
+          
+          <SiteFooter />
+        </>
+      )}
     </div>
   );
 }

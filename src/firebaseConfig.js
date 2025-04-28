@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -14,11 +15,74 @@ const firebaseConfig = {
 	// measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID // Uncomment if you use Analytics
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Check if all required Firebase config values are available
+const validateFirebaseConfig = () => {
+	const requiredFields = [
+		"apiKey",
+		"authDomain",
+		"projectId",
+		"storageBucket",
+		"messagingSenderId",
+		"appId",
+	];
+
+	const missingFields = requiredFields.filter(
+		(field) =>
+			!firebaseConfig[field] || firebaseConfig[field].includes("undefined")
+	);
+
+	if (missingFields.length > 0) {
+		console.error(
+			`Missing Firebase configuration values: ${missingFields.join(", ")}`
+		);
+		console.error(
+			"Make sure your .env file contains all necessary VITE_FIREBASE_* variables"
+		);
+		return false;
+	}
+
+	return true;
+};
+
+// Only initialize Firebase if config is valid
+let app, auth, db;
+
+if (validateFirebaseConfig()) {
+	try {
+		console.log("Initializing Firebase app...");
+		app = initializeApp(firebaseConfig);
+
+		console.log("Initializing Firebase Auth...");
+		auth = getAuth(app);
+
+		console.log("Initializing Firestore...");
+		db = getFirestore(app);
+
+		// Enable offline persistence (optional)
+		enableIndexedDbPersistence(db)
+			.then(() => {
+				console.log("Firestore offline persistence enabled");
+			})
+			.catch((err) => {
+				if (err.code === "failed-precondition") {
+					console.warn(
+						"Multiple tabs open, persistence can only be enabled in one tab at a time."
+					);
+				} else if (err.code === "unimplemented") {
+					console.warn(
+						"The current browser does not support offline persistence"
+					);
+				}
+			});
+
+		console.log("Firebase initialized successfully");
+	} catch (error) {
+		console.error("Error initializing Firebase:", error);
+	}
+} else {
+	console.error("Firebase initialization skipped due to missing configuration");
+}
 
 // Initialize Firebase Authentication and get a reference to the service
-export const auth = getAuth(app);
-
-// You can also export the app instance if needed elsewhere
-// export default app;
+export { auth, db, app };
+export default app;
