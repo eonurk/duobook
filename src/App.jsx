@@ -10,6 +10,8 @@ import SiteFooter from '@/components/Layout/SiteFooter'; // Use alias - Import F
 import UserProfilePage from '@/components/User/UserProfilePage'; // Use alias
 import MyStoriesPage from '@/components/User/MyStoriesPage'; // Use alias
 import DuoBookExplain from '@/assets/duobook-explain.jpg'; // Use alias
+import PrivacyPolicy from '@/pages/PrivacyPolicy'; // Import PrivacyPolicy
+import TermsOfService from '@/pages/TermsOfService'; // Import TermsOfService
 // Initialize OpenAI Client
 // IMPORTANT: This key is exposed in the frontend bundle.
 // For production, use a backend proxy.
@@ -164,15 +166,14 @@ function MainAppView({ generateStory }) {
 }
 
 function App() {
-  const { currentUser, loading } = useAuth();
-  console.log("Current User in App:", currentUser);
+  const { loading } = useAuth();
+
   const navigate = useNavigate();
 
   const generateStory = async (description, sourceLang, targetLang, difficulty, storyLength) => {
     if (!openai) {
       throw new Error('OpenAI client is not initialized. Check API key.');
     }
-    console.log(`Requesting story: ${description} (${sourceLang} -> ${targetLang}, ${difficulty}, ${storyLength})`);
     const params = { description, source: sourceLang, target: targetLang, difficulty, length: storyLength };
 
     try {
@@ -206,7 +207,6 @@ function App() {
         }
       `;
 
-      console.log("Sending prompt to OpenAI:", prompt);
       const completion = await openai.chat.completions.create({
         model: "gpt-4.1-mini",
         messages: [
@@ -225,7 +225,6 @@ function App() {
       let parsedStory;
       try {
         parsedStory = JSON.parse(content);
-        console.log("Attempting to parse:", content);
         if (!parsedStory || !Array.isArray(parsedStory.sentencePairs) || !Array.isArray(parsedStory.vocabulary)) {
           throw new Error('Invalid JSON structure received from AI.');
         }
@@ -250,29 +249,45 @@ function App() {
       }
 
       // --- SUCCESS: Navigate to the story view ---
-      console.log("Navigation payload:", { storyData: parsedStory, params });
       navigate('/story/view', { state: { storyData: parsedStory, params } });
 
-    } catch (err) {
-      console.error("Error generating story:", err);
-      throw err; 
-    } 
+    } catch (error) {
+      console.error("Error generating story:", error);
+      throw error; // Re-throw to be caught by handleGenerate
+    }
   };
 
+  // Show loading indicator while Firebase auth is initializing
   if (loading) {
-    return <div>Loading user...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      <Navbar /> {/* Render Navbar */}
       <Routes>
-        <Route path="/" element={<MainAppView generateStory={generateStory} />} /> 
-        <Route path="/story/view" element={<StoryViewPage />} /> 
+        {/* Main view: Show InputForm or Example */}
+        <Route path="/" element={<MainAppView generateStory={generateStory} />} />
+
+        {/* Story viewing page (receives state via navigation) */}
+        <Route path="/story/view" element={<StoryViewPage />} />
+
+        {/* Protected Routes */}
         <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
         <Route path="/my-stories" element={<ProtectedRoute><MyStoriesPage /></ProtectedRoute>} />
+
+        {/* Add new routes here */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+
+        {/* Optional: Redirect any unknown paths back to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <SiteFooter />
+      <SiteFooter /> {/* Render Footer */}
     </div>
   );
 }

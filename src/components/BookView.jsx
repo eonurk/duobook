@@ -52,7 +52,6 @@ function BookView({ sentencePairs, vocabulary, targetLanguage, sourceLanguage, o
   const populateVoiceList = useCallback(() => {
     if (!synth) return;
     const availableVoices = synth.getVoices();
-    // console.log("Available voices:", availableVoices);
     setVoices(availableVoices);
     if (availableVoices.length > 0) {
         setTtsReady(true);
