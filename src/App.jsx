@@ -9,7 +9,7 @@ import Navbar from '@/components/Layout/Navbar'; // Use alias - Import Navbar
 import SiteFooter from '@/components/Layout/SiteFooter'; // Use alias - Import Footer
 import UserProfilePage from '@/components/User/UserProfilePage'; // Use alias
 import MyStoriesPage from '@/components/User/MyStoriesPage'; // Use alias
-
+import DuoBookExplain from '@/assets/duobook-explain.jpg'; // Use alias
 // Initialize OpenAI Client
 // IMPORTANT: This key is exposed in the frontend bundle.
 // For production, use a backend proxy.
@@ -27,20 +27,23 @@ if (apiKey) {
 // Static Example Story Data
 const exampleStoryData = {
   sentencePairs: [
-    { id: 1, target: "El perro corre.", source: "The dog runs." },
-    { id: 2, target: "El gato duerme.", source: "The cat sleeps." },
-    { id: 3, target: "El pájaro canta.", source: "The bird sings." },
+    { id: 1, target: "DuoBook es una app nueva.", source: "DuoBook is a new app." },
+    { id: 2, target: "Ayuda a las personas a aprender idiomas.", source: "It helps people learn languages." },
+    { id: 3, target: "Puedes leer historias en dos idiomas.", source: "You can read stories in two languages." },
+    { id: 4, target: "Haz clic para ver la traducción.", source: "Click to see the translation." },
+    { id: 5, target: "¡Aprender es divertido con DuoBook!", source: "Learning is fun with DuoBook!" },
   ],
   vocabulary: [
-    { word: "perro", translation: "dog" },
-    { word: "corre", translation: "runs" },
-    { word: "gato", translation: "cat" },
-    { word: "duerme", translation: "sleeps" },
-    { word: "pájaro", translation: "bird" },
-    { word: "canta", translation: "sings" },
+    { word: "app", translation: "app" },
+    { word: "nueva", translation: "new" },
+    { word: "aprender", translation: "to learn" },
+    { word: "idiomas", translation: "languages" },
+    { word: "historias", translation: "stories" },
+    { word: "traducción", translation: "translation" },
+    { word: "divertido", translation: "fun" },
   ],
-  targetLanguage: 'Spanish', // Example target language
-  sourceLanguage: 'English' // Example source language
+  targetLanguage: 'Spanish',
+  sourceLanguage: 'English'
 };
 
 // --- Local Storage Key ---
@@ -130,8 +133,20 @@ function MainAppView({ generateStory }) {
 
         {!isGenerating && (
           <div className="mt-12 pt-8 border-t">
-            <h2 className="text-2xl font-semibold mb-4 text-center">How it Works: Example Book</h2>
-            <p className="text-muted-foreground text-center mb-6">This is what your generated bilingual book will look like. Hover over words (in the active sentence) for translations and click sentences to reveal the source text.</p>
+            <p style={{ textAlign: 'center', fontSize: '1rem', color: '#666', marginBottom: '1.5rem' }}>
+              Here's a quick example of a <b>DuoBook</b> story and how you interact with it.
+            </p>
+            <img src={DuoBookExplain} alt="DuoBook Explain" 
+              style={{ 
+                display: 'block',
+                width: '100%',
+                maxWidth: '520px',
+                height: 'auto',
+                margin: '0 auto 2rem auto',
+                borderRadius: '15px'
+              }}
+            />
+
             <BookView 
               sentencePairs={exampleStoryData.sentencePairs} 
               vocabulary={exampleStoryData.vocabulary}
