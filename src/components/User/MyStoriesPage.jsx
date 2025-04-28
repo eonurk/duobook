@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // --- Local Storage Key Prefix (should match App.jsx) ---
 const LOCAL_STORAGE_KEY_PREFIX = 'savedStories';
@@ -36,6 +47,26 @@ function MyStoriesPage() {
     navigate('/story/view', { state: { storyData: story.storyData, params: story.params } });
   };
 
+  const performDeleteStory = (storyIdToDelete) => {
+    if (!currentUser) return;
+
+    try {
+      const userStoryKey = `${LOCAL_STORAGE_KEY_PREFIX}-${currentUser.uid}`;
+      const storiesRaw = localStorage.getItem(userStoryKey);
+      let stories = storiesRaw ? JSON.parse(storiesRaw) : [];
+
+      const updatedStories = stories.filter(story => story.id !== storyIdToDelete);
+
+      localStorage.setItem(userStoryKey, JSON.stringify(updatedStories));
+
+      setSavedStories(updatedStories);
+
+    } catch (error) {
+      console.error("Error deleting story from localStorage:", error);
+      alert("There was an error deleting the story.");
+    }
+  };
+
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
     return new Date(timestamp).toLocaleString(undefined, {
@@ -58,13 +89,16 @@ function MyStoriesPage() {
           {savedStories.map((story) => (
             <div 
               key={story.id} 
-              className="border rounded-lg p-4 flex justify-between items-center cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => handleStoryClick(story)}
-              role="button" 
-              tabIndex={0} 
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleStoryClick(story); }}
+              className="border rounded-lg p-4 flex justify-between items-center"
             >
-              <div>
+              <div 
+                className="flex-grow cursor-pointer"
+                onClick={() => handleStoryClick(story)}
+                role="button" 
+                tabIndex={0} 
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleStoryClick(story); }}
+                aria-label={`Open story: ${story.params.description || "Untitled Story"}`}
+              >
                 <h3 className="font-semibold text-lg mb-1">
                   {story.params.description || "Untitled Story"}
                 </h3>
@@ -75,6 +109,33 @@ function MyStoriesPage() {
                   Saved: {formatTimestamp(story.savedAt)}
                 </p>
               </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="text-destructive hover:text-destructive/80 flex-shrink-0"
+                    aria-label={`Delete story: ${story.params.description || "Untitled Story"}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-white">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-black">Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the story
+                      "{story.params.description || "Untitled Story"}".
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => performDeleteStory(story.id)} className="bg-red-500 hover:bg-red-600 text-white"> 
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           ))}
         </div>

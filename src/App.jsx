@@ -12,7 +12,7 @@ import UserProfilePage from '@/components/User/UserProfilePage'; // Use alias
 import MyStoriesPage from '@/components/User/MyStoriesPage'; // Use alias
 import UserProgressDashboard from '@/components/User/UserProgressDashboard'; // Import ProgressDashboard
 import Achievements from '@/components/Gamification/Achievements'; // Import Achievements component
-import DuoBookExplain from '@/assets/duobook-explain.jpg'; // Use alias
+import DuoBookExplain from '@/assets/duobook-explain.png'; // Use alias
 import PrivacyPolicy from '@/pages/PrivacyPolicy'; // Import PrivacyPolicy
 import TermsOfService from '@/pages/TermsOfService'; // Import TermsOfService
 // Initialize OpenAI Client
