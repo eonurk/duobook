@@ -4,7 +4,7 @@
 
 Create a `.env` file in the root of your project with the following variables:
 
-```
+```ini
 # Firebase Configuration
 VITE_FIREBASE_API_KEY=your-api-key-here
 VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
@@ -15,6 +15,9 @@ VITE_FIREBASE_APP_ID=your-app-id
 
 # OpenAI API Key
 VITE_OPENAI_API_KEY=your-openai-api-key
+
+# SQlite path
+DATABASE_URL="file:./dev.db"
 ```
 
 ## Fixing the Firestore Connection Errors
