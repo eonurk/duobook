@@ -15,6 +15,16 @@ import Achievements from '@/components/Gamification/Achievements'; // Import Ach
 import DuoBookExplain from '@/assets/duobook-explain.png'; // Use alias
 import PrivacyPolicy from '@/pages/PrivacyPolicy'; // Import PrivacyPolicy
 import TermsOfService from '@/pages/TermsOfService'; // Import TermsOfService
+import {
+    // getStories, // Commented out: Will be used in MyStoriesPage
+    createStory,
+    // deleteStory, // Commented out: Will be used in MyStoriesPage
+    // getUserProgress, // Commented out: Will be used elsewhere (e.g., AuthContext, UserProgressDashboard)
+    // updateUserProgress, // Commented out: Will be used elsewhere
+    // getAllAchievements, // Commented out: Will be used elsewhere (e.g., Achievements page)
+    // getUserAchievements // Commented out: Will be used elsewhere
+} from './lib/api'; // Import API functions
+
 // Initialize OpenAI Client
 // IMPORTANT: This key is exposed in the frontend bundle.
 // For production, use a backend proxy.
@@ -169,7 +179,7 @@ function MainAppView({ generateStory }) {
 }
 
 function App() {
-  const { loading } = useAuth();
+  const { loading, currentUser } = useAuth();
   const [firebaseError, setFirebaseError] = useState(false);
   const navigate = useNavigate();
 
@@ -186,6 +196,10 @@ function App() {
     if (!openai) {
       throw new Error('OpenAI client is not initialized. Check API key.');
     }
+    if (!currentUser) {
+        throw new Error("User must be logged in to generate and save stories.");
+    }
+
     const params = { description, source: sourceLang, target: targetLang, difficulty, length: storyLength };
 
     try {
@@ -219,8 +233,9 @@ function App() {
         }
       `;
 
+      console.log("Sending prompt to OpenAI...");
       const completion = await openai.chat.completions.create({
-        model: "gpt-4.1-mini",
+        model: "gpt-4-turbo",
         messages: [
             { role: "system", content: `You are an assistant that generates bilingual stories in JSON format for ${difficulty} level learners.` },
             { role: "user", content: prompt }
@@ -229,6 +244,7 @@ function App() {
         response_format: { type: "json_object" },
       });
       const content = completion.choices[0]?.message?.content;
+      console.log("Received response from OpenAI.");
 
       if (!content) {
         throw new Error('No content received from OpenAI.');
@@ -250,81 +266,74 @@ function App() {
         });
         parsedStory.vocabulary.forEach((item, index) => {
            if (typeof item.word !== 'string' || typeof item.translation !== 'string') {
-            throw new Error(`Invalid vocabulary structure at index ${index} in AI response.`);
-          }
-        });
+             throw new Error(`Invalid vocabulary item structure at index ${index} in AI response.`);
+           }
+         });
 
       } catch (parseError) {
-        console.error("JSON Parsing Error:", parseError);
-        console.error("Content attempted to parse:", content);
-        throw new Error(`Failed to parse the story response from the AI. ${parseError.message}`);
+        console.error("Failed to parse OpenAI response:", content, parseError);
+        throw new Error(`Failed to parse story data from AI. ${parseError.message}`);
       }
 
-      // --- SUCCESS: Navigate to the story view ---
-      navigate('/view', { state: { storyData: parsedStory, params } });
+      console.log("Story parsed successfully. Saving to backend...");
+
+      // *** SAVE STORY TO BACKEND ***
+      const storyToSave = {
+          story: content,
+          description: params.description,
+          sourceLanguage: params.source,
+          targetLanguage: params.target,
+          difficulty: params.difficulty,
+          length: params.length
+      };
+
+      try {
+        const savedStory = await createStory(storyToSave);
+        console.log("Story saved successfully to backend:", savedStory);
+      } catch (apiError) {
+          console.error("Failed to save story via API:", apiError);
+      }
+      // ****************************
+
+      console.log("Navigating to story view...");
+      navigate('/story-view', { state: { storyData: parsedStory, params: params } });
 
     } catch (error) {
-      console.error("Error generating story:", error);
-      throw error; // Re-throw to be caught by handleGenerate
+      console.error("Error in generateStory function:", error);
+      throw error;
     }
   };
 
-  // Show loading indicator while Firebase auth is initializing
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
-      </div>
+        <div className="flex items-center justify-center h-screen">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+        </div>
     );
   }
-
-  // Show error if Firebase failed to initialize
   if (firebaseError) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen p-4 text-center">
-        <h1 className="text-2xl font-bold text-red-600 mb-4">Firebase Connection Error</h1>
-        <p className="mb-4">There was a problem connecting to Firebase. Please check:</p>
-        <ul className="list-disc text-left mb-6">
-          <li className="ml-8">Your internet connection</li>
-          <li className="ml-8">Firebase project configuration in the .env file</li>
-          <li className="ml-8">Firebase console to ensure your project is active</li>
-        </ul>
-        <button 
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" 
-          onClick={() => window.location.reload()}
-        >
-          Retry Connection
-        </button>
-      </div>
-    );
+      return (
+          <div className="text-center p-8 text-red-600">
+              Error: Firebase could not be initialized. Please check configuration and console.
+          </div>
+      );
   }
 
   return (
-    <div className="app flex flex-col min-h-screen">
-      {!loading && (
-        <>
-          <Navbar />
-          
-          {/* Achievements Component (for popups) */}
-          <Achievements />
-          
-          <Routes>
-            <Route path="/" element={<MainAppView generateStory={generateStory} />} />
-            <Route path="/view" element={<StoryViewPage />} />
-            
-            {/* User Profile and Progress Routes */}
-            <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
-            <Route path="/my-stories" element={<ProtectedRoute><MyStoriesPage /></ProtectedRoute>} />
-            <Route path="/progress" element={<ProtectedRoute><UserProgressDashboard /></ProtectedRoute>} />
-            
-            {/* Legal Pages */}
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-          </Routes>
-          
-          <SiteFooter />
-        </>
-      )}
+    <div className="app-container flex flex-col min-h-screen bg-background text-foreground">
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<MainAppView generateStory={generateStory} />} />
+        <Route path="/story-view" element={<StoryViewPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
+        <Route path="/my-stories" element={<ProtectedRoute><MyStoriesPage /></ProtectedRoute>} />
+        <Route path="/progress" element={<ProtectedRoute><UserProgressDashboard /></ProtectedRoute>} />
+        <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <SiteFooter />
     </div>
   );
 }

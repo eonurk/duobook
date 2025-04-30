@@ -1,172 +1,153 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { collection, query, limit, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '@/firebaseConfig';
+import { Loader2, Gem, Star, Award, Target } from 'lucide-react';
+import DailyChallenges from '../Gamification/DailyChallenges';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 function UserProgressDashboard() {
-  const { currentUser, userProgress } = useAuth();
-  const [recentStories, setRecentStories] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { userProgress, userAchievements, loading } = useAuth();
 
-  useEffect(() => {
-    const fetchRecentStories = async () => {
-      if (!currentUser) return;
-      
-      try {
-        // Get most recent stories
-        const storiesRef = collection(db, 'users', currentUser.uid, 'stories');
-        const q = query(storiesRef, orderBy('createdAt', 'desc'), limit(5));
-        const querySnapshot = await getDocs(q);
-        
-        const stories = [];
-        querySnapshot.forEach((doc) => {
-          stories.push({
-            id: doc.id,
-            ...doc.data()
-          });
-        });
-        
-        setRecentStories(stories);
-      } catch (error) {
-        console.error("Error fetching recent stories:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRecentStories();
-  }, [currentUser]);
-
-  // Calculate XP needed for next level
-  const calculateXpForNextLevel = (level) => {
-    // Simple calculation: 100 * current level
+  const calculatePointsForNextLevel = (level) => {
     return 100 * level;
   };
 
-  // Calculate progress percentage to next level
   const calculateLevelProgress = () => {
-    if (!userProgress) return 0;
-    
-    const currentXp = userProgress.xpPoints || 0;
-    const currentLevel = userProgress.level || 1;
-    const xpForNextLevel = calculateXpForNextLevel(currentLevel);
-    
-    return Math.min(Math.floor((currentXp / xpForNextLevel) * 100), 100);
+    if (!userProgress || userProgress.level === undefined || userProgress.points === undefined) return 0;
+
+    const currentPoints = userProgress.points;
+    const currentLevel = userProgress.level;
+
+    let pointsAtStartOfLevel = 0;
+    if (currentLevel > 1) {
+        pointsAtStartOfLevel = calculatePointsForNextLevel(currentLevel - 1);
+    }
+    const pointsForNextLevel = calculatePointsForNextLevel(currentLevel);
+    const pointsNeededForLevel = pointsForNextLevel - pointsAtStartOfLevel;
+    const pointsEarnedInLevel = currentPoints - pointsAtStartOfLevel;
+
+    if (pointsNeededForLevel <= 0) {
+        return currentPoints > pointsAtStartOfLevel ? 100 : 0;
+    }
+
+    const progressPercentage = Math.max(0, Math.min(100,
+        Math.floor((pointsEarnedInLevel / pointsNeededForLevel) * 100)
+    ));
+
+    return progressPercentage;
   };
 
-  if (isLoading) {
-    return <div className="p-8 text-center">Loading progress data...</div>;
+  if (loading) {
+    return (
+        <div className="container mx-auto p-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+            Loading progress data...
+        </div>
+    );
   }
 
+  if (!userProgress) {
+      return <div className="container mx-auto p-8 text-center text-muted-foreground">Could not load progress data.</div>;
+  }
+
+  const currentLevel = userProgress.level || 1;
+  const currentPoints = userProgress.points || 0;
+  const pointsToNextLevel = calculatePointsForNextLevel(currentLevel) - currentPoints;
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Your Language Learning Journey</h1>
-      
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-2">Current Streak</h2>
-          <div className="flex items-center">
-            <span className="text-3xl font-bold text-orange-500">{userProgress?.streak || 0}</span>
-            <span className="ml-2 text-gray-600">days</span>
-          </div>
-          <p className="text-sm text-gray-500 mt-2">Keep learning daily to increase your streak!</p>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-2">Vocabulary Mastered</h2>
-          <div className="flex items-center">
-            <span className="text-3xl font-bold text-blue-500">{userProgress?.vocabularyLearned || 0}</span>
-            <span className="ml-2 text-gray-600">words</span>
-          </div>
-          <p className="text-sm text-gray-500 mt-2">Words you've learned across all stories</p>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-2">Stories Completed</h2>
-          <div className="flex items-center">
-            <span className="text-3xl font-bold text-green-500">{userProgress?.storiesCompleted || 0}</span>
-            <span className="ml-2 text-gray-600">stories</span>
-          </div>
-          <p className="text-sm text-gray-500 mt-2">Total bilingual stories you've read</p>
-        </div>
+    <div className="container mx-auto p-4 space-y-6">
+      <h1 className="text-3xl font-bold mb-6 text-center">Your Learning Journey</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Points
+            </CardTitle>
+            <Gem className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{currentPoints}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Earn points by completing challenges and stories!
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Current Level
+            </CardTitle>
+            <Star className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{currentLevel}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+                {pointsToNextLevel > 0 ? `${pointsToNextLevel} points to Level ${currentLevel + 1}` : "Max level? Keep learning!"}
+            </p>
+          </CardContent>
+         </Card>
       </div>
-      
-      {/* Level Progress */}
-      <div className="bg-white rounded-lg shadow p-6 mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-lg font-semibold">Level {userProgress?.level || 1}</h2>
-          <span className="text-sm text-gray-600">{userProgress?.xpPoints || 0} XP</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className="bg-primary h-2.5 rounded-full" 
-            style={{ width: `${calculateLevelProgress()}%` }}
-          ></div>
-        </div>
-        <div className="flex justify-between mt-2">
-          <span className="text-xs text-gray-500">Current</span>
-          <span className="text-xs text-gray-500">
-            {calculateXpForNextLevel(userProgress?.level || 1) - (userProgress?.xpPoints || 0)} XP to Level {(userProgress?.level || 1) + 1}
-          </span>
-        </div>
-      </div>
-      
-      {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow p-6 mb-8">
-        <h2 className="text-lg font-semibold mb-4">Recent Stories</h2>
-        
-        {recentStories.length > 0 ? (
-          <div className="space-y-4">
-            {recentStories.map((story) => (
-              <div key={story.id} className="border-b pb-4">
-                <div className="flex justify-between">
-                  <h3 className="font-medium">{story.title || 'Untitled Story'}</h3>
-                  <span className="text-sm text-gray-500">
-                    {story.createdAt?.toDate().toLocaleDateString() || 'Unknown date'}
-                  </span>
+
+      <Card>
+        <CardHeader>
+             <CardTitle className="text-lg font-semibold">Level {currentLevel} Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <div className="w-full bg-muted rounded-full h-2.5 dark:bg-gray-700 mb-2">
+            <div
+                className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${calculateLevelProgress()}%` }}
+            ></div>
+            </div>
+            <div className="text-right">
+            <span className="text-xs font-medium text-muted-foreground">
+                {calculateLevelProgress()}% Complete
+            </span>
+            </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-semibold">Achievements</CardTitle>
+             <Award className="h-5 w-5 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+            {userAchievements && userAchievements.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {userAchievements.map((userAch) => (
+                <div key={userAch.id} className="flex flex-col items-center text-center p-3 border rounded-lg bg-background/50 hover:bg-accent transition-colors">
+                    <div className="text-4xl mb-2" title={userAch.achievement.description}>🏆</div>
+                    <h3 className="font-medium text-xs leading-tight">{userAch.achievement.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{new Date(userAch.unlockedAt).toLocaleDateString()}</p>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">
-                  {story.targetLanguage} / {story.sourceLanguage}
-                </p>
-                <div className="mt-2 flex items-center">
-                  <div className="w-full bg-gray-200 rounded-full h-1.5 mr-2">
-                    <div 
-                      className="bg-green-500 h-1.5 rounded-full" 
-                      style={{ width: `${story.completionPercentage || 0}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-xs text-gray-500">{story.completionPercentage || 0}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-4">No stories yet. Start creating your first language story!</p>
-        )}
-      </div>
-      
-      {/* Achievements Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold mb-4">Your Achievements</h2>
-        
-        {userProgress?.achievements && userProgress.achievements.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {userProgress.achievements.map((achievement, index) => (
-              <div key={index} className="text-center p-4 border rounded-lg">
-                <div className="text-3xl mb-2">🏆</div>
-                <h3 className="font-medium text-sm">{achievement.name}</h3>
-                <p className="text-xs text-gray-500 mt-1">{achievement.description}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-4">
-            <p className="text-gray-500 mb-2">No achievements unlocked yet</p>
-            <p className="text-sm text-gray-400">Complete stories and practice daily to earn achievements!</p>
-          </div>
-        )}
-      </div>
+                ))}
+            </div>
+            ) : (
+            <div className="text-center py-4 text-muted-foreground">
+                <p className=" mb-1">No achievements unlocked yet.</p>
+                <p className="text-sm ">Complete stories and challenges to earn them!</p>
+            </div>
+            )}
+        </CardContent>
+      </Card>
+
+       <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                 <CardTitle className="text-lg font-semibold">Daily Challenges</CardTitle>
+                 <Target className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <DailyChallenges />
+             </CardContent>
+         </Card>
+
     </div>
   );
 }

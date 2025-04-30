@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '@/firebaseConfig';
+import React from 'react';
+// REMOVE Firestore imports:
+// import { db } from '@/firebaseConfig'; 
+// import { doc, getDoc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 
-// Achievement definitions
+// Achievement definitions (Keep these for reference if needed, or they could move to backend constants)
 export const ACHIEVEMENTS = [
   {
     id: 'first_story',
@@ -11,7 +11,8 @@ export const ACHIEVEMENTS = [
     description: 'Complete your first story',
     icon: '📚',
     xpReward: 50,
-    checkCondition: (progress) => progress.storiesCompleted >= 1
+    // checkCondition might be removed or kept just for frontend display logic if needed elsewhere
+    checkCondition: (progress) => progress.storiesCompleted >= 1 
   },
   {
     id: 'vocabulary_builder',
@@ -71,59 +72,10 @@ export const ACHIEVEMENTS = [
   }
 ];
 
-// Function to check and award achievements
-export const checkAchievements = async (userId, userProgress) => {
-  if (!userId || !userProgress) return;
-  
-  const earnedAchievements = [];
-  const existingAchievementIds = (userProgress.achievements || []).map(a => a.id);
-  
-  // Check each achievement to see if it's been earned
-  for (const achievement of ACHIEVEMENTS) {
-    if (!existingAchievementIds.includes(achievement.id) && achievement.checkCondition(userProgress)) {
-      earnedAchievements.push({
-        id: achievement.id,
-        name: achievement.name,
-        description: achievement.description,
-        icon: achievement.icon,
-        earnedAt: new Date(),
-        xpReward: achievement.xpReward
-      });
-    }
-  }
-  
-  // If new achievements were earned, update user progress
-  if (earnedAchievements.length > 0) {
-    const progressRef = doc(db, 'userProgress', userId);
-    
-    // Calculate total XP reward
-    const totalXpReward = earnedAchievements.reduce((sum, achievement) => sum + achievement.xpReward, 0);
-    
-    // Update with new achievements and XP
-    await updateDoc(progressRef, {
-      achievements: arrayUnion(...earnedAchievements),
-      xpPoints: (userProgress.xpPoints || 0) + totalXpReward
-    });
-    
-    // Check if level up is needed
-    const currentLevel = userProgress.level || 1;
-    const newXpTotal = (userProgress.xpPoints || 0) + totalXpReward;
-    const xpNeededForNextLevel = currentLevel * 100;
-    
-    if (newXpTotal >= xpNeededForNextLevel) {
-      const newLevel = Math.floor(newXpTotal / 100) + 1;
-      await updateDoc(progressRef, {
-        level: newLevel
-      });
-    }
-    
-    return earnedAchievements;
-  }
-  
-  return [];
-};
+// REMOVE the entire checkAchievements function:
+// export const checkAchievements = async (userId, userProgress) => { ... };
 
-// Component to display recent achievements
+// Component to display recent achievements popup (Keep this component definition)
 function AchievementPopup({ achievements }) {
   if (!achievements || achievements.length === 0) return null;
   
@@ -139,7 +91,8 @@ function AchievementPopup({ achievements }) {
           <div>
             <h3 className="font-bold">{achievement.name}</h3>
             <p className="text-sm text-gray-600">{achievement.description}</p>
-            <p className="text-xs text-blue-500 mt-1">+{achievement.xpReward} XP</p>
+            {/* Display XP reward if available from the data */}
+            {achievement.xpReward && <p className="text-xs text-blue-500 mt-1">+{achievement.xpReward} XP</p>}
           </div>
         </div>
       ))}
@@ -149,31 +102,21 @@ function AchievementPopup({ achievements }) {
 
 // Main achievements component
 function Achievements() {
-  const { currentUser, userProgress, fetchUserProgress } = useAuth();
-  const [recentAchievements, setRecentAchievements] = useState([]);
-  
-  useEffect(() => {
-    const checkForNewAchievements = async () => {
-      if (!currentUser || !userProgress) return;
-      
-      const newAchievements = await checkAchievements(currentUser.uid, userProgress);
-      
-      if (newAchievements && newAchievements.length > 0) {
-        setRecentAchievements(newAchievements);
-        // Re-fetch user progress to get updated data
-        fetchUserProgress(currentUser);
-        
-        // Clear achievements popup after 5 seconds
-        setTimeout(() => {
-          setRecentAchievements([]);
-        }, 5000);
-      }
-    };
-    
-    checkForNewAchievements();
-  }, [currentUser, userProgress, fetchUserProgress]);
-  
-  return <AchievementPopup achievements={recentAchievements} />;
+  // Removed unused variables from useAuth() and useState()
+  // const { currentUser, userProgress, userAchievements } = useAuth(); 
+  // const [recentAchievements, setRecentAchievements] = useState([]); 
+
+  // TODO: Implement logic to trigger AchievementPopup if needed.
+  // This might involve comparing previous userAchievements with current ones
+  // after certain actions or periodically. For now, it won't show automatically.
+
+  // Example: You could potentially pass newly awarded achievements via props or another mechanism
+  // return <AchievementPopup achievements={recentAchievements} />;
+
+  // Or return null if this component is only for the popup logic
+  return null; // Returning null for now as the main check logic is removed.
+                // This component might need restructuring or removal depending on 
+                // how achievement notifications are handled.
 }
 
 export default Achievements; 

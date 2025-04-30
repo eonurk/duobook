@@ -1,11 +1,15 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import Tooltip from './Tooltip'; // Import the Tooltip component
 import VocabularyList from './VocabularyList'; // Import VocabularyList
 import { useAuth } from '@/context/AuthContext'; // Import useAuth
-import { doc, updateDoc, increment, arrayUnion, serverTimestamp, setDoc } from 'firebase/firestore'; // Import Firestore functions
-import { db } from '@/firebaseConfig'; // Import db
-import { checkAchievements } from './Gamification/Achievements'; // Import achievements checker
-import { checkChallengeCompletion, updateChallengeProgress } from './Gamification/DailyChallenges'; // Import challenge functions
+// import { doc, updateDoc, increment, arrayUnion, serverTimestamp, setDoc } from 'firebase/firestore'; // Remove db import
+// import { collection, addDoc } from 'firebase/firestore'; // Keep if still needed for something else?
+// import { checkAchievements } from './Gamification/Achievements'; // Import achievements checker
+// import { checkChallengeCompletion, updateChallengeProgress } from './Gamification/DailyChallenges'; // Import challenge functions
+
+// Import API function for challenge progress
+import { postChallengeProgress } from '@/lib/api';
 
 // Helper function to normalize words (lowercase, remove punctuation)
 const normalizeWord = (word) => {
@@ -39,9 +43,8 @@ const getLangCode = (langName) => {
     return langNameToCode[langName?.toLowerCase() || ''] || null;
 }
 
-function BookView({ sentencePairs, vocabulary, targetLanguage, sourceLanguage, onGoBack, isExample = false, storyId = null }) {
-  // Get current user and progress from AuthContext
-  const { currentUser, userProgress, fetchUserProgress } = useAuth();
+function BookView({ sentencePairs, vocabulary, targetLanguage, sourceLanguage, onGoBack, isExample = false }) {
+  const { currentUser } = useAuth(); // Removed userProgress, fetchUserProgress if not needed directly
   
   // State for current sentence focus
   const [activeSentenceIndex, setActiveSentenceIndex] = useState(0);
@@ -107,99 +110,22 @@ function BookView({ sentencePairs, vocabulary, targetLanguage, sourceLanguage, o
 
   // New state for tracking word interactions and gamification
   const [wordsLearned, setWordsLearned] = useState(new Set());
-  const [showAchievement, setShowAchievement] = useState(null);
-  const [showChallenge, setShowChallenge] = useState(null);
 
-  // Function to track and save reading progress
-  const trackReadingProgress = async (sentenceIndex) => {
-    if (!currentUser || isExample) return;
-    
-    try {
-      // Create a unique identifier for this story if not provided
-      const actualStoryId = storyId || `story_${Date.now()}`;
-      
-      // Update general reading statistics
-      const progressRef = doc(db, 'userProgress', currentUser.uid);
-      await updateDoc(progressRef, {
-        sentencesRead: increment(1),
-        lastActivity: serverTimestamp()
-      });
-      
-      // Calculate completion percentage
-      const completionPercentage = Math.floor(((sentenceIndex + 1) / sentencePairs.length) * 100);
-      
-      // Update story-specific progress
-      await updateDoc(progressRef, {
-        [`storiesProgress.${actualStoryId}`]: {
-          lastSentence: sentenceIndex,
-          completionPercentage: completionPercentage,
-          targetLanguage: targetLanguage,
-          sourceLanguage: sourceLanguage
-        }
-      });
-      
-      // If story is completed
-      if (sentenceIndex === sentencePairs.length - 1) {
-        await updateDoc(progressRef, {
-          storiesCompleted: increment(1),
-          lastStoryCompleted: serverTimestamp(),
-          // Track languages explored
-          languagesExplored: arrayUnion(targetLanguage)
-        });
-        
-        // Store the story information
-        const storyRef = doc(db, 'users', currentUser.uid, 'stories', actualStoryId);
-        await updateDoc(storyRef, {
-          title: sentencePairs[0]?.target || 'Untitled Story',
-          targetLanguage: targetLanguage,
-          sourceLanguage: sourceLanguage,
-          completionPercentage: 100,
-          completedAt: serverTimestamp()
-        }).catch(() => {
-          // If document doesn't exist, create it
-          const storyData = {
-            title: sentencePairs[0]?.target || 'Untitled Story',
-            targetLanguage: targetLanguage,
-            sourceLanguage: sourceLanguage,
-            completionPercentage: 100,
-            completedAt: serverTimestamp(),
-            createdAt: serverTimestamp()
-          };
-          
-          // Try to set the document
-          try {
-            setDoc(storyRef, storyData);
-          } catch (error) {
-            console.error("Error saving story:", error);
-          }
-        });
-        
-        // Check story completion challenge
-        if (userProgress?.challenges?.dailyChallenges) {
-          const completedChallenge = await checkChallengeCompletion(
-            currentUser.uid, 
-            userProgress, 
-            'read_story'
-          );
-          
-          if (completedChallenge) {
-            setShowChallenge(completedChallenge);
-          }
-        }
-        
-        // Re-fetch user progress to check for new achievements
-        const updatedProgress = await fetchUserProgress(currentUser);
-        
-        // Check for achievements
-        const newAchievements = await checkAchievements(currentUser.uid, updatedProgress);
-        if (newAchievements && newAchievements.length > 0) {
-          setShowAchievement(newAchievements[0]);
-        }
-      }
-    } catch (error) {
-      console.error("Error tracking reading progress:", error);
-    }
-  };
+  // --- Remove Firestore-based progress tracking --- 
+  // const trackReadingProgress = async (sentenceIndex) => {
+      // ... removed Firestore logic ...
+      // Check for completion and potentially call API
+      // if (sentenceIndex === sentencePairs.length - 1 && !isExample && currentUser) {
+      //     try {
+      //         console.log("Attempting to post READ_STORY challenge progress...");
+      //         const result = await postChallengeProgress({ challengeType: "READ_STORY" });
+      //         console.log("Challenge progress response:", result);
+      //         // Optionally show a notification based on result.completedChallenges
+      //     } catch (error) {
+      //         console.error("Error posting challenge progress:", error);
+      //     }
+      // }
+  // };
 
   // Enhanced word hover function to track vocabulary interactions
   const handleWordHover = async (event, word) => {
@@ -215,42 +141,23 @@ function BookView({ sentencePairs, vocabulary, targetLanguage, sourceLanguage, o
       setTooltipContent(translation);
       setTooltipVisible(true);
       
-      // Track unique words learned
+      // Track unique words learned in *this session* to avoid spamming API
       if (!wordsLearned.has(normalized) && !isExample && currentUser) {
+        const newWordsLearned = new Set(wordsLearned);
+        newWordsLearned.add(normalized);
+        setWordsLearned(newWordsLearned);
+
+        // Call API to update LEARN_WORDS challenge progress
         try {
-          // Add to tracked words
-          const newWordsLearned = new Set(wordsLearned);
-          newWordsLearned.add(normalized);
-          setWordsLearned(newWordsLearned);
-          
-          // Update vocabulary count in user progress
-          const progressRef = doc(db, 'userProgress', currentUser.uid);
-          await updateDoc(progressRef, {
-            vocabularyLearned: increment(1),
-            todayWordsLearned: increment(1)
-          });
-          
-          // Check for word learning challenge progress
-          if (userProgress?.challenges?.dailyChallenges) {
-            const learnWordsChallenge = userProgress.challenges.dailyChallenges.find(c => c.id === 'learn_words');
-            
-            if (learnWordsChallenge && !learnWordsChallenge.completed) {
-              const newProgress = (learnWordsChallenge.progress || 0) + 1;
-              
-              const completedChallenge = await updateChallengeProgress(
-                currentUser.uid,
-                userProgress,
-                'learn_words',
-                newProgress
-              );
-              
-              if (completedChallenge) {
-                setShowChallenge(completedChallenge);
-              }
-            }
-          }
+            console.log("Attempting to post LEARN_WORDS challenge progress...");
+            const result = await postChallengeProgress({ challengeType: "LEARN_WORDS", incrementAmount: 1 });
+            console.log("Challenge progress LEARN_WORDS response:", result);
+            // Optionally show notification if result.completedChallenges has items
+            if (result?.completedChallenges?.length > 0) {
+                 alert(`Challenge Completed: ${result.completedChallenges[0].title}! +${result.completedChallenges[0].xpReward} Points`);
+             }
         } catch (error) {
-          console.error("Error tracking vocabulary:", error);
+            console.error("Error posting LEARN_WORDS challenge progress:", error);
         }
       }
     }
@@ -360,24 +267,37 @@ function BookView({ sentencePairs, vocabulary, targetLanguage, sourceLanguage, o
     }
   };
 
-  const handleNextSentence = () => {
-    if (activeSentenceIndex < sentencePairs.length - 1) {
-      // Reveal the current source sentence if not already revealed
-      if (!revealedSourceIndices.has(activeSentenceIndex)) {
+  const handleNextSentence = async () => { // Make async
+    // Reveal the current source sentence if not already revealed
+    if (!revealedSourceIndices.has(activeSentenceIndex)) {
         const newRevealedIndices = new Set(revealedSourceIndices);
         newRevealedIndices.add(activeSentenceIndex);
         setRevealedSourceIndices(newRevealedIndices);
-      }
-      
+    }
+
+    const isFinishing = activeSentenceIndex === sentencePairs.length - 1;
+
+    if (!isFinishing) {
       // Move to next sentence
       setActiveSentenceIndex(prevIndex => prevIndex + 1);
-      
-      // Track progress for the sentence we just completed
-      trackReadingProgress(activeSentenceIndex);
     } else {
-      // At the end, mark as finished and track final sentence
+      // At the end, mark as finished
       setIsFinished(true);
-      trackReadingProgress(activeSentenceIndex);
+      
+      // If finishing a non-example story, post progress for READ_STORY challenge
+      if (!isExample && currentUser) {
+         try {
+             console.log("Attempting to post READ_STORY challenge progress...");
+             const result = await postChallengeProgress({ challengeType: "READ_STORY" });
+             console.log("Challenge progress READ_STORY response:", result);
+             // Optionally show notification
+              if (result?.completedChallenges?.length > 0) {
+                 alert(`Challenge Completed: ${result.completedChallenges[0].title}! +${result.completedChallenges[0].xpReward} Points`);
+             }
+         } catch (error) {
+             console.error("Error posting READ_STORY challenge progress:", error);
+         }
+      }
     }
   };
 
@@ -389,16 +309,6 @@ function BookView({ sentencePairs, vocabulary, targetLanguage, sourceLanguage, o
     setShowAllSource(true);
     if (synth?.speaking) synth.cancel();
     document.querySelector('.book-view')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // Function to handle achievement popup dismissal
-  const handleDismissAchievement = () => {
-    setShowAchievement(null);
-  };
-  
-  // Function to handle challenge popup dismissal
-  const handleDismissChallenge = () => {
-    setShowChallenge(null);
   };
 
   // --- Rendering ---
@@ -534,43 +444,6 @@ function BookView({ sentencePairs, vocabulary, targetLanguage, sourceLanguage, o
             {isExample ? 'Go Back' : 'Create Another Book'} 
         </button>
       </div>
-
-      {/* Achievement Popup */}
-      {showAchievement && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleDismissAchievement}>
-          <div className="bg-white rounded-lg p-6 max-w-md mx-auto text-center" onClick={e => e.stopPropagation()}>
-            <div className="text-5xl mb-3">{showAchievement.icon || '🏆'}</div>
-            <h3 className="text-xl font-bold mb-2">Achievement Unlocked!</h3>
-            <p className="font-semibold mb-2">{showAchievement.name}</p>
-            <p className="mb-4 text-gray-600">{showAchievement.description}</p>
-            <p className="text-blue-500 font-semibold mb-6">+{showAchievement.xpReward} XP</p>
-            <button 
-              className="px-4 py-2 bg-blue-500 text-white rounded-md"
-              onClick={handleDismissAchievement}
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {/* Challenge Completion Popup */}
-      {showChallenge && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleDismissChallenge}>
-          <div className="bg-white rounded-lg p-6 max-w-md mx-auto text-center" onClick={e => e.stopPropagation()}>
-            <div className="text-5xl mb-3">🎉</div>
-            <h3 className="text-xl font-bold mb-2">Challenge Completed!</h3>
-            <p className="mb-4">{showChallenge.title}</p>
-            <p className="text-blue-500 font-semibold mb-6">+{showChallenge.xpReward} XP</p>
-            <button 
-              className="px-4 py-2 bg-blue-500 text-white rounded-md"
-              onClick={handleDismissChallenge}
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

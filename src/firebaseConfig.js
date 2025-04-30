@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+// Remove Firestore imports
+// import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -44,8 +45,9 @@ const validateFirebaseConfig = () => {
 	return true;
 };
 
-// Only initialize Firebase if config is valid
-let app, auth, db;
+// Remove db from declaration
+let app, auth;
+// let app, auth, db;
 
 if (validateFirebaseConfig()) {
 	try {
@@ -55,34 +57,37 @@ if (validateFirebaseConfig()) {
 		console.log("Initializing Firebase Auth...");
 		auth = getAuth(app);
 
-		console.log("Initializing Firestore...");
-		db = getFirestore(app);
+		// Remove Firestore initialization
+		// console.log("Initializing Firestore...");
+		// db = getFirestore(app);
 
-		// Enable offline persistence (optional)
-		enableIndexedDbPersistence(db)
-			.then(() => {
-				console.log("Firestore offline persistence enabled");
-			})
-			.catch((err) => {
-				if (err.code === "failed-precondition") {
-					console.warn(
-						"Multiple tabs open, persistence can only be enabled in one tab at a time."
-					);
-				} else if (err.code === "unimplemented") {
-					console.warn(
-						"The current browser does not support offline persistence"
-					);
-				}
-			});
+		// Remove Firestore persistence logic
+		// // Enable offline persistence (optional)
+		// enableIndexedDbPersistence(db)
+		// 	.then(() => {
+		// 		console.log("Firestore offline persistence enabled");
+		// 	})
+		// 	.catch((err) => {
+		// 		if (err.code === "failed-precondition") {
+		// 			console.warn(
+		// 				"Multiple tabs open, persistence can only be enabled in one tab at a time."
+		// 			);
+		// 		} else if (err.code === "unimplemented") {
+		// 			console.warn(
+		// 				"The current browser does not support offline persistence"
+		// 			);
+		// 		}
+		// 	});
 
-		console.log("Firebase initialized successfully");
+		console.log("Firebase App & Auth initialized successfully");
 	} catch (error) {
-		console.error("Error initializing Firebase:", error);
+		console.error("Error initializing Firebase App/Auth:", error);
 	}
 } else {
 	console.error("Firebase initialization skipped due to missing configuration");
 }
 
-// Initialize Firebase Authentication and get a reference to the service
-export { auth, db, app };
+// Remove db from export
+export { auth, app };
+// export { auth, db, app };
 export default app;

@@ -59,9 +59,9 @@ function Navbar() {
                     <Star className="h-4 w-4 mr-1 text-yellow-400" />
                     <span className="text-sm font-medium">{userProgress?.level || 1}</span>
                   </div>
-                  <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors" title={`${userProgress?.xpPoints || 0} Experience Points`}>
+                  <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors" title={`${userProgress?.points || 0} Experience Points`}>
                     <Sparkles className="h-4 w-4 mr-1 text-teal-400" />
-                    <span className="text-sm font-medium">{userProgress?.xpPoints || 0}</span>
+                    <span className="text-sm font-medium">{userProgress?.points || 0}</span>
                   </div>
                 </div>
                 <Button variant="link" size="sm" asChild className="px-0 text-foreground/70 hover:text-foreground">

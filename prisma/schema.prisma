@@ -3,7 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "./generated/client"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -11,9 +11,87 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Model to track user's gamification progress
+model UserProgress {
+  id         Int      @id @default(autoincrement())
+  userId     String   @unique
+  level      Int      @default(1)
+  points     Int      @default(0)
+  updatedAt  DateTime @updatedAt
+  lastLogin  DateTime?
+  streak     Int      @default(0)
+
+  // Add field to track challenge generation date
+  dailyChallengesLastGenerated DateTime?
+
+  // Add relation to user's assigned daily challenges
+  userDailyChallenges UserDailyChallenge[]
+}
+
+// Model for stories created by users
 model Story {
-  id    Int     @id @default(autoincrement())
-  owner String  @unique
-  story  String
+  id        Int      @id @default(autoincrement())
+  userId    String
+  story     String   // This will store the JSON string of sentencePairs & vocabulary
   createdAt DateTime @default(now())
+
+  // Add fields for storing generation parameters
+  description    String?  // Optional description used for generation
+  sourceLanguage String?  // Optional source language
+  targetLanguage String?  // Optional target language
+  difficulty     String?  // Optional difficulty level
+  length         String?  // Optional length param
+
+  // Indexing userId might be useful for querying stories by user
+  @@index([userId])
+}
+
+// Model defining the available achievements
+model Achievement {
+  id          String   @id
+  name        String
+  description String
+  points      Int      @default(0)
+  userAchievements UserAchievement[]
+}
+
+// Model linking users (by Firebase UID) to the achievements they've unlocked
+model UserAchievement {
+  id            Int         @id @default(autoincrement())
+  userId        String
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  unlockedAt    DateTime    @default(now())
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+// Model for defining available challenges
+model Challenge {
+  id             String  @id // e.g., "read_story", "learn_words_5"
+  title          String
+  description    String
+  xpReward       Int
+  type           String  // e.g., "READ_STORY", "LEARN_WORDS", "LOGIN_STREAK" (can be used by backend logic)
+  requiredCount  Int?    // e.g., 5 for "learn 5 words"
+  isCore         Boolean @default(false)
+
+  // Relation to instances assigned to users
+  userDailyChallenges UserDailyChallenge[]
+}
+
+// Model linking a user to specific challenges assigned for a specific day
+model UserDailyChallenge {
+  id           Int      @id @default(autoincrement())
+  userId       String   // Foreign key to UserProgress (Firebase UID)
+  userProgress UserProgress @relation(fields: [userId], references: [userId]) // Link via userId
+  challengeId  String   // Foreign key to Challenge definition
+  challenge    Challenge @relation(fields: [challengeId], references: [id])
+  day          DateTime // The day this challenge was assigned for (use date part)
+  progress     Int      @default(0) // Current progress (e.g., words learned today)
+  completed    Boolean  @default(false)
+  completedAt  DateTime?
+
+  @@unique([userId, challengeId, day]) // User can only have one instance of a challenge per day
+  @@index([userId, day]) // Efficiently query user's challenges for a day
 }

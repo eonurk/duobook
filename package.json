@@ -16,6 +16,9 @@
     "server:build": "npm run prisma:migrate && tsc",
     "server": "node dist"
   },
+  "prisma": {
+      "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.11",
@@ -28,8 +31,10 @@
     "clsx": "^2.1.1",
     "express": "^5.1.0",
     "firebase": "^11.6.0",
+    "firebase-admin": "^13.3.0",
     "lucide-react": "^0.503.0",
     "openai": "^4.95.1",
+    "prop-types": "^15.8.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.5.2",

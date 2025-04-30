@@ -1,12 +1,19 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "NodeNext",
-    "rootDir": "server",
-    "outDir": "dist",
-    "moduleResolution": "nodenext",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true
-  }
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
+		"allowJs": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"strict": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"noEmit": true,
+		"jsx": "react-jsx"
+	},
+	"include": ["src", "server"]
 }
