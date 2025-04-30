@@ -30,4 +30,6 @@ dist-ssr
 *.db
 *.sqlite
 generated/
+
+# Firebase Admin SDK
 firebase-admin-sdk.json

@@ -11,9 +11,16 @@ import express, { Request, Response, NextFunction } from "express";
 // Import Prisma namespace and specific types
 import { PrismaClient, Prisma } from "@prisma/client";
 import admin from "firebase-admin"; // Import Firebase Admin SDK
+import OpenAI from "openai"; // Import OpenAI
 
 // Import the service account JSON using import assertion
 import serviceAccount from "../firebase-admin-sdk.json" assert { type: "json" };
+
+// --- START OPENAI CLIENT SETUP ---
+const openai = new OpenAI({
+	apiKey: process.env.OPENAI_API_KEY, // Use backend environment variable
+});
+// --- END OPENAI CLIENT SETUP ---
 
 // --- START FIREBASE ADMIN SETUP ---
 try {
@@ -90,6 +97,79 @@ app.get("/health", (req: Request, res: Response) => {
 // --- PROTECTED ROUTES ---
 // Apply the synchronous wrapper middleware
 app.use(authenticateTokenMiddleware);
+
+// === STORY GENERATION PROXY ROUTE ===
+app.post(
+	"/api/generate-story",
+	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+		const userId = req.userId;
+		if (!userId) {
+			const err = new Error("Authentication required.");
+			(err as any).status = 401;
+			return next(err);
+		}
+
+		const { description, source, target, difficulty, length } = req.body;
+
+		// Basic validation
+		if (!description || !source || !target || !difficulty || !length) {
+			const err = new Error(
+				"Missing required parameters for story generation."
+			);
+			(err as any).status = 400;
+			return next(err);
+		}
+
+		console.log("Received generation request:", {
+			userId,
+			description,
+			source,
+			target,
+			difficulty,
+			length,
+		});
+
+		// Construct the prompt (similar to frontend)
+		// TODO: Refine this prompt based on the original frontend logic
+		const prompt = `Create a story based on this description: "${description}". The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}. The story should be ${length} in length. Return the story as a JSON object with two keys: "sentencePairs" (an array of objects, each with "source" and "target" sentences) and "vocabulary" (an array of objects, each with "word" in ${source} and "translation" in ${target}). Use simple language appropriate for the difficulty level. Ensure the JSON is valid. Example SentencePair format: { "source": "Sentence in source language.", "target": "Sentence translated to target language." }. Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }.`;
+
+		try {
+			console.log("Sending request to OpenAI...");
+			const completion = await openai.chat.completions.create({
+				model: "gpt-4o", // Or your preferred model
+				messages: [{ role: "user", content: prompt }],
+				response_format: { type: "json_object" }, // Enforce JSON output
+			});
+
+			const storyContent = completion.choices[0]?.message?.content;
+
+			if (!storyContent) {
+				throw new Error("OpenAI did not return story content.");
+			}
+
+			console.log("Received story content from OpenAI.");
+			// Optionally, validate the structure of storyContent before sending
+			try {
+				const parsedStory = JSON.parse(storyContent);
+				// Minimal validation - check if keys exist
+				if (!parsedStory.sentencePairs || !parsedStory.vocabulary) {
+					throw new Error("Invalid JSON structure received from OpenAI.");
+				}
+				res.status(200).json(parsedStory); // Send parsed JSON back
+			} catch (parseError) {
+				console.error("Error parsing OpenAI response:", parseError);
+				console.error("Raw OpenAI response:", storyContent);
+				throw new Error("Failed to parse story JSON from OpenAI.");
+			}
+		} catch (error) {
+			console.error("Error calling OpenAI API:", error);
+			// Forward a generic error or specific OpenAI error if needed
+			const err = new Error("Failed to generate story via OpenAI.");
+			(err as any).status = 502; // Bad Gateway or appropriate error
+			next(err);
+		}
+	})
+);
 
 // === STORY ROUTES ===
 

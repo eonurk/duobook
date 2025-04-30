@@ -13,10 +13,9 @@ VITE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
 VITE_FIREBASE_APP_ID=your-app-id
 
-# === OpenAI API Key (Currently Frontend - Move to Backend for Production!) ===
-# NOTE: For production security, this key MUST be removed from the frontend
-# and used only in the backend environment.
-VITE_OPENAI_API_KEY=your-openai-api-key
+# === Backend OpenAI API Key ===
+# This key is used by the backend server ONLY.
+OPENAI_API_KEY=your-openai-api-key
 
 # === Backend Database URL (Prisma) ===
 # Use SQLite for local development
@@ -25,7 +24,7 @@ DATABASE_URL="file:./dev.db"
 ```
 
 - Get the `VITE_FIREBASE_...` values from your Firebase Project settings → Your apps → SDK setup & configuration.
-- Get the `VITE_OPENAI_API_KEY` from your OpenAI account settings.
+- Get the `OPENAI_API_KEY` from your OpenAI account settings.
 
 ## 2. Firebase Admin SDK Setup (Backend)
 

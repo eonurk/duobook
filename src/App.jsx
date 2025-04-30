@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import OpenAI from 'openai';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import '@/App.css'; // Use alias
 import InputForm from '@/components/InputForm'; // Use alias
@@ -23,21 +22,8 @@ import {
     // updateUserProgress, // Commented out: Will be used elsewhere
     // getAllAchievements, // Commented out: Will be used elsewhere (e.g., Achievements page)
     // getUserAchievements // Commented out: Will be used elsewhere
+    generateStoryViaBackend // ADD import for backend generation
 } from './lib/api'; // Import API functions
-
-// Initialize OpenAI Client
-// IMPORTANT: This key is exposed in the frontend bundle.
-// For production, use a backend proxy.
-const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-let openai;
-if (apiKey) {
-  openai = new OpenAI({
-    apiKey: apiKey,
-    dangerouslyAllowBrowser: true // Necessary for frontend usage
-  });
-} else {
-  console.error('OpenAI API key not found. Please set VITE_OPENAI_API_KEY in your .env file.');
-}
 
 // Static Example Story Data
 const exampleStoryData = {
@@ -109,20 +95,16 @@ function MainAppView({ generateStory }) {
   const [formError, setFormError] = useState(null);
   const [formParams, setFormParams] = useState(null);
 
-  const handleGenerate = async (...args) => {
+  const handleGenerate = async (description, sourceLang, targetLang, difficulty, storyLength) => {
     setIsGenerating(true);
     setFormError(null);
-    setFormParams({ 
-        description: args[0], 
-        source: args[1], 
-        target: args[2], 
-        difficulty: args[3], 
-        length: args[4]
-    });
+    setFormParams({ description, source: sourceLang, target: targetLang, difficulty, length: storyLength });
     try {
-      await generateStory(...args); 
+        // Call the generateStory function passed from App, which now uses the backend
+        await generateStory(description, sourceLang, targetLang, difficulty, storyLength); 
     } catch (error) {
-      setFormError(error.message || "Failed to generate story.");
+      console.error("Error during generation or saving:", error);
+      setFormError(error.message || "Failed to generate story. Please try again.");
       setIsGenerating(false); 
     }
   };
@@ -192,10 +174,8 @@ function App() {
     }
   }, []);
 
+  // Updated generateStory function to use the backend proxy
   const generateStory = async (description, sourceLang, targetLang, difficulty, storyLength) => {
-    if (!openai) {
-      throw new Error('OpenAI client is not initialized. Check API key.');
-    }
     if (!currentUser) {
         throw new Error("User must be logged in to generate and save stories.");
     }
@@ -203,104 +183,38 @@ function App() {
     const params = { description, source: sourceLang, target: targetLang, difficulty, length: storyLength };
 
     try {
-       let lengthInstruction = '';
-      switch (storyLength.toLowerCase()) {
-          case 'short': lengthInstruction = 'around 15-20 sentences total'; break;
-          case 'medium': lengthInstruction = 'around 25-35 sentences total'; break;
-          case 'long': lengthInstruction = 'around 40-50 sentences total (or more)'; break;
-          default: lengthInstruction = 'around 25 sentences total';
-      }
-      const prompt = `
-        You are a helpful assistant creating bilingual learning materials.
-        The user wants a story based on this description: "${description}"
+        console.log("Sending generation request to backend proxy...");
+        // 1. Call the backend proxy to get the generated story content
+        const generatedStoryContent = await generateStoryViaBackend(params);
 
-        1. Generate a story with ${lengthInstruction}. Adhere closely to this length requirement.
-        2. The story should be suitable for a ${difficulty.toLowerCase()} level learner of ${targetLang}.
-        3. Break the story into logical sentences. Ensure each sentence has a corresponding translation.
-        4. Provide both the ${targetLang} version (target language) and the ${sourceLang} version (source language) for each sentence.
-        5. Identify 5-10 key vocabulary words from the ${targetLang} story relevant to the ${difficulty} level. Provide their ${sourceLang} translations.
+        console.log("Received story content from backend:", generatedStoryContent);
 
-        Respond ONLY with a valid JSON object adhering to the following structure. Do NOT include any text outside the JSON object:
-        {
-          "sentencePairs": [
-            { "id": 1, "target": "[${targetLang} sentence 1]", "source": "[${sourceLang} sentence 1]" },
-            // ... etc ...
-          ],
-          "vocabulary": [
-            { "word": "[${targetLang} word 1]", "translation": "[${sourceLang} translation 1]" },
-            // ... etc ...
-          ]
+        // Ensure the received data has the expected structure (basic check)
+        if (!generatedStoryContent || !generatedStoryContent.sentencePairs || !generatedStoryContent.vocabulary) {
+             throw new Error("Invalid story data received from backend.");
         }
-      `;
-
-      console.log("Sending prompt to OpenAI...");
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4-turbo",
-        messages: [
-            { role: "system", content: `You are an assistant that generates bilingual stories in JSON format for ${difficulty} level learners.` },
-            { role: "user", content: prompt }
-        ],
-        temperature: 0.7,
-        response_format: { type: "json_object" },
-      });
-      const content = completion.choices[0]?.message?.content;
-      console.log("Received response from OpenAI.");
-
-      if (!content) {
-        throw new Error('No content received from OpenAI.');
-      }
-      
-      let parsedStory;
-      try {
-        parsedStory = JSON.parse(content);
-        if (!parsedStory || !Array.isArray(parsedStory.sentencePairs) || !Array.isArray(parsedStory.vocabulary)) {
-          throw new Error('Invalid JSON structure received from AI.');
-        }
-        if (parsedStory.sentencePairs.length === 0) {
-          throw new Error('AI response contained no sentence pairs.');
-        }
-        parsedStory.sentencePairs.forEach((pair, index) => {
-           if (typeof pair.id !== 'number' || typeof pair.target !== 'string' || typeof pair.source !== 'string') {
-            throw new Error(`Invalid sentence pair structure at index ${index} in AI response.`);
-          }
+        
+        // 2. Save the generated story content to the database via API
+        console.log("Saving generated story to database...");
+        const savedStory = await createStory({
+            story: JSON.stringify(generatedStoryContent), // Store the whole generated object as JSON string
+            description: description,
+            sourceLanguage: sourceLang,
+            targetLanguage: targetLang,
+            difficulty: difficulty,
+            length: storyLength,
         });
-        parsedStory.vocabulary.forEach((item, index) => {
-           if (typeof item.word !== 'string' || typeof item.translation !== 'string') {
-             throw new Error(`Invalid vocabulary item structure at index ${index} in AI response.`);
-           }
-         });
+        console.log("Story saved successfully:", savedStory);
 
-      } catch (parseError) {
-        console.error("Failed to parse OpenAI response:", content, parseError);
-        throw new Error(`Failed to parse story data from AI. ${parseError.message}`);
-      }
-
-      console.log("Story parsed successfully. Saving to backend...");
-
-      // *** SAVE STORY TO BACKEND ***
-      const storyToSave = {
-          story: content,
-          description: params.description,
-          sourceLanguage: params.source,
-          targetLanguage: params.target,
-          difficulty: params.difficulty,
-          length: params.length
-      };
-
-      try {
-        const savedStory = await createStory(storyToSave);
-        console.log("Story saved successfully to backend:", savedStory);
-      } catch (apiError) {
-          console.error("Failed to save story via API:", apiError);
-      }
-      // ****************************
-
-      console.log("Navigating to story view...");
-      navigate('/story-view', { state: { storyData: parsedStory, params: params } });
+        // 3. Navigate to the story view page with the generated content and params
+        navigate('/story-view', {
+            state: { storyData: generatedStoryContent, params: params }
+        });
 
     } catch (error) {
-      console.error("Error in generateStory function:", error);
-      throw error;
+        console.error("Error in generateStory (App.jsx):", error);
+        // Re-throw the error so MainAppView can catch it and display it
+        throw error; 
     }
   };
 

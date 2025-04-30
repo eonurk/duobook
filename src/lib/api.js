@@ -78,6 +78,13 @@ export const deleteStory = (storyId) =>
 		method: "DELETE",
 	});
 
+// Story Generation Proxy
+export const generateStoryViaBackend = (generationParams) =>
+	authenticatedFetch("/generate-story", {
+		method: "POST",
+		body: JSON.stringify(generationParams), // e.g., { description, sourceLanguage, targetLanguage, difficulty, length }
+	});
+
 // Progress
 export const getUserProgress = () => authenticatedFetch("/progress");
 export const updateUserProgress = (progressData) =>
