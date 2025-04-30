@@ -12,33 +12,30 @@ import {
 function UserProgressDashboard() {
   const { userProgress, userAchievements, loading } = useAuth();
 
-  const calculatePointsForNextLevel = (level) => {
-    return 100 * level;
-  };
+  const calculateLevelProgress = (level, points) => {
+    if (!level || level < 1) level = 1;
+    if (!points || points < 0) points = 0;
 
-  const calculateLevelProgress = () => {
-    if (!userProgress || userProgress.level === undefined || userProgress.points === undefined) return 0;
+    const pointsForLevel = (lvl) => {
+        if (lvl <= 1) return 0;
+        // Sum formula: n*(n+1)/2 -> (lvl-1)*lvl/2 * 100
+        return (lvl - 1) * lvl / 2 * 100; 
+    };
 
-    const currentPoints = userProgress.points;
-    const currentLevel = userProgress.level;
+    const currentLevelBasePoints = pointsForLevel(level);
+    const nextLevelBasePoints = pointsForLevel(level + 1);
+    const pointsNeededForNextLevel = nextLevelBasePoints - currentLevelBasePoints; // This is level * 100
+    const pointsInCurrentLevel = points - currentLevelBasePoints;
 
-    let pointsAtStartOfLevel = 0;
-    if (currentLevel > 1) {
-        pointsAtStartOfLevel = calculatePointsForNextLevel(currentLevel - 1);
-    }
-    const pointsForNextLevel = calculatePointsForNextLevel(currentLevel);
-    const pointsNeededForLevel = pointsForNextLevel - pointsAtStartOfLevel;
-    const pointsEarnedInLevel = currentPoints - pointsAtStartOfLevel;
-
-    if (pointsNeededForLevel <= 0) {
-        return currentPoints > pointsAtStartOfLevel ? 100 : 0;
-    }
-
-    const progressPercentage = Math.max(0, Math.min(100,
-        Math.floor((pointsEarnedInLevel / pointsNeededForLevel) * 100)
-    ));
-
-    return progressPercentage;
+    if (pointsNeededForNextLevel <= 0) return { percentage: 100, pointsInCurrentLevel: pointsInCurrentLevel > 0 ? pointsInCurrentLevel : 0 , pointsNeededForNextLevel: 0 }; // Avoid division by zero if logic is flawed or level maxed out
+    
+    const progressPercentage = Math.max(0, Math.min(100, (pointsInCurrentLevel / pointsNeededForNextLevel) * 100));
+    
+    return {
+      percentage: progressPercentage,
+      pointsInCurrentLevel: Math.max(0, pointsInCurrentLevel), // Ensure no negative points displayed
+      pointsNeededForNextLevel: pointsNeededForNextLevel
+    };
   };
 
   if (loading) {
@@ -56,7 +53,7 @@ function UserProgressDashboard() {
 
   const currentLevel = userProgress.level || 1;
   const currentPoints = userProgress.points || 0;
-  const pointsToNextLevel = calculatePointsForNextLevel(currentLevel) - currentPoints;
+  const progressInfo = calculateLevelProgress(currentLevel, currentPoints);
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -88,7 +85,9 @@ function UserProgressDashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-primary">{currentLevel}</div>
             <p className="text-xs text-muted-foreground mt-1">
-                {pointsToNextLevel > 0 ? `${pointsToNextLevel} points to Level ${currentLevel + 1}` : "Max level? Keep learning!"}
+                {progressInfo.pointsNeededForNextLevel > 0 
+                  ? `${progressInfo.pointsNeededForNextLevel - progressInfo.pointsInCurrentLevel} points to Level ${currentLevel + 1}` 
+                  : "Max level reached!"} 
             </p>
           </CardContent>
          </Card>
@@ -99,16 +98,16 @@ function UserProgressDashboard() {
              <CardTitle className="text-lg font-semibold">Level {currentLevel} Progress</CardTitle>
         </CardHeader>
         <CardContent>
-            <div className="w-full bg-muted rounded-full h-2.5 dark:bg-gray-700 mb-2">
-            <div
+            <div className="w-full bg-muted rounded-full h-2.5 dark:bg-gray-700 mb-1">
+              <div
                 className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${calculateLevelProgress()}%` }}
-            ></div>
+                style={{ width: `${progressInfo.percentage}%` }}
+              ></div>
             </div>
             <div className="text-right">
-            <span className="text-xs font-medium text-muted-foreground">
-                {calculateLevelProgress()}% Complete
-            </span>
+              <span className="text-xs font-medium text-muted-foreground">
+                  {`${progressInfo.pointsInCurrentLevel} / ${progressInfo.pointsNeededForNextLevel} XP (${Math.round(progressInfo.percentage)}%)`}
+              </span>
             </div>
         </CardContent>
       </Card>

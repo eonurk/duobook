@@ -14,6 +14,8 @@ import Achievements from '@/components/Gamification/Achievements'; // Import Ach
 import DuoBookExplain from '@/assets/duobook-explain.png'; // Use alias
 import PrivacyPolicy from '@/pages/PrivacyPolicy'; // Import PrivacyPolicy
 import TermsOfService from '@/pages/TermsOfService'; // Import TermsOfService
+import VocabularyPracticePage from '@/pages/VocabularyPracticePage'; // Import Practice Page
+import { ArrowDown } from 'lucide-react'; // Import ArrowDown icon
 import {
     // getStories, // Commented out: Will be used in MyStoriesPage
     createStory,
@@ -46,9 +48,6 @@ const exampleStoryData = {
   targetLanguage: 'Spanish',
   sourceLanguage: 'English'
 };
-
-// --- Local Storage Key ---
-const LOCAL_STORAGE_KEY_PREFIX = 'savedStories';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -130,19 +129,19 @@ function MainAppView({ generateStory }) {
 
         {!isGenerating && (
           <div className="mt-12 pt-8 border-t">
-            <p style={{ textAlign: 'center', fontSize: '1rem', color: '#666', marginBottom: '1.5rem' }}>
+            <p className="text-center text-base text-muted-foreground mb-6">
               Here's a quick example of a <b>DuoBook</b> story and how you interact with it.
             </p>
-            <img src={DuoBookExplain} alt="DuoBook Explain" 
-              style={{ 
-                display: 'block',
-                width: '100%',
-                maxWidth: '520px',
-                height: 'auto',
-                margin: '0 auto 2rem auto',
-                borderRadius: '15px'
-              }}
+            <img 
+              src={DuoBookExplain} 
+              alt="DuoBook Explain" 
+              className="block w-full max-w-lg h-auto mx-auto mb-4 rounded-lg"
             />
+
+            <div className="text-center mb-4">
+               <ArrowDown className="h-6 w-6 mx-auto text-muted-foreground" aria-hidden="true" />
+               <p className="text-sm text-muted-foreground mt-1">Scroll down to view the example.</p>
+            </div>
 
             <BookView 
               sentencePairs={exampleStoryData.sentencePairs} 
@@ -244,6 +243,7 @@ function App() {
         <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
         <Route path="/my-stories" element={<ProtectedRoute><MyStoriesPage /></ProtectedRoute>} />
         <Route path="/progress" element={<ProtectedRoute><UserProgressDashboard /></ProtectedRoute>} />
+        <Route path="/practice" element={<ProtectedRoute><VocabularyPracticePage /></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

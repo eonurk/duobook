@@ -16,8 +16,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getStories, deleteStory } from '@/lib/api';
 
-// --- Local Storage Key Prefix (should match App.jsx) ---
-const LOCAL_STORAGE_KEY_PREFIX = 'savedStories';
 
 function MyStoriesPage() {
   const { currentUser } = useAuth();

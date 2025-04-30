@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from '../firebaseConfig';
 // Import API functions for progress and achievements
-import { getGamificationData } from '../lib/api';
+import { getGamificationData, updateUserProgress } from '../lib/api';
 
 // Create the context
 const AuthContext = createContext();
@@ -58,13 +58,39 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
+  // Function to update user progress locally and via API
+  const updateProgressData = async (updates) => {
+    if (!currentUser || !userProgress) {
+      console.error("Cannot update progress: no user or initial progress data.");
+      return; // Or throw error
+    }
+
+    const optimisticProgress = { ...userProgress, ...updates };
+    setUserProgress(optimisticProgress); // Optimistic update
+
+    try {
+      console.log("Sending progress update to API:", updates);
+      // Assume updateUserProgress sends a PATCH/PUT request with the updates object
+      const updatedProgress = await updateUserProgress(updates);
+      setUserProgress(updatedProgress); // Update with response from server if needed
+      console.log("Progress updated successfully on server.");
+    } catch (error) {
+      console.error("Failed to update progress on server:", error);
+      // Revert optimistic update on failure?
+      // setError("Failed to save progress."); // Optionally surface error
+      // For simplicity, we might just leave the optimistic update for now
+      // Or re-fetch all data: await fetchApiGamificationData(currentUser);
+    }
+  };
+
   // Value provided to context consumers
   const value = {
     currentUser,
     loading,
     userProgress,
     userAchievements, // Provide achievements
-    fetchApiGamificationData // Expose API fetch function if needed elsewhere
+    fetchApiGamificationData, // Expose API fetch function if needed elsewhere
+    updateProgressData // Expose the update function
   };
 
   // Render children only when not loading to avoid rendering protected components prematurely

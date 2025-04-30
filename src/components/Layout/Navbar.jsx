@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { signOut } from "firebase/auth";
 import { auth } from '@/firebaseConfig'; // Use alias
 import { useAuth } from '@/context/AuthContext'; // Use alias
 import { Button } from '@/components/ui/button'; // Import shadcn Button
 import Login from '@/components/Auth/Login';
 import Signup from '@/components/Auth/Signup';
-import { Flame, Star, Sparkles } from 'lucide-react'; // Use consistent icons
+import { Flame, Star, Sparkles, Menu, X } from 'lucide-react'; // Use consistent icons
 import {
   Dialog,
   DialogContent,
@@ -26,16 +26,61 @@ import {
 function Navbar() {
   const { currentUser, userProgress } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // Get location object
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile menu
+
+  // Helper function to calculate level progress
+  const calculateLevelProgress = (level, points) => {
+    if (!level || level < 1) level = 1;
+    if (!points || points < 0) points = 0;
+
+    const pointsForLevel = (lvl) => {
+        if (lvl <= 1) return 0;
+        // Sum formula: n*(n+1)/2 -> (lvl-1)*lvl/2 * 100
+        return (lvl - 1) * lvl / 2 * 100; 
+    };
+
+    const currentLevelBasePoints = pointsForLevel(level);
+    const nextLevelBasePoints = pointsForLevel(level + 1);
+    const pointsNeededForNextLevel = nextLevelBasePoints - currentLevelBasePoints; // This is level * 100
+    const pointsInCurrentLevel = points - currentLevelBasePoints;
+
+    if (pointsNeededForNextLevel <= 0) return 100; // Avoid division by zero if logic is flawed or level maxed out
+    
+    const progressPercentage = Math.max(0, Math.min(100, (pointsInCurrentLevel / pointsNeededForNextLevel) * 100));
+    
+    return {
+      percentage: progressPercentage,
+      pointsInCurrentLevel: Math.max(0, pointsInCurrentLevel), // Ensure no negative points displayed
+      pointsNeededForNextLevel: pointsNeededForNextLevel
+    };
+  };
+
+  const progressInfo = userProgress ? calculateLevelProgress(userProgress.level, userProgress.points) : { percentage: 0, pointsInCurrentLevel: 0, pointsNeededForNextLevel: 100 }; // Default if no progress
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      setIsMobileMenuOpen(false); // Close mobile menu on logout
       navigate('/'); // Navigate to home/login page after logout
     } catch (err) {
       console.error("Logout Error:", err);
       // Optionally show an error message to the user using toast
     }
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleAuthClick = () => {
+    closeMobileMenu();
+    setShowAuthDialog(true);
   };
 
   return (
@@ -47,7 +92,8 @@ function Navbar() {
               DuoBook
             </Link>
           </div>
-          <nav className="flex items-center gap-4 ml-auto">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-4 ml-auto">
             {currentUser ? (
               <>
                 <div className="hidden md:flex items-center space-x-4 border-r pr-4 mr-2">
@@ -55,22 +101,27 @@ function Navbar() {
                     <Flame className="h-4 w-4 mr-1 text-orange-400" />
                     <span className="text-sm font-medium">{userProgress?.streak || 0}</span>
                   </div>
-                  <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors" title={`Level ${userProgress?.level || 1}`}>
+                  {/* Level Display without Progress */}
+                  <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors" title={`Level ${userProgress?.level || 1} (${progressInfo.pointsInCurrentLevel} / ${progressInfo.pointsNeededForNextLevel} points)`}>
                     <Star className="h-4 w-4 mr-1 text-yellow-400" />
                     <span className="text-sm font-medium">{userProgress?.level || 1}</span>
                   </div>
-                  <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors" title={`${userProgress?.points || 0} Experience Points`}>
+                  {/* Points Display */}
+                  <div className="flex items-center text-muted-foreground hover:text-foreground transition-colors" title={`${userProgress?.points || 0} Total Experience Points`}>
                     <Sparkles className="h-4 w-4 mr-1 text-teal-400" />
                     <span className="text-sm font-medium">{userProgress?.points || 0}</span>
                   </div>
                 </div>
-                <Button variant="link" size="sm" asChild className="px-0 text-foreground/70 hover:text-foreground">
+                <Button variant="link" size="sm" asChild className={`px-0 ${location.pathname === '/progress' ? 'text-primary font-semibold' : 'text-foreground/70 hover:text-foreground'}`}>
                   <Link to="/progress" >Progress</Link>
                 </Button>
-                <Button variant="link" size="sm" asChild className="px-0 text-foreground/70 hover:text-foreground">
+                <Button variant="link" size="sm" asChild className={`px-0 ${location.pathname === '/my-stories' ? 'text-primary font-semibold' : 'text-foreground/70 hover:text-foreground'}`}>
                   <Link to="/my-stories">My Stories</Link>
                 </Button>
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="link" size="sm" asChild className={`px-0 ${location.pathname === '/practice' ? 'text-primary font-semibold' : 'text-foreground/70 hover:text-foreground'}`}>
+                  <Link to="/practice">Practice</Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild className={`${location.pathname === '/profile' ? 'ring-2 ring-ring ring-offset-2' : ''}`}>
                   <Link to="/profile">Profile</Link>
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleLogout}>Logout</Button>
@@ -82,7 +133,82 @@ function Navbar() {
               </>
             )}
           </nav>
+          {/* Mobile Menu Button */}
+          <div className="md:hidden ml-auto">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMobileMenu}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile Menu Dropdown/Overlay */}
+        {isMobileMenuOpen && (
+          <div className="absolute top-16 left-0 right-0 z-40 bg-white shadow-md md:hidden border-t border-border/40">
+            <nav className="flex flex-col items-start gap-2 p-4">
+              {currentUser ? (
+                <>
+                  {/* Mobile User Progress */}
+                  <div className="flex flex-col space-y-3 mb-3 border-b pb-3 w-full">
+                     <div className="flex items-center justify-between text-muted-foreground" title={`${userProgress?.streak || 0} Day Streak`}>
+                       <div className="flex items-center">
+                         <Flame className="h-5 w-5 mr-2 text-orange-400" />
+                         <span className="text-sm font-medium">Daily Streak</span>
+                       </div>
+                       <span className="text-sm font-medium">{userProgress?.streak || 0} Days</span>
+                     </div>
+                     {/* Mobile Level Display without Progress Bar */}
+                     <div title={`Level ${userProgress?.level || 1} (${progressInfo.pointsInCurrentLevel} / ${progressInfo.pointsNeededForNextLevel} points)`}>
+                       <div className="flex items-center justify-between text-muted-foreground">
+                         <div className="flex items-center">
+                           <Star className="h-5 w-5 mr-2 text-yellow-400" />
+                           <span className="text-sm font-medium">Level {userProgress?.level || 1}</span>
+                         </div>
+                          <span className="text-sm font-medium">{`${progressInfo.pointsInCurrentLevel} / ${progressInfo.pointsNeededForNextLevel} XP`}</span>
+                       </div>
+                     </div>
+                     {/* Mobile Points Display */}
+                     <div className="flex items-center justify-between text-muted-foreground" title={`${userProgress?.points || 0} Total Experience Points`}>
+                       <div className="flex items-center">
+                         <Sparkles className="h-5 w-5 mr-2 text-teal-400" />
+                         <span className="text-sm font-medium">Total XP</span>
+                       </div>
+                       <span className="text-sm font-medium">{userProgress?.points || 0}</span>
+                     </div>
+                   </div>
+                   <Button variant="ghost" asChild className={`w-full justify-start ${location.pathname === '/' ? 'text-primary font-semibold bg-accent' : ''}`} onClick={closeMobileMenu}>
+                     <Link to="/">Home</Link>
+                   </Button>
+                   <Button variant="ghost" asChild className={`w-full justify-start ${location.pathname === '/progress' ? 'text-primary font-semibold bg-accent' : ''}`} onClick={closeMobileMenu}>
+                     <Link to="/progress">Progress</Link>
+                   </Button>
+                   <Button variant="ghost" asChild className={`w-full justify-start ${location.pathname === '/my-stories' ? 'text-primary font-semibold bg-accent' : ''}`} onClick={closeMobileMenu}>
+                     <Link to="/my-stories">My Stories</Link>
+                   </Button>
+                   <Button variant="ghost" asChild className={`w-full justify-start ${location.pathname === '/practice' ? 'text-primary font-semibold bg-accent' : ''}`} onClick={closeMobileMenu}>
+                     <Link to="/practice">Practice</Link>
+                   </Button>
+                    <Button variant="ghost" asChild className={`w-full justify-start ${location.pathname === '/profile' ? 'text-primary font-semibold bg-accent' : ''}`} onClick={closeMobileMenu}>
+                     <Link to="/profile">Profile</Link>
+                   </Button>
+                  <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50">
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={handleAuthClick} className="w-full justify-start">Login</Button>
+                  <Button variant="default" onClick={handleAuthClick} className="w-full justify-start">Sign Up</Button>
+                </>
+              )}
+            </nav>
+          </div>
+        )}
       </header>
 
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
