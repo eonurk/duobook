@@ -13,7 +13,7 @@
     "prisma:studio": "prisma studio",
     "prisma:migrate": "prisma migrate dev",
     "server:dev": "tsx watch server/index.ts",
-    "server:build": "npm run prisma:migrate && tsc",
+    "server:build": "npm run prisma:migrate && tsc && copyfiles -u 1 firebase-admin-sdk.json build",
     "server": "node dist"
   },
   "prisma": {
@@ -54,6 +54,7 @@
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
+    "copyfiles": "^2.4.1",
     "eslint": "^9.22.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
