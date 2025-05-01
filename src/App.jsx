@@ -26,6 +26,7 @@ import {
     // getUserAchievements // Commented out: Will be used elsewhere
     generateStoryViaBackend // ADD import for backend generation
 } from './lib/api'; // Import API functions
+import toast, { Toaster } from 'react-hot-toast'; // ADD react-hot-toast imports
 
 // Static Example Story Data
 const exampleStoryData = {
@@ -99,11 +100,16 @@ function MainAppView({ generateStory }) {
     setFormError(null);
     setFormParams({ description, source: sourceLang, target: targetLang, difficulty, length: storyLength });
     try {
-        // Call the generateStory function passed from App, which now uses the backend
+        // Call the generateStory function passed from App
         await generateStory(description, sourceLang, targetLang, difficulty, storyLength); 
-    } catch (error) {
-      console.error("Error during generation or saving:", error);
+        // If generateStory succeeds without error, we might still want to stop the spinner
+        // depending on navigation timing. However, the finally block handles this.
+    } catch (error) { // This catches errors *re-thrown* from App.jsx's generateStory
+      console.error("Error during generation or saving (caught in MainAppView):", error);
       setFormError(error.message || "Failed to generate story. Please try again.");
+      // No need to set isGenerating false here, finally block handles it.
+    } finally {
+      // This block will ALWAYS execute after try or catch
       setIsGenerating(false); 
     }
   };
@@ -176,7 +182,11 @@ function App() {
   // Updated generateStory function to use the backend proxy
   const generateStory = async (description, sourceLang, targetLang, difficulty, storyLength) => {
     if (!currentUser) {
-        throw new Error("User must be logged in to generate and save stories.");
+        // Use toast for user-facing error
+        toast.error("Login Required", { description: "You must be logged in to generate stories." });
+        // Optionally re-throw if other parts of the app expect an error
+        // throw new Error("User must be logged in to generate and save stories."); 
+        return; // Stop execution if not logged in
     }
 
     const params = { description, source: sourceLang, target: targetLang, difficulty, length: storyLength };
@@ -212,8 +222,17 @@ function App() {
 
     } catch (error) {
         console.error("Error in generateStory (App.jsx):", error);
-        // Re-throw the error so MainAppView can catch it and display it
-        throw error; 
+        
+        // Check if it's the specific rate limit error message
+        if (error instanceof Error && error.message.includes("Too many story generation requests")) {
+          // Show specific toast for rate limit
+          toast.error("Daily Limit Reached", { description: error.message });
+          // We might not want to setFormError here, as the toast is the main feedback
+          // setFormError(error.message); 
+        } else {
+          // For other errors, re-throw to be caught by MainAppView's setFormError
+          throw error; 
+        }
     }
   };
 
@@ -235,6 +254,8 @@ function App() {
   return (
     <div className="app-container flex flex-col min-h-screen bg-background text-foreground">
       <Navbar />
+      {/* Use react-hot-toast Toaster */}
+      <Toaster position="top-center" reverseOrder={false} />
       <Routes>
         <Route path="/" element={<MainAppView generateStory={generateStory} />} />
         <Route path="/story-view" element={<StoryViewPage />} />

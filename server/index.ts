@@ -15,6 +15,8 @@ import OpenAI from "openai"; // Import OpenAI
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import rateLimit from "express-rate-limit";
+import { SubscriptionTier } from "@prisma/client"; // Import the enum
 
 // Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -23,7 +25,7 @@ const __dirname = path.dirname(__filename);
 // Construct the absolute path to the JSON file
 const serviceAccountPath = path.resolve(
 	__dirname,
-	"../../firebase-admin-sdk.json"
+	"../firebase-admin-sdk.json"
 );
 
 // Read the file content synchronously
@@ -107,6 +109,57 @@ const authenticateTokenMiddleware = (
 };
 // --- END AUTH MIDDLEWARE ---
 
+// --- START RATE LIMITER SETUP ---
+const storyGenerationLimiter = rateLimit({
+	windowMs: 24 * 60 * 60 * 1000, // 24 hours window
+	max: 3, // Limit each FREE user to 3 story generations per day
+	message: {
+		error:
+			"Too many story generation requests today for free users. Upgrade to premium or try again tomorrow.",
+	},
+	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+	keyGenerator: (req: Request): string => {
+		return req.userId || req.ip || "unknown"; // Added 'unknown' as final fallback
+	},
+	skip: async (req: Request, res: Response): Promise<boolean> => {
+		// If user is not authenticated for some reason, apply the limit based on IP
+		if (!req.userId) {
+			console.warn("Rate limiting story generation by IP (userId not found)");
+			return false;
+		}
+
+		// Check user's subscription tier
+		try {
+			const userProgress = await prisma.userProgress.findUnique({
+				where: { userId: req.userId },
+				select: { subscriptionTier: true },
+			});
+
+			// If user has PREMIUM or PRO tier, skip the rate limit
+			if (
+				userProgress &&
+				(userProgress.subscriptionTier === SubscriptionTier.PREMIUM ||
+					userProgress.subscriptionTier === SubscriptionTier.PRO)
+			) {
+				console.log(
+					`Skipping rate limit for ${userProgress.subscriptionTier} user: ${req.userId}`
+				);
+				return true; // Skip the limit for premium users
+			}
+		} catch (error) {
+			console.error("Error fetching user progress for rate limiting:", error);
+			// Fallback: apply limit if DB check fails?
+			return false;
+		}
+
+		// Apply the limit for FREE users or if progress couldn't be found
+		console.log(`Applying rate limit for FREE user: ${req.userId}`);
+		return false;
+	},
+});
+// --- END RATE LIMITER SETUP ---
+
 // Health check route (public)
 app.get("/health", (req: Request, res: Response) => {
 	res.status(200).json({ status: "API is running successfully!" });
@@ -119,6 +172,7 @@ app.use(authenticateTokenMiddleware);
 // === STORY GENERATION PROXY ROUTE ===
 app.post(
 	"/api/generate-story",
+	storyGenerationLimiter, // Apply the specific limiter here
 	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 		const userId = req.userId;
 		if (!userId) {
@@ -611,18 +665,36 @@ app.get(
 			const today = new Date();
 			const todayStart = getStartOfDayUTC(today);
 
-			// Use upsert to ensure userProgress exists
-			const userProgress = await prisma.userProgress.upsert({
+			// Step 1: Ensure UserProgress record exists (Simplified Upsert)
+			await prisma.userProgress.upsert({
 				where: { userId: userId },
-				update: {}, // No update needed if exists
-				create: { userId: userId }, // Create if doesn't exist
+				update: {
+					// Optionally update a field like lastLogin if needed,
+					// or leave empty if updatedAt handles it automatically.
+					// For robustness, let's explicitly update something benign:
+					updatedAt: new Date(),
+				},
+				create: { userId: userId },
+			});
+
+			// Step 2: Fetch the UserProgress record WITH the includes
+			const userProgress = await prisma.userProgress.findUnique({
+				where: { userId: userId },
 				include: {
 					userDailyChallenges: {
 						where: { day: todayStart },
 						include: { challenge: true },
 					},
-				}, // Include today's challenges
+				},
 			});
+
+			// Handle case where userProgress might somehow still be null after upsert (shouldn't happen but good practice)
+			if (!userProgress) {
+				console.error(
+					`Failed to find UserProgress for user ${userId} after upsert.`
+				);
+				return next(new Error("Could not retrieve user progress."));
+			}
 
 			let needsNewChallenges = true;
 			if (

@@ -11,6 +11,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Define subscription tiers
+enum SubscriptionTier {
+  FREE
+  PREMIUM
+  PRO
+  // Add more tiers here later if needed
+}
+
 // Model to track user's gamification progress
 model UserProgress {
   id         Int      @id @default(autoincrement())
@@ -20,6 +28,7 @@ model UserProgress {
   updatedAt  DateTime @updatedAt
   lastLogin  DateTime?
   streak     Int      @default(0)
+  subscriptionTier SubscriptionTier @default(FREE)
 
   // Add field to track challenge generation date
   dailyChallengesLastGenerated DateTime?

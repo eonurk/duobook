@@ -38,13 +38,21 @@ const authenticatedFetch = async (endpoint, options = {}) => {
 			try {
 				errorData = await response.json();
 			} catch {
-				// Ignore if response is not JSON (remove unused 'e' variable)
+				// Ignore if response is not JSON
 			}
+
+			// Construct the error message, prioritizing backend message
 			const errorMessage =
 				errorData?.error || `HTTP error! status: ${response.status}`;
 			const error = new Error(errorMessage);
 			error.status = response.status; // Attach status code to error
-			throw error;
+
+			// Log specifically for rate limit error
+			if (response.status === 429) {
+				console.warn("Rate limit hit:", errorMessage);
+			}
+
+			throw error; // Throw the error with status and potentially specific message
 		}
 
 		// Handle cases with no content (like DELETE 204)
