@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 // Construct the absolute path to the JSON file
 const serviceAccountPath = path.resolve(
 	__dirname,
-	"../firebase-admin-sdk.json"
+	"../../firebase-admin-sdk.json"
 );
 
 // Read the file content synchronously
