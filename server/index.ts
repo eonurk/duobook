@@ -12,9 +12,27 @@ import express, { Request, Response, NextFunction } from "express";
 import { PrismaClient, Prisma } from "@prisma/client";
 import admin from "firebase-admin"; // Import Firebase Admin SDK
 import OpenAI from "openai"; // Import OpenAI
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Import the service account JSON using import assertion
-import serviceAccount from "../firebase-admin-sdk.json" assert { type: "json" };
+// Define __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Construct the absolute path to the JSON file
+const serviceAccountPath = path.resolve(
+	__dirname,
+	"../firebase-admin-sdk.json"
+);
+
+// Read the file content synchronously
+const serviceAccountRaw = fs.readFileSync(serviceAccountPath, "utf8");
+
+// Parse the JSON content
+const serviceAccount = JSON.parse(serviceAccountRaw) as {
+	/* Define expected structure here if known */
+};
 
 // --- START OPENAI CLIENT SETUP ---
 const openai = new OpenAI({
