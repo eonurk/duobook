@@ -93,6 +93,12 @@ export const generateStoryViaBackend = (generationParams) =>
 		body: JSON.stringify(generationParams), // e.g., { description, sourceLanguage, targetLanguage, difficulty, length }
 	});
 
+// Get remaining story generation limit
+export const getStoryGenerationLimit = () =>
+	authenticatedFetch("/story-limit", {
+		method: "GET",
+	});
+
 // Progress
 export const getUserProgress = () => authenticatedFetch("/progress");
 export const updateUserProgress = (progressData) =>

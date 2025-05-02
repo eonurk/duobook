@@ -169,6 +169,74 @@ app.get("/health", (req: Request, res: Response) => {
 // Apply the synchronous wrapper middleware
 app.use(authenticateTokenMiddleware);
 
+// Get remaining story generation limit for current user
+app.get(
+	"/api/story-limit",
+	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+		const userId = req.userId;
+		if (!userId) {
+			const err = new Error("Authentication required.");
+			(err as any).status = 401;
+			return next(err);
+		}
+
+		// Get user's subscription tier to determine limit
+		try {
+			// Include type annotation to fix TypeScript error
+			const userProgress = (await prisma.userProgress.findUnique({
+				where: { userId: req.userId },
+				select: { subscriptionTier: true },
+			})) as { subscriptionTier: SubscriptionTier } | null;
+
+			// Premium and Pro users have unlimited generations
+			if (
+				userProgress &&
+				(userProgress.subscriptionTier === SubscriptionTier.PREMIUM ||
+					userProgress.subscriptionTier === SubscriptionTier.PRO)
+			) {
+				return res.status(200).json({
+					limit: Infinity,
+					remaining: Infinity,
+					isPremium: true,
+					subscriptionTier: userProgress.subscriptionTier,
+				});
+			}
+
+			// Free users - check remaining from rate limiter
+			// For free users, we use the fixed daily limit
+			const limit = 3; // Same as in the rate limiter config
+
+			// Due to the implementation details of express-rate-limit, we can't directly access
+			// the hits. Instead, we'll count how many successful generate-story requests
+			// the user has made in the past 24 hours
+			const recentStories = await prisma.story.count({
+				where: {
+					userId: userId,
+					createdAt: {
+						gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+					},
+				},
+			});
+
+			const remaining = Math.max(0, limit - recentStories);
+
+			return res.status(200).json({
+				limit,
+				remaining,
+				isPremium: false,
+				subscriptionTier:
+					userProgress?.subscriptionTier || SubscriptionTier.FREE,
+			});
+		} catch (error) {
+			console.error("Error checking rate limit:", error);
+			// In case of error, assume no limit to avoid blocking legitimate users
+			return res
+				.status(500)
+				.json({ error: "Could not determine remaining limit" });
+		}
+	})
+);
+
 // === STORY GENERATION PROXY ROUTE ===
 app.post(
 	"/api/generate-story",

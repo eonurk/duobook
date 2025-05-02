@@ -18,10 +18,11 @@ import MyStoriesPage from "@/components/User/MyStoriesPage"; // Use alias
 import UserProgressDashboard from "@/components/User/UserProgressDashboard"; // Import ProgressDashboard
 import Achievements from "@/components/Gamification/Achievements"; // Import Achievements component
 import DuoBookExplain from "@/assets/duobook-explain.png"; // Use alias
+import DailyLimitImage from "@/assets/daily-limit.png"; // Import daily limit image
 import PrivacyPolicy from "@/pages/PrivacyPolicy"; // Import PrivacyPolicy
 import TermsOfService from "@/pages/TermsOfService"; // Import TermsOfService
 import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import Practice Page
-import { ArrowDown } from "lucide-react"; // Import ArrowDown icon
+import { ArrowDown, Sparkles, CheckCircle2 } from "lucide-react"; // Import ArrowDown icon and new icons
 import {
 	// getStories, // Commented out: Will be used in MyStoriesPage
 	createStory,
@@ -131,6 +132,111 @@ function StoryViewPage() {
 }
 // ----------------------------------
 
+// Premium Plans component for rate limit banner
+function PremiumPlansSuggestion({ onClose }) {
+	return (
+		<div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200 p-6 mb-8">
+			<div className="flex justify-between items-start">
+				<h2 className="text-xl font-bold text-amber-800 mb-4">
+					Upgrade to Premium for Unlimited Stories
+				</h2>
+				<button
+					onClick={onClose}
+					className="text-amber-500 hover:text-amber-700"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						<line x1="18" y1="6" x2="6" y2="18"></line>
+						<line x1="6" y1="6" x2="18" y2="18"></line>
+					</svg>
+				</button>
+			</div>
+
+			<div className="grid md:grid-cols-2 gap-6 mt-4">
+				<div className="bg-white rounded-lg p-5 shadow-sm border border-amber-100">
+					<div className="flex items-center mb-3">
+						<Sparkles className="h-5 w-5 text-amber-500 mr-2" />
+						<h3 className="font-medium text-lg">Premium</h3>
+					</div>
+					<ul className="space-y-2 mb-4">
+						<li className="flex items-start">
+							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+							<span>Unlimited story generations</span>
+						</li>
+						<li className="flex items-start">
+							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+							<span>Priority support</span>
+						</li>
+						<li className="flex items-start">
+							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+							<span>Advanced language exercises</span>
+						</li>
+					</ul>
+					<button
+						onClick={() => (window.location.href = "/profile")}
+						className="w-full py-2 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md hover:from-amber-600 hover:to-orange-600 transition-all"
+					>
+						Upgrade Now
+					</button>
+				</div>
+
+				<div className="bg-white rounded-lg p-5 shadow-sm border border-amber-100">
+					<div className="flex items-center mb-3">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							className="text-purple-500 mr-2"
+						>
+							<path d="M12 2l3 7h7l-6 4 3 7-7-4-7 4 3-7-6-4h7z"></path>
+						</svg>
+						<h3 className="font-medium text-lg">Pro</h3>
+					</div>
+					<ul className="space-y-2 mb-4">
+						<li className="flex items-start">
+							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+							<span>All Premium features</span>
+						</li>
+						<li className="flex items-start">
+							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+							<span>Custom vocabulary training</span>
+						</li>
+						<li className="flex items-start">
+							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+							<span>Text-to-speech for all stories</span>
+						</li>
+					</ul>
+					<button
+						onClick={() => (window.location.href = "/profile")}
+						className="w-full py-2 px-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-md hover:from-purple-600 hover:to-indigo-600 transition-all"
+					>
+						Get Pro
+					</button>
+				</div>
+			</div>
+
+			<p className="text-sm text-amber-700 mt-4 text-center">
+				Upgrade today and boost your language learning journey!
+			</p>
+		</div>
+	);
+}
+
 // Component for the logged-in main view (story generation)
 function MainAppView({ generateStory }) {
 	const [isGenerating, setIsGenerating] = useState(false);
@@ -160,7 +266,8 @@ function MainAppView({ generateStory }) {
 				sourceLang,
 				targetLang,
 				difficulty,
-				storyLength
+				storyLength,
+				setFormError // Pass setFormError to allow App to update it directly
 			);
 			// If generateStory succeeds without error, we might still want to stop the spinner
 			// depending on navigation timing. However, the finally block handles this.
@@ -184,10 +291,42 @@ function MainAppView({ generateStory }) {
 		<>
 			{formError && (
 				<div
-					className="error-message p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+					className={`mb-6 rounded-lg ${
+						formError.isRateLimit
+							? "bg-amber-50 border border-amber-100"
+							: "bg-red-50 text-red-800 dark:bg-gray-800 dark:text-red-400"
+					}`}
 					role="alert"
 				>
-					<strong>Error:</strong> {formError}
+					<div className="flex">
+						{formError.isRateLimit ? (
+							<div className="w-full">
+								<div className="flex justify-center p-4 pb-0">
+									<img
+										src={DailyLimitImage}
+										alt="Daily limit reached"
+										className="h-40 w-auto mx-auto"
+									/>
+								</div>
+								<div className="p-4 pt-2 text-center">
+									<div className="text-sm text-amber-700">
+										<p className="mb-4">{formError.message}</p>
+										<p className="mt-2 font-bold text-amber-800 flex items-center justify-center gap-2">
+											Premium subscriptions with unlimited story generation are
+											coming soon!{" "}
+										</p>
+									</div>
+								</div>
+							</div>
+						) : (
+							<div className="p-4">
+								<strong>Error:</strong>{" "}
+								{typeof formError === "string"
+									? formError
+									: "Failed to generate story. Please try again."}
+							</div>
+						)}
+					</div>
 				</div>
 			)}
 			<main className="flex-1 container mx-auto px-4 py-8">
@@ -244,6 +383,7 @@ function App() {
 	const { loading, currentUser } = useAuth();
 	const [firebaseError, setFirebaseError] = useState(false);
 	const navigate = useNavigate();
+	const navbarRef = React.useRef(null); // Use React.useRef instead of useRef import
 
 	// Check Firebase initialization
 	useEffect(() => {
@@ -260,7 +400,8 @@ function App() {
 		sourceLang,
 		targetLang,
 		difficulty,
-		storyLength
+		storyLength,
+		setFormError // Accept the setter function
 	) => {
 		if (!currentUser) {
 			// Use toast for user-facing error
@@ -311,6 +452,11 @@ function App() {
 			});
 			console.log("Story saved successfully:", savedStory);
 
+			// Refresh the story limit in navbar
+			if (navbarRef.current) {
+				navbarRef.current.refreshStoryLimit();
+			}
+
 			// 3. Navigate to the story view page with the generated content and params
 			navigate("/story-view", {
 				state: { storyData: generatedStoryContent, params: params },
@@ -323,10 +469,27 @@ function App() {
 				error instanceof Error &&
 				error.message.includes("Too many story generation requests")
 			) {
-				// Show specific toast for rate limit
-				toast.error("Daily Limit Reached", { description: error.message });
-				// We might not want to setFormError here, as the toast is the main feedback
-				// setFormError(error.message);
+				// Show an enhanced toast notification for rate limit
+				toast.error("Daily Limit Reached", {
+					duration: 5000, // 5 seconds is enough
+					description: "You've reached your 3 story generations for today.",
+					style: {
+						borderRadius: "0.5rem",
+						background: "#FFFBEB",
+						color: "#7C2D12",
+						border: "1px solid #FED7AA",
+					},
+				});
+
+				// Update the formError with a "coming soon" message
+				if (setFormError) {
+					setFormError({
+						title: "Daily Story Generation Limit Reached",
+						message:
+							"You've reached your 3 story generations for today. Free users are limited to 3 stories per day.",
+						isRateLimit: true,
+					});
+				}
 			} else {
 				// For other errors, re-throw to be caught by MainAppView's setFormError
 				throw error;
@@ -352,9 +515,8 @@ function App() {
 
 	return (
 		<div className="app-container flex flex-col min-h-screen bg-background text-foreground">
-			<Navbar />
-			{/* Use react-hot-toast Toaster */}
-			<Toaster position="top-center" reverseOrder={false} />
+			<Toaster />
+			<Navbar ref={navbarRef} />
 			<Routes>
 				<Route
 					path="/"
