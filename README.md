@@ -70,3 +70,7 @@ For deploying to production (e.g., using a VPS like DigitalOcean):
 5.  Run the backend server using a process manager like PM2: `pm2 start build/server/index.js --name duobook-backend`
 6.  Configure a web server like Nginx as a reverse proxy to serve the frontend static files (from `dist/`) and forward API requests (e.g., `/api`) to the backend process.
 7.  Ensure necessary environment variables are set on the production server.
+
+## TO-DO
+
+[] Add better TTS for premium users (Amazon Polly or Google Cloud TTS)
