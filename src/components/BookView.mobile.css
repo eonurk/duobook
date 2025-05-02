@@ -249,6 +249,17 @@
 	border: none;
 }
 
+/* Next button styling to match desktop */
+.next-button {
+	background-color: #66a060;
+	color: white;
+	font-weight: bold !important;
+	border: none;
+	padding: 10px 15px !important;
+	min-width: 100px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
 .mobile-navigation .button-tertiary {
 	background-color: #f0f0f0;
 	color: #333;
@@ -340,6 +351,16 @@
 	background-color: #66a060;
 	color: white;
 	border: none;
+}
+
+/* Create button styling */
+.create-button {
+	font-weight: bold !important;
+	padding: 12px 0 !important;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+	background-color: #66a060;
+	color: white;
+	padding: 15px 20px !important;
 }
 
 .mobile-buttons .button-tertiary {

@@ -58,21 +58,23 @@ function BookView({
 
 	// Default implementation for onGoBack if not provided
 	const handleGoBack = useCallback(() => {
-		console.log("Go Back button clicked");
+		console.log("Create Story button clicked");
+
+		// Scroll to the top of the page for story creation
+		window.scrollTo({ top: 0, behavior: "smooth" });
 
 		if (typeof onGoBack === "function") {
 			console.log("Using provided onGoBack function");
 			onGoBack();
 		} else {
-			console.log("No onGoBack function provided, using fallback navigation");
-			// Try different navigation approaches
+			console.log("No onGoBack function provided, navigating to home");
+			// Try going to home page
 			try {
-				// First try changing location to the home page
 				window.location.href = "/";
 			} catch (error) {
 				console.error("Navigation error:", error);
 				alert(
-					"Could not navigate back. Please use your browser's back button."
+					"Could not navigate to story creation. Please try using your browser's navigation."
 				);
 			}
 		}
@@ -741,7 +743,7 @@ function BookView({
 				<span className="button-gap"></span>
 				<button
 					onClick={() => handleNextSentence()}
-					className="button button-primary nav-button"
+					className="button button-primary nav-button next-button"
 					disabled={isFinished}
 				>
 					{activeSentenceIndex === sentencePairs.length - 1 ? "Finish" : "Next"}{" "}
@@ -798,8 +800,11 @@ function BookView({
 				<button onClick={handleToggleSource} className="button button-tertiary">
 					{showAllSource ? "Hide" : "Show"} All Translations
 				</button>
-				<button onClick={handleGoBack} className="button button-secondary">
-					{isExample ? "Go Back" : "Create Another Book"}
+				<button
+					onClick={handleGoBack}
+					className="button button-secondary create-button"
+				>
+					Create Your First Story
 				</button>
 			</div>
 		</div>
