@@ -336,7 +336,13 @@ function MainAppView({ generateStory }) {
 			)}
 			<main className="flex-1 container mx-auto px-4 py-8">
 				{!isGenerating && (
-					<InputForm onSubmit={handleGenerate} isLoading={isGenerating} />
+					<>
+						<h1 className="text-2xl font-semibold text-center mb-2">DuoBook</h1>
+						<p className="text-center text-muted-foreground mb-6">
+							Generate bilingual stories to learn any language
+						</p>
+						<InputForm onSubmit={handleGenerate} isLoading={isGenerating} />
+					</>
 				)}
 
 				{isGenerating && (
@@ -349,24 +355,107 @@ function MainAppView({ generateStory }) {
 
 				{!isGenerating && (
 					<div className="mt-12 pt-8 border-t">
-						<p className="text-center text-base text-muted-foreground mb-6">
-							Here's a quick example of a <b>DuoBook</b> story and how you
-							interact with it.
-						</p>
-						<img
-							src={DuoBookExplain}
-							alt="DuoBook Explain"
-							className="block w-full max-w-lg h-auto mx-auto mb-4 rounded-lg"
-						/>
+						<h2 className="text-2xl font-bold text-center mb-8">
+							How DuoBook Works
+						</h2>
 
-						<div className="text-center mb-4">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
+							{/* Element 1: Generate */}
+							<div className="flex flex-col items-center text-center p-4">
+								<div className="bg-blue-100 p-3 rounded-full mb-4">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										className="text-blue-600"
+									>
+										<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+									</svg>
+								</div>
+								<h3 className="text-lg font-semibold mb-2">1. Generate</h3>
+								<p className="text-sm text-muted-foreground">
+									Create custom bilingual stories about any topic in your target
+									language
+								</p>
+							</div>
+
+							{/* Element 2: Read */}
+							<div className="flex flex-col items-center text-center p-4">
+								<div className="bg-green-100 p-3 rounded-full mb-4">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										className="text-green-600"
+									>
+										<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+										<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+									</svg>
+								</div>
+								<h3 className="text-lg font-semibold mb-2">2. Read</h3>
+								<p className="text-sm text-muted-foreground">
+									Enjoy parallel text with interactive translations and
+									vocabulary assistance
+								</p>
+							</div>
+
+							{/* Element 3: Learn */}
+							<div className="flex flex-col items-center text-center p-4">
+								<div className="bg-amber-100 p-3 rounded-full mb-4">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										className="text-amber-600"
+									>
+										<path d="M12 22V8" />
+										<path d="m20 12-8-4-8 4" />
+										<path d="m20 18-8-4-8 4" />
+										<path d="m20 6-8-4-8 4" />
+									</svg>
+								</div>
+								<h3 className="text-lg font-semibold mb-2">3. Learn</h3>
+								<p className="text-sm text-muted-foreground">
+									Build vocabulary and comprehension through context and
+									practice
+								</p>
+							</div>
+						</div>
+
+						<div className="flex justify-center mb-8">
+							<img
+								src={DuoBookExplain}
+								alt="DuoBook Interface Example"
+								className="max-w-full md:max-w-lg h-auto rounded-lg border"
+							/>
+						</div>
+
+						<div className="text-center mb-6">
+							<p className="text-base font-medium mb-2">
+								Try this interactive example
+							</p>
 							<ArrowDown
 								className="h-6 w-6 mx-auto text-muted-foreground"
 								aria-hidden="true"
 							/>
-							<p className="text-sm text-muted-foreground mt-1">
-								Scroll down to view the example.
-							</p>
 						</div>
 
 						<BookView
