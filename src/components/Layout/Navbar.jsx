@@ -36,6 +36,7 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 	const fetchStoryLimit = useCallback(async () => {
 		try {
 			const limitData = await getStoryGenerationLimit();
+			console.log("Story limit data fetched:", limitData); // Add logging to debug
 			setStoryLimit(limitData);
 		} catch (error) {
 			console.error("Error fetching story limit:", error);
@@ -52,6 +53,13 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 	useEffect(() => {
 		if (currentUser) {
 			fetchStoryLimit();
+
+			// Add a polling mechanism to refresh limit data periodically
+			const intervalId = setInterval(() => {
+				fetchStoryLimit();
+			}, 60000); // Refresh every minute
+
+			return () => clearInterval(intervalId);
 		}
 	}, [currentUser, fetchStoryLimit]);
 
