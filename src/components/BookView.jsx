@@ -85,8 +85,8 @@ function BookView({
 	// State to track revealed source sentences (using a Set for efficient lookup)
 	const [revealedSourceIndices, setRevealedSourceIndices] = useState(new Set());
 	const [isFinished, setIsFinished] = useState(false); // State for completion
-	// Default showAllSource state to true
-	const [showAllSource, setShowAllSource] = useState(true); // State for toggling source visibility
+	// Default showAllSource state to false (hide translations by default)
+	const [showAllSource, setShowAllSource] = useState(false); // State for toggling source visibility
 	// Add state for vocabulary expansion
 	const [isVocabExpanded, setIsVocabExpanded] = useState(false);
 
@@ -124,7 +124,7 @@ function BookView({
 		setActiveSentenceIndex(0);
 		setRevealedSourceIndices(new Set());
 		setIsFinished(false);
-		setShowAllSource(true); // Reset toggle too
+		setShowAllSource(false); // Reset toggle too
 		if (synth?.speaking) synth.cancel(); // Stop speech if generating new story
 	}, [sentencePairs, synth]); // Add synth here
 
@@ -283,7 +283,7 @@ function BookView({
 		setActiveSentenceIndex(0);
 		setRevealedSourceIndices(new Set());
 		setIsFinished(false);
-		setShowAllSource(true);
+		setShowAllSource(false);
 		if (synth?.speaking) synth.cancel();
 	}, [sentencePairs, synth]); // Keep dependencies
 
@@ -377,7 +377,7 @@ function BookView({
 		setActiveSentenceIndex(0);
 		setRevealedSourceIndices(new Set());
 		setIsFinished(false);
-		setShowAllSource(true);
+		setShowAllSource(false);
 		if (synth?.speaking) synth.cancel();
 		document
 			.querySelector(".book-view")
