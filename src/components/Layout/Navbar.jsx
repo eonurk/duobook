@@ -36,7 +36,6 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 	const fetchStoryLimit = useCallback(async () => {
 		try {
 			const limitData = await getStoryGenerationLimit();
-			console.log("Story limit data fetched:", limitData); // Add logging to debug
 			setStoryLimit(limitData);
 		} catch (error) {
 			console.error("Error fetching story limit:", error);
@@ -354,13 +353,6 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 														? "Unlimited"
 														: `${storyLimit.remaining}/${storyLimit.limit}`}
 												</span>
-											</div>
-										)}
-
-										{/* Add "Premium Coming Soon" note if not premium */}
-										{storyLimit && !storyLimit.isPremium && (
-											<div className="flex justify-end text-xs text-amber-500 italic mt-1 mb-2">
-												Premium coming soon!
 											</div>
 										)}
 									</div>
