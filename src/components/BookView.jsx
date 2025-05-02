@@ -22,28 +22,68 @@ const normalizeWord = (word) => {
 // --- TTS Helper ---
 // Basic mapping, might need more comprehensive language code mapping (e.g., 'Spanish' -> 'es-ES', 'es-MX', etc.)
 const langNameToCode = {
-	english: "en",
-	spanish: "es",
-	french: "fr",
-	german: "de",
-	italian: "it",
-	portuguese: "pt",
-	dutch: "nl",
-	russian: "ru",
+	english: "en-US",
+	spanish: "es-ES",
+	french: "fr-FR",
+	german: "de-DE",
+	italian: "it-IT",
+	portuguese: "pt-PT",
+	dutch: "nl-NL",
+	russian: "ru-RU",
 	"chinese (simplified)": "zh-CN",
-	japanese: "ja",
-	korean: "ko",
+	japanese: "ja-JP",
+	korean: "ko-KR",
 	arabic: "ar",
-	hindi: "hi",
-	turkish: "tr",
-	swedish: "sv",
-	norwegian: "no",
-	danish: "da",
-	polish: "pl",
+	hindi: "hi-IN",
+	turkish: "tr-TR",
+	swedish: "sv-SE",
+	norwegian: "no-NO",
+	danish: "da-DK",
+	polish: "pl-PL",
+};
+
+// Preferred voices for specific languages (these typically sound better)
+const preferredVoices = {
+	"en-US": ["Google US English", "Microsoft Zira", "Samantha"],
+	"es-ES": ["Google español", "Microsoft Helena", "Monica", "Juan"],
+	"fr-FR": ["Google français", "Microsoft Julie", "Thomas", "Amelie"],
+	"de-DE": ["Google Deutsch", "Microsoft Hedda", "Anna"],
+	"it-IT": ["Google italiano", "Microsoft Elsa", "Alice"],
+	"ja-JP": ["Google 日本語", "Microsoft Ayumi", "Kyoko"],
+	"zh-CN": ["Google 普通话（中国大陆）", "Microsoft Yaoyao", "Tingting"],
 };
 
 const getLangCode = (langName) => {
-	return langNameToCode[langName?.toLowerCase() || ""] || null;
+	return langNameToCode[langName?.toLowerCase() || ""] || "en-US";
+};
+
+// TTS Helper function to get the best available voice for a language
+const getBestVoiceForLanguage = (voices, langCode) => {
+	if (!voices || voices.length === 0) return null;
+
+	// First try to find preferred voices
+	if (preferredVoices[langCode]) {
+		for (const preferredName of preferredVoices[langCode]) {
+			const preferredVoice = voices.find(
+				(voice) =>
+					voice.name.includes(preferredName) ||
+					voice.voiceURI.includes(preferredName)
+			);
+			if (preferredVoice) return preferredVoice;
+		}
+	}
+
+	// Then try exact language match
+	const exactMatch = voices.find((voice) => voice.lang === langCode);
+	if (exactMatch) return exactMatch;
+
+	// Then try language base match (e.g., 'en' for 'en-US')
+	const baseCode = langCode.split("-")[0];
+	const baseMatch = voices.find((voice) => voice.lang.startsWith(baseCode));
+	if (baseMatch) return baseMatch;
+
+	// Fallback to default voice
+	return voices.find((voice) => voice.default) || voices[0];
 };
 
 function BookView({
@@ -93,17 +133,30 @@ function BookView({
 	// --- TTS State ---
 	const [voices, setVoices] = useState([]);
 	const [ttsReady, setTtsReady] = useState(false);
+	const [isSpeaking, setIsSpeaking] = useState(false); // Track speaking state
+	const [speechRate, setSpeechRate] = useState(0.9); // Default speech rate
+	const [speechPitch, setSpeechPitch] = useState(1.0); // Default speech pitch
+	const [autoPlayEnabled, setAutoPlayEnabled] = useState(false); // Auto-play option
+	const [selectedVoiceURI, setSelectedVoiceURI] = useState(null); // Store selected voice URI
 	const synth = window.speechSynthesis; // Get synthesis object
 
-	// --- Load Voices ---
+	// --- Advanced TTS Controls ---
+	const [showTtsControls, setShowTtsControls] = useState(false);
+
+	// --- Load Voices & Set Default ---
 	const populateVoiceList = useCallback(() => {
 		if (!synth) return;
 		const availableVoices = synth.getVoices();
-		setVoices(availableVoices);
-		if (availableVoices.length > 0) {
+		// Filter out duplicate voice URIs which can happen sometimes
+		const uniqueVoices = Array.from(
+			new Map(availableVoices.map((v) => [v.voiceURI, v])).values()
+		);
+		setVoices(uniqueVoices);
+		if (uniqueVoices.length > 0) {
 			setTtsReady(true);
+			// We will set the default voice in a separate effect based on ttsReady
 		}
-	}, [synth]);
+	}, [synth]); // Removed targetLanguage and selectedVoiceURI dependencies
 
 	useEffect(() => {
 		populateVoiceList();
@@ -249,34 +302,102 @@ function BookView({
 		if (!synth || !ttsReady || !textToSpeak) return;
 		if (synth.speaking) synth.cancel(); // Cancel previous before starting new
 
+		// Get language code
 		const targetLangCode = getLangCode(targetLanguage);
-		if (!targetLangCode) {
-			console.warn(`No language code found for ${targetLanguage}`);
-			return;
+
+		// Find the selected voice by URI, or fallback to best voice logic
+		let voiceToUse = voices.find((v) => v.voiceURI === selectedVoiceURI);
+		if (!voiceToUse) {
+			voiceToUse = getBestVoiceForLanguage(voices, targetLangCode);
+			// Update state if we fell back
+			if (voiceToUse) setSelectedVoiceURI(voiceToUse.voiceURI);
 		}
-		let voiceToUse = voices.find((voice) =>
-			voice.lang.startsWith(targetLangCode)
-		);
-		if (!voiceToUse)
-			voiceToUse = voices.find(
-				(voice) => voice.lang.split("-")[0] === targetLangCode
-			);
-		if (!voiceToUse) voiceToUse = voices.find((voice) => voice.default);
 
 		if (voiceToUse) {
 			const utterance = new SpeechSynthesisUtterance(textToSpeak);
 			utterance.voice = voiceToUse;
 			utterance.lang = voiceToUse.lang;
-			utterance.pitch = 1;
-			utterance.rate = 0.9;
+			utterance.pitch = speechPitch;
+			utterance.rate = speechRate;
 			utterance.volume = 1;
+
+			// Add event handlers for better feedback
+			utterance.onstart = () => {
+				console.log("Speech started with voice:", voiceToUse.name);
+				setIsSpeaking(true);
+			};
+			utterance.onend = () => {
+				console.log("Speech ended");
+				setIsSpeaking(false);
+			};
+			utterance.onerror = (event) => {
+				console.error("Speech error:", event);
+				setIsSpeaking(false);
+			};
+
 			synth.speak(utterance);
+
+			// On iOS Safari, we sometimes need to force speech to start
+			// This is a known workaround
+			if (synth.paused) {
+				synth.resume();
+			}
 		} else {
 			console.warn(
 				`No suitable voice found for ${targetLanguage} (code: ${targetLangCode})`
 			);
 		}
 	};
+
+	// Auto-play when active sentence changes
+	useEffect(() => {
+		if (autoPlayEnabled && !isFinished && sentencePairs.length > 0) {
+			const currentSentence = sentencePairs[activeSentenceIndex]?.target;
+			if (currentSentence) {
+				handleSpeak(currentSentence);
+			}
+		}
+		// Stop speech if autoPlay is turned off
+		if (!autoPlayEnabled && synth?.speaking) {
+			synth.cancel();
+		}
+	}, [activeSentenceIndex, autoPlayEnabled, isFinished, sentencePairs]); // Removed handleSpeak from deps
+
+	// Effect to manage the selected voice based on language and available voices
+	useEffect(() => {
+		if (!ttsReady || voices.length === 0) return; // Don't run until voices are ready
+
+		const targetLangCode = getLangCode(targetLanguage);
+		const currentLangVoices = voices.filter((voice) =>
+			voice.lang.startsWith(targetLangCode.split("-")[0])
+		);
+
+		// Check if the currently selected voice is valid for the current language
+		const isCurrentVoiceValid =
+			selectedVoiceURI &&
+			currentLangVoices.some((v) => v.voiceURI === selectedVoiceURI);
+
+		// If the current voice is not valid (or none is selected), find the best default for the current language
+		if (!isCurrentVoiceValid) {
+			console.log(
+				`Selected voice ${selectedVoiceURI} not valid for ${targetLanguage}, finding default...`
+			);
+			const bestVoice = getBestVoiceForLanguage(voices, targetLangCode);
+			if (bestVoice) {
+				console.log(
+					"Setting default voice:",
+					bestVoice.name,
+					bestVoice.voiceURI
+				);
+				setSelectedVoiceURI(bestVoice.voiceURI);
+			} else {
+				console.log("No suitable default voice found for", targetLanguage);
+				setSelectedVoiceURI(null);
+			}
+		} else {
+			// console.log(`Keeping selected voice ${selectedVoiceURI} for ${targetLanguage}`);
+		}
+	}, [targetLanguage, voices, ttsReady]); // Rerun when language, voices, or readiness changes
 
 	// --- Reset progress on new story / example change ---
 	useEffect(() => {
@@ -286,6 +407,35 @@ function BookView({
 		setShowAllSource(false);
 		if (synth?.speaking) synth.cancel();
 	}, [sentencePairs, synth]); // Keep dependencies
+
+	// --- TTS Controls ---
+	const handleToggleAutoPlay = () => {
+		setAutoPlayEnabled(!autoPlayEnabled);
+	};
+
+	const handleRateChange = (e) => {
+		setSpeechRate(parseFloat(e.target.value));
+	};
+
+	const handlePitchChange = (e) => {
+		setSpeechPitch(parseFloat(e.target.value));
+	};
+
+	const handleVoiceChange = (e) => {
+		setSelectedVoiceURI(e.target.value);
+	};
+
+	const toggleTtsControls = () => {
+		setShowTtsControls(!showTtsControls);
+	};
+
+	// Filter voices for the current target language
+	const targetLangCode = getLangCode(targetLanguage);
+	const availableTargetVoices = useMemo(() => {
+		return voices.filter((voice) =>
+			voice.lang.startsWith(targetLangCode.split("-")[0])
+		);
+	}, [voices, targetLangCode]);
 
 	// --- Interaction Logic ---
 	const handleSentenceClick = (index) => {
@@ -511,7 +661,9 @@ function BookView({
 									>
 										{canSpeak && (
 											<button
-												className="speak-button"
+												className={`speak-button ${
+													isSpeaking ? "speaking" : ""
+												}`}
 												onClick={(e) => {
 													e.stopPropagation();
 													handleSpeak(pair.target);
@@ -627,7 +779,9 @@ function BookView({
 											>
 												{canSpeak && (
 													<button
-														className="speak-button"
+														className={`speak-button ${
+															isSpeaking ? "speaking" : ""
+														}`}
 														onClick={(e) => {
 															e.stopPropagation();
 															handleSpeak(pair.target);
@@ -740,7 +894,82 @@ function BookView({
 				>
 					&larr; Prev
 				</button>
-				<span className="button-gap"></span>
+
+				{/* TTS Controls Toggle - Moved here */}
+				{ttsReady && (
+					<div
+						className={`tts-controls-container ${
+							showTtsControls ? "open" : ""
+						}`}
+					>
+						<button
+							onClick={toggleTtsControls}
+							className="button button-icon tts-toggle-button-subtle"
+							title="Speech Settings"
+						>
+							⚙️
+						</button>
+						{/* Panel now positioned relative to this container */}
+						{showTtsControls && (
+							<div className="tts-settings-panel">
+								<div className="tts-setting">
+									<label>
+										<input
+											type="checkbox"
+											checked={autoPlayEnabled}
+											onChange={handleToggleAutoPlay}
+										/>
+										Auto-play sentences
+									</label>
+								</div>
+
+								<div className="tts-setting">
+									<label>Speech Rate: {speechRate.toFixed(1)}</label>
+									<input
+										type="range"
+										min="0.5"
+										max="1.5"
+										step="0.1"
+										value={speechRate}
+										onChange={handleRateChange}
+									/>
+								</div>
+
+								<div className="tts-setting">
+									<label>Pitch: {speechPitch.toFixed(1)}</label>
+									<input
+										type="range"
+										min="0.5"
+										max="1.5"
+										step="0.1"
+										value={speechPitch}
+										onChange={handlePitchChange}
+									/>
+								</div>
+
+								{/* Voice Selection Dropdown */}
+								{availableTargetVoices.length > 0 && (
+									<div className="tts-setting">
+										<label htmlFor="voice-select">Voice:</label>
+										<select
+											id="voice-select"
+											value={selectedVoiceURI || ""}
+											onChange={handleVoiceChange}
+											className="tts-voice-select"
+										>
+											{availableTargetVoices.map((voice) => (
+												<option key={voice.voiceURI} value={voice.voiceURI}>
+													{voice.name} ({voice.lang})
+												</option>
+											))}
+										</select>
+									</div>
+								)}
+							</div>
+						)}
+					</div>
+				)}
+
 				<button
 					onClick={() => handleNextSentence()}
 					className="button button-primary nav-button next-button"

@@ -227,6 +227,7 @@
 .mobile-navigation {
 	display: flex;
 	justify-content: space-between;
+	align-items: center;
 	padding: 10px 12px; /* Reduced padding */
 	background-color: white;
 	border-radius: 8px;
@@ -269,6 +270,107 @@
 .mobile-navigation .nav-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+/* Container for the subtle TTS controls */
+.tts-controls-container {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+/* Subtle TTS Toggle Button */
+.tts-toggle-button-subtle {
+	background: none;
+	border: none;
+	padding: 5px 10px;
+	box-shadow: none;
+	font-size: 18px;
+	line-height: 1;
+	cursor: pointer;
+	transition: color 0.2s ease;
+}
+
+.tts-toggle-button-subtle:hover {
+	color: #333;
+	background-color: #f0f0f0;
+}
+
+/* Panel positioning */
+.tts-controls-container .tts-settings-panel {
+	position: absolute;
+	bottom: 100%;
+	left: 50%;
+	transform: translateX(-50%) translateY(-10px);
+	background-color: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+	z-index: 10;
+	width: 250px;
+	padding: 15px;
+	border: 1px solid #eee;
+}
+
+.tts-setting {
+	margin-bottom: 12px;
+}
+
+.tts-setting:last-child {
+	margin-bottom: 0;
+}
+
+.tts-setting label {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 14px;
+	color: #555;
+}
+
+.tts-setting input[type="range"] {
+	width: 100%;
+	margin: 8px 0;
+}
+
+.tts-setting input[type="checkbox"] {
+	margin-right: 8px;
+}
+
+/* Voice Select Dropdown */
+.tts-voice-select {
+	width: 100%;
+	padding: 8px 10px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	background-color: white;
+	font-size: 14px;
+	cursor: pointer;
+}
+
+.tts-voice-select:focus {
+	outline: none;
+	border-color: #66a060;
+	box-shadow: 0 0 0 2px rgba(102, 160, 96, 0.2);
+}
+
+/* Speaking animation */
+.speak-button.speaking {
+	animation: pulse 1.5s infinite;
+	background-color: #ff9800;
+}
+
+@keyframes pulse {
+	0% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(1.1);
+		opacity: 0.8;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
 }
 
 /* Touch-friendly word hovering */
@@ -391,4 +493,79 @@
 	padding: 8px 12px;
 	font-size: 14px;
 	z-index: 200;
+}
+
+/* TTS Controls */
+.tts-controls {
+	margin: 12px 0;
+	border-radius: 8px;
+	background-color: white;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	overflow: hidden;
+}
+
+.mobile-tts-controls {
+	padding: 0;
+}
+
+.tts-toggle-button {
+	width: 100%;
+	text-align: center;
+	padding: 10px;
+	background-color: #f8f9fa;
+	border: none;
+	border-bottom: 1px solid #eee;
+	color: #66a060;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.tts-settings-panel {
+	padding: 12px 15px;
+	background-color: white;
+}
+
+.tts-setting {
+	margin-bottom: 12px;
+}
+
+.tts-setting:last-child {
+	margin-bottom: 0;
+}
+
+.tts-setting label {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 14px;
+	color: #555;
+}
+
+.tts-setting input[type="range"] {
+	width: 100%;
+	margin: 8px 0;
+}
+
+.tts-setting input[type="checkbox"] {
+	margin-right: 8px;
+}
+
+/* Speaking animation */
+.speak-button.speaking {
+	animation: pulse 1.5s infinite;
+	background-color: #ff9800;
+}
+
+@keyframes pulse {
+	0% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(1.1);
+		opacity: 0.8;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
 }
