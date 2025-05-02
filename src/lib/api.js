@@ -94,10 +94,24 @@ export const generateStoryViaBackend = (generationParams) =>
 	});
 
 // Get remaining story generation limit
-export const getStoryGenerationLimit = () =>
-	authenticatedFetch("/story-limit", {
-		method: "GET",
-	});
+export const getStoryGenerationLimit = async () => {
+	try {
+		const result = await authenticatedFetch("/story-limit", {
+			method: "GET",
+		});
+		console.log("Story limit response:", result);
+		return result;
+	} catch (error) {
+		console.error("Error fetching story limit:", error);
+		// Return a default object instead of throwing to avoid breaking UI
+		return {
+			limit: 3,
+			remaining: 0,
+			isPremium: false,
+			subscriptionTier: "FREE",
+		};
+	}
+};
 
 // Progress
 export const getUserProgress = () => authenticatedFetch("/progress");
