@@ -23,6 +23,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card"; // Import Card components
 import { getStoryGenerationLimit } from "@/lib/api"; // Import the API function
+import { trackAuth } from "@/lib/analytics"; // Import analytics tracking
 
 const Navbar = forwardRef(function Navbar(props, ref) {
 	const { currentUser, userProgress } = useAuth();
@@ -102,6 +103,7 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 			await signOut(auth);
 			setIsMobileMenuOpen(false); // Close mobile menu on logout
 			navigate("/"); // Navigate to home/login page after logout
+			trackAuth("logout"); // Track logout event
 		} catch (err) {
 			console.error("Logout Error:", err);
 			// Optionally show an error message to the user using toast

@@ -17,12 +17,17 @@ import UserProfilePage from "@/components/User/UserProfilePage"; // Use alias
 import MyStoriesPage from "@/components/User/MyStoriesPage"; // Use alias
 import UserProgressDashboard from "@/components/User/UserProgressDashboard"; // Import ProgressDashboard
 import Achievements from "@/components/Gamification/Achievements"; // Import Achievements component
-import DuoBookExplain from "@/assets/duobook-explain.png"; // Use alias
-import DailyLimitImage from "@/assets/daily-limit.png"; // Import daily limit image
+import DuoBookExplain from "@/assets/duobook-explain.webp"; // Use alias
+import DailyLimitImage from "@/assets/daily-limit.webp"; // Import daily limit image
 import PrivacyPolicy from "@/pages/PrivacyPolicy"; // Import PrivacyPolicy
 import TermsOfService from "@/pages/TermsOfService"; // Import TermsOfService
 import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import Practice Page
 import { ArrowDown, Sparkles, CheckCircle2 } from "lucide-react"; // Import ArrowDown icon and new icons
+import {
+	trackPageView,
+	trackStoryGeneration,
+	trackDailyLimitReached,
+} from "@/lib/analytics"; // Import analytics
 import {
 	// getStories, // Commented out: Will be used in MyStoriesPage
 	createStory,
@@ -383,6 +388,7 @@ function App() {
 	const { loading, currentUser } = useAuth();
 	const [firebaseError, setFirebaseError] = useState(false);
 	const navigate = useNavigate();
+	const location = useLocation();
 	const navbarRef = React.useRef(null); // Use React.useRef instead of useRef import
 
 	// Check Firebase initialization
@@ -393,6 +399,18 @@ function App() {
 			setFirebaseError(true);
 		}
 	}, []);
+
+	// Track page views when location changes
+	useEffect(() => {
+		// Get the current page name from the pathname
+		const pageName =
+			location.pathname === "/"
+				? "home"
+				: location.pathname.substring(1).replace(/\//g, "-");
+
+		// Track the page view
+		trackPageView(pageName);
+	}, [location]);
 
 	// Updated generateStory function to use the backend proxy
 	const generateStory = async (
@@ -461,6 +479,15 @@ function App() {
 			navigate("/story-view", {
 				state: { storyData: generatedStoryContent, params: params },
 			});
+
+			// Track story generation
+			trackStoryGeneration(
+				description,
+				sourceLang,
+				targetLang,
+				difficulty,
+				storyLength
+			);
 		} catch (error) {
 			console.error("Error in generateStory (App.jsx):", error);
 
@@ -480,6 +507,9 @@ function App() {
 						border: "1px solid #FED7AA",
 					},
 				});
+
+				// Track daily limit reached
+				trackDailyLimitReached();
 
 				// Update the formError with a "coming soon" message
 				if (setFormError) {

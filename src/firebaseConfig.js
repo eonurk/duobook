@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getAnalytics } from "firebase/analytics";
 // Remove Firestore imports
 // import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 
@@ -13,7 +14,7 @@ const firebaseConfig = {
 	storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
 	messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
 	appId: import.meta.env.VITE_FIREBASE_APP_ID,
-	// measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID // Uncomment if you use Analytics
+	measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID, // Uncommented for Analytics
 };
 
 // Check if all required Firebase config values are available
@@ -46,7 +47,7 @@ const validateFirebaseConfig = () => {
 };
 
 // Remove db from declaration
-let app, auth;
+let app, auth, analytics;
 // let app, auth, db;
 
 if (validateFirebaseConfig()) {
@@ -56,6 +57,12 @@ if (validateFirebaseConfig()) {
 
 		console.log("Initializing Firebase Auth...");
 		auth = getAuth(app);
+
+		// Initialize Firebase Analytics
+		if (import.meta.env.VITE_FIREBASE_MEASUREMENT_ID) {
+			console.log("Initializing Firebase Analytics...");
+			analytics = getAnalytics(app);
+		}
 
 		// Remove Firestore initialization
 		// console.log("Initializing Firestore...");
@@ -79,15 +86,15 @@ if (validateFirebaseConfig()) {
 		// 		}
 		// 	});
 
-		console.log("Firebase App & Auth initialized successfully");
+		console.log("Firebase App, Auth & Analytics initialized successfully");
 	} catch (error) {
-		console.error("Error initializing Firebase App/Auth:", error);
+		console.error("Error initializing Firebase App/Auth/Analytics:", error);
 	}
 } else {
 	console.error("Firebase initialization skipped due to missing configuration");
 }
 
-// Remove db from export
-export { auth, app };
+// Export analytics along with auth and app
+export { auth, app, analytics };
 // export { auth, db, app };
 export default app;
