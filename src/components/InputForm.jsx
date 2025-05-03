@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext"; // Import useAuth
 import Login from "@/components/Auth/Login"; // Import Login
 import Signup from "@/components/Auth/Signup"; // Import Signup
+import { BookText, Heart } from "lucide-react"; // Replace existing icons with cuter alternatives
 import {
 	Dialog,
 	DialogContent,
@@ -135,17 +136,7 @@ const languages = [
 
 // Map numeric values to labels
 const difficultyMap = ["Beginner", "Intermediate", "Advanced"];
-const difficultyLabels = [
-	"Beginner (A1/A2)",
-	"Intermediate (B1/B2)",
-	"Advanced (C1/C2)",
-];
 const lengthMap = ["Short", "Medium", "Long"];
-const lengthLabels = [
-	"Short (~3-4 paragraphs)",
-	"Medium (~5-7 paragraphs)",
-	"Long (~8-10+ paragraphs)", // Increased target for Long
-];
 
 // Examples Array
 const storyExamples = [
@@ -191,6 +182,55 @@ function InputForm({ onSubmit, isLoading }) {
 
 	return (
 		<>
+			<style>{`
+				.custom-select {
+					background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23777' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
+					background-repeat: no-repeat;
+					background-position: right 0.75rem center;
+					background-size: 16px 12px;
+					padding-right: 2.5rem;
+				}
+				
+				.custom-range {
+					-webkit-appearance: none;
+					height: 0.5rem;
+					border-radius: 0.5rem;
+					background-color: #e0e0e0;
+				}
+				
+				.custom-range::-webkit-slider-thumb {
+					-webkit-appearance: none;
+					width: 18px;
+					height: 18px;
+					border-radius: 50%;
+					background-color: #f59e0b;
+					box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+					cursor: pointer;
+					margin-top: -6px;
+				}
+				
+				.custom-range::-moz-range-thumb {
+					width: 18px;
+					height: 18px;
+					border-radius: 50%;
+					background-color: #f59e0b;
+					box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+					cursor: pointer;
+					border: none;
+				}
+				
+				.custom-range:disabled {
+					opacity: 0.6;
+					cursor: not-allowed;
+				}
+				
+				.status-pill {
+					padding: 0.125rem 0.625rem;
+					font-size: 0.875rem;
+					font-weight: 500;
+					color: #b45309;
+				}
+			`}</style>
 			<form onSubmit={handleSubmit} className="input-form">
 				<p
 					style={{
@@ -258,16 +298,19 @@ function InputForm({ onSubmit, isLoading }) {
 				{/* Section 2: Languages */}
 				<fieldset className="form-section">
 					<legend className="form-section-title">Languages</legend>
-					<div className="language-select-container">
-						<div>
-							<label htmlFor="sourceLang" className="form-label">
+					<div className="md:flex md:space-x-4 space-y-4 md:space-y-0">
+						<div className="flex-1">
+							<label
+								htmlFor="sourceLang"
+								className="block text-sm font-medium mb-2"
+							>
 								Your Language:
 							</label>
 							<select
 								id="sourceLang"
 								value={sourceLang}
 								onChange={(e) => setSourceLang(e.target.value)}
-								className="input-select"
+								className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-amber-500 appearance-none bg-white custom-select"
 								disabled={isLoading}
 							>
 								{languages.map((lang) => (
@@ -277,15 +320,18 @@ function InputForm({ onSubmit, isLoading }) {
 								))}
 							</select>
 						</div>
-						<div>
-							<label htmlFor="targetLang" className="form-label">
+						<div className="flex-1">
+							<label
+								htmlFor="targetLang"
+								className="block text-sm font-medium mb-2"
+							>
 								Language to Learn:
 							</label>
 							<select
 								id="targetLang"
 								value={targetLang}
 								onChange={(e) => setTargetLang(e.target.value)}
-								className="input-select"
+								className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-amber-500 appearance-none bg-white custom-select"
 								disabled={isLoading}
 							>
 								{languages
@@ -296,53 +342,80 @@ function InputForm({ onSubmit, isLoading }) {
 										</option>
 									))}
 							</select>
+							{sourceLang === targetLang && (
+								<p className="mt-1 text-xs text-rose-500">
+									Please select different languages
+								</p>
+							)}
 						</div>
 					</div>
 				</fieldset>
 
 				{/* Section 3: Story Settings */}
-				<fieldset className="form-section">
+				<fieldset className="form-section mt-6">
 					<legend className="form-section-title">Story Settings</legend>
-					<div className="slider-container">
-						<div className="slider-item">
-							<label htmlFor="difficulty" className="form-label">
-								Difficulty:{" "}
-								<span className="slider-value">
+					<div className="space-y-6">
+						<div className="px-1">
+							<div className="flex justify-between">
+								<label
+									htmlFor="difficulty"
+									className="block text-sm font-medium"
+								>
+									Difficulty:
+								</label>
+								{/* <span className="status-pill">
 									{difficultyLabels[difficultyIndex]}
-								</span>
-							</label>
-							<input
-								type="range"
-								id="difficulty"
-								min="0"
-								max="2"
-								step="1"
-								value={difficultyIndex}
-								onChange={(e) =>
-									setDifficultyIndex(parseInt(e.target.value, 10))
-								}
-								className="input-range"
-								disabled={isLoading}
-							/>
+								</span> */}
+							</div>
+							<div className="relative pt-1">
+								<input
+									type="range"
+									id="difficulty"
+									min="0"
+									max="2"
+									step="1"
+									value={difficultyIndex}
+									onChange={(e) =>
+										setDifficultyIndex(parseInt(e.target.value, 10))
+									}
+									className="w-full custom-range"
+									disabled={isLoading}
+								/>
+								<div className="flex justify-between text-xs text-gray-500 mt-1.5 px-0.5">
+									<span>Beginner</span>
+									<span>Intermediate</span>
+									<span>Advanced</span>
+								</div>
+							</div>
 						</div>
-						<div className="slider-item">
-							<label htmlFor="storyLength" className="form-label">
-								Story Length:{" "}
-								<span className="slider-value">
-									{lengthLabels[lengthIndex]}
-								</span>
-							</label>
-							<input
-								type="range"
-								id="storyLength"
-								min="0"
-								max="2"
-								step="1"
-								value={lengthIndex}
-								onChange={(e) => setLengthIndex(parseInt(e.target.value, 10))}
-								className="input-range"
-								disabled={isLoading}
-							/>
+						<div className="px-1">
+							<div className="flex justify-between">
+								<label
+									htmlFor="storyLength"
+									className="block text-sm font-medium"
+								>
+									Story Length:
+								</label>
+								{/* <span className="status-pill">{lengthLabels[lengthIndex]}</span> */}
+							</div>
+							<div className="relative pt-1">
+								<input
+									type="range"
+									id="storyLength"
+									min="0"
+									max="2"
+									step="1"
+									value={lengthIndex}
+									onChange={(e) => setLengthIndex(parseInt(e.target.value, 10))}
+									className="w-full custom-range"
+									disabled={isLoading}
+								/>
+								<div className="flex justify-between text-xs text-gray-500 mt-1.5 px-0.5">
+									<span>Short</span>
+									<span>Medium</span>
+									<span>Long</span>
+								</div>
+							</div>
 						</div>
 					</div>
 				</fieldset>
@@ -352,9 +425,110 @@ function InputForm({ onSubmit, isLoading }) {
 					disabled={
 						isLoading || !description.trim() || sourceLang === targetLang
 					}
-					className="button button-primary submit-button bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-amber-900 font-medium py-3 px-6 rounded-lg shadow-md transition-all duration-200"
+					className={`button button-primary submit-button py-3 px-6 rounded-lg shadow-md transition-all duration-300 relative group ${
+						isLoading || !description.trim() || sourceLang === targetLang
+							? "bg-gray-100 text-gray-400 border border-gray-300"
+							: "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-amber-900 font-medium"
+					}`}
+					aria-label={
+						!description.trim()
+							? "Please enter a story description"
+							: !currentUser
+							? "Please log in to create a book"
+							: "Create Book"
+					}
 				>
-					{isLoading ? "Generating..." : "Create Book"}
+					{isLoading ? (
+						<span className="flex items-center">
+							<svg
+								className="animate-spin -ml-1 mr-2 h-4 w-4 text-amber-700"
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+							>
+								<circle
+									className="opacity-25"
+									cx="12"
+									cy="12"
+									r="10"
+									stroke="currentColor"
+									strokeWidth="4"
+								></circle>
+								<path
+									className="opacity-75"
+									fill="currentColor"
+									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+								></path>
+							</svg>
+							Generating...
+						</span>
+					) : (
+						<>
+							<span className="flex items-center justify-center">
+								{(!description.trim() || !currentUser) && (
+									<span className="relative w-5 h-5 mr-2 inline-flex">
+										{!description.trim() ? (
+											<BookText className="w-5 h-5 text-amber-600 opacity-70" />
+										) : !currentUser ? (
+											<Heart className="w-5 h-5 text-amber-600 opacity-70" />
+										) : null}
+										{/* Subtle animated pulsing effect */}
+										<span
+											className={`absolute inset-0 rounded-full ${
+												!description.trim() ? "bg-amber-200" : "bg-pink-200"
+											} animate-ping opacity-30`}
+										></span>
+									</span>
+								)}
+								Create Book
+							</span>
+
+							{/* Improved tooltip that works on mobile */}
+							<div
+								className={`
+									absolute left-0 right-0 mx-auto w-max max-w-[90%] px-3 py-1.5
+									-top-10 sm:-top-9 
+									rounded-full text-xs font-medium leading-tight
+									bg-amber-50 border border-amber-200 text-amber-800
+									shadow-sm
+									opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100
+									transition-all duration-200 group-focus:opacity-100 
+									pointer-events-none
+									flex items-center justify-center
+									${description.trim() && currentUser ? "hidden" : ""}
+								`}
+							>
+								{!description.trim() ? (
+									<>
+										<BookText className="inline w-3.5 h-3.5 mr-1 text-amber-500" />
+										Add a story idea first
+									</>
+								) : !currentUser ? (
+									<>
+										<Heart className="inline w-3.5 h-3.5 mr-1 text-amber-500" />
+										Sign in to create
+									</>
+								) : null}
+								{/* Cute triangle pointer */}
+								<svg
+									className="absolute -bottom-2 h-2 w-4 text-amber-50"
+									fill="currentColor"
+									viewBox="0 0 24 8"
+								>
+									<path d="M0,0 L12,8 L24,0"></path>
+								</svg>
+								<svg
+									className="absolute -bottom-2 h-2 w-4 text-amber-200"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1"
+									viewBox="0 0 24 8"
+								>
+									<path d="M0,0 L12,8 L24,0"></path>
+								</svg>
+							</div>
+						</>
+					)}
 				</button>
 			</form>
 
