@@ -11,6 +11,7 @@ import InputForm from "@/components/InputForm"; // Use alias
 import BookView from "@/components/BookView"; // Use alias
 import { useAuth } from "@/context/AuthContext"; // Use alias
 import { auth } from "@/firebaseConfig"; // Import auth directly
+import CookieConsent from "@/components/CookieConsent"; // Import Cookie Consent
 import Navbar from "@/components/Layout/Navbar"; // Use alias - Import Navbar
 import SiteFooter from "@/components/Layout/SiteFooter"; // Use alias - Import Footer
 import UserProfilePage from "@/components/User/UserProfilePage"; // Use alias
@@ -641,6 +642,7 @@ function App() {
 		<div className="app-container flex flex-col min-h-screen bg-background text-foreground">
 			<Toaster />
 			<Navbar ref={navbarRef} />
+			<CookieConsent />
 			<Routes>
 				<Route
 					path="/"

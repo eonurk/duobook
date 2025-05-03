@@ -22,6 +22,7 @@ import {
 	getStories,
 	getUserAchievements,
 } from "@/lib/api";
+import CookieSettings from "@/components/CookieSettings";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 
@@ -509,6 +510,17 @@ function UserProfilePage() {
 							{isLoading ? "Changing Password..." : "Change Password"}
 						</Button>
 					</form>
+				</CardContent>
+			</Card>
+
+			{/* Privacy & Cookie Settings Card */}
+			<Card className="w-full max-w-md">
+				<CardHeader>
+					<CardTitle>Privacy Settings</CardTitle>
+					<CardDescription>Manage your cookie preferences</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<CookieSettings />
 				</CardContent>
 			</Card>
 		</div>

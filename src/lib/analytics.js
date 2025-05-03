@@ -1,9 +1,24 @@
 import { logEvent } from "firebase/analytics";
 import { analytics } from "../firebaseConfig";
+import { getCookie } from "./cookies";
 
 /**
  * Utility functions for tracking events with Firebase Analytics
+ * Only tracks if user has consented to cookies
  */
+
+// Helper to check if analytics tracking is allowed
+const isTrackingAllowed = () => {
+	// First check the specific analytics cookie
+	const analyticsConsent = getCookie("cookieConsent_analytics");
+	if (analyticsConsent !== null) {
+		return analyticsConsent === "accepted";
+	}
+
+	// Fall back to general consent cookie for backward compatibility
+	const generalConsent = getCookie("cookieConsent");
+	return generalConsent === "accepted";
+};
 
 /**
  * Track a user authentication event
@@ -11,7 +26,7 @@ import { analytics } from "../firebaseConfig";
  * @param {string} method - Authentication method used (email, google, etc.)
  */
 export const trackAuth = (eventType, method = "email") => {
-	if (!analytics) return;
+	if (!analytics || !isTrackingAllowed()) return;
 
 	try {
 		logEvent(analytics, `user_${eventType}`, {
@@ -28,7 +43,7 @@ export const trackAuth = (eventType, method = "email") => {
  * @param {Object} params - Story generation parameters
  */
 export const trackStoryGeneration = (params) => {
-	if (!analytics) return;
+	if (!analytics || !isTrackingAllowed()) return;
 
 	try {
 		logEvent(analytics, "story_generated", {
@@ -48,7 +63,7 @@ export const trackStoryGeneration = (params) => {
  * @param {Object} story - Story data
  */
 export const trackStoryView = (story) => {
-	if (!analytics) return;
+	if (!analytics || !isTrackingAllowed()) return;
 
 	try {
 		logEvent(analytics, "story_viewed", {
@@ -69,7 +84,7 @@ export const trackStoryView = (story) => {
  * @param {number} wordCount - Number of words in the practice session
  */
 export const trackPractice = (language, wordCount) => {
-	if (!analytics) return;
+	if (!analytics || !isTrackingAllowed()) return;
 
 	try {
 		logEvent(analytics, "vocabulary_practice", {
@@ -88,7 +103,7 @@ export const trackPractice = (language, wordCount) => {
  * @param {number} points - User's current points
  */
 export const trackLevelUp = (newLevel, points) => {
-	if (!analytics) return;
+	if (!analytics || !isTrackingAllowed()) return;
 
 	try {
 		logEvent(analytics, "level_up", {
@@ -106,7 +121,7 @@ export const trackLevelUp = (newLevel, points) => {
  * @param {Object} achievement - Achievement data
  */
 export const trackAchievement = (achievement) => {
-	if (!analytics) return;
+	if (!analytics || !isTrackingAllowed()) return;
 
 	try {
 		logEvent(analytics, "achievement_unlocked", {
@@ -124,7 +139,7 @@ export const trackAchievement = (achievement) => {
  * @param {string} challengeType - Type of challenge completed
  */
 export const trackChallengeCompleted = (challengeType) => {
-	if (!analytics) return;
+	if (!analytics || !isTrackingAllowed()) return;
 
 	try {
 		logEvent(analytics, "challenge_completed", {
@@ -140,7 +155,7 @@ export const trackChallengeCompleted = (challengeType) => {
  * Track when the daily limit is reached
  */
 export const trackDailyLimitReached = () => {
-	if (!analytics) return;
+	if (!analytics || !isTrackingAllowed()) return;
 
 	try {
 		logEvent(analytics, "daily_limit_reached", {
@@ -156,7 +171,7 @@ export const trackDailyLimitReached = () => {
  * @param {string} pageName - Name of the page
  */
 export const trackPageView = (pageName) => {
-	if (!analytics) return;
+	if (!analytics || !isTrackingAllowed()) return;
 
 	try {
 		logEvent(analytics, "page_view", {
@@ -167,3 +182,26 @@ export const trackPageView = (pageName) => {
 		console.error("Failed to track page view event:", error);
 	}
 };
+
+// Listen for cookie consent acceptance to initialize analytics
+if (typeof window !== "undefined") {
+	window.addEventListener("cookieConsentAccepted", () => {
+		// Track that user accepted cookies
+		if (analytics && isTrackingAllowed()) {
+			try {
+				logEvent(analytics, "cookie_consent_accepted", {
+					timestamp: new Date().toISOString(),
+				});
+				// Track the current page view now that we have consent
+				const currentPath = window.location.pathname;
+				const pageName =
+					currentPath === "/"
+						? "home"
+						: currentPath.substring(1).replace(/\//g, "-");
+				trackPageView(pageName);
+			} catch (error) {
+				console.error("Failed to track cookie consent event:", error);
+			}
+		}
+	});
+}

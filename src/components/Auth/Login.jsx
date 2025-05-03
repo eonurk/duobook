@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
 	signInWithEmailAndPassword,
 	sendPasswordResetEmail,
 	signInWithPopup,
+	signInWithRedirect,
+	getRedirectResult,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/firebaseConfig"; // Import googleProvider
 import { Button } from "@/components/ui/button"; // Use alias
@@ -19,6 +21,31 @@ function Login({ onSuccess }) {
 	const [resetMessage, setResetMessage] = useState(""); // State for success/error messages for reset
 	const [resetError, setResetError] = useState(""); // State for reset error message specifically
 	const [isGoogleLoading, setIsGoogleLoading] = useState(false); // Add loading state for Google
+
+	// Check for redirect result on component mount
+	useEffect(() => {
+		async function checkRedirectResult() {
+			try {
+				const result = await getRedirectResult(auth);
+				if (result) {
+					// User successfully authenticated via redirect
+					trackAuth("login", "google");
+					if (onSuccess) {
+						onSuccess();
+					}
+				}
+			} catch (err) {
+				console.error("Redirect authentication error:", err);
+				if (err.code !== "auth/credential-already-in-use") {
+					setError(
+						"An error occurred with Google sign-in. Please try again or use email login."
+					);
+				}
+			}
+		}
+
+		checkRedirectResult();
+	}, [onSuccess]);
 
 	const handleLogin = async (e) => {
 		e.preventDefault();
@@ -56,6 +83,7 @@ function Login({ onSuccess }) {
 		setError(null);
 		setIsGoogleLoading(true); // Set Google loading state
 		try {
+			// Try popup first
 			await signInWithPopup(auth, googleProvider);
 			// Track successful login with Google
 			trackAuth("login", "google");
@@ -65,14 +93,28 @@ function Login({ onSuccess }) {
 			}
 		} catch (err) {
 			console.error("Google Login Error:", err);
-			if (err.code === "auth/popup-closed-by-user") {
+
+			// If popup is blocked or domain unauthorized, try redirect
+			if (
+				err.code === "auth/popup-blocked" ||
+				err.code === "auth/unauthorized-domain"
+			) {
+				try {
+					// Use redirect method instead
+					await signInWithRedirect(auth, googleProvider);
+					// Note: We won't reach this point until the user returns from the redirect
+				} catch (redirectErr) {
+					console.error("Redirect auth error:", redirectErr);
+					setError(
+						"Could not sign in with Google. Please try again or use email login."
+					);
+				}
+			} else if (err.code === "auth/popup-closed-by-user") {
 				setError("Login cancelled. Please try again.");
-			} else if (err.code === "auth/popup-blocked") {
-				setError(
-					"Pop-up blocked by browser. Please allow pop-ups for this site."
-				);
 			} else {
-				setError("Could not sign in with Google. Please try again.");
+				setError(
+					"Could not sign in with Google. Please try again or use email login."
+				);
 			}
 		} finally {
 			setIsGoogleLoading(false); // Unset Google loading

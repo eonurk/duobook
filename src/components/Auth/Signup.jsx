@@ -1,5 +1,10 @@
-import React, { useState } from "react";
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import React, { useState, useEffect } from "react";
+import {
+	createUserWithEmailAndPassword,
+	signInWithPopup,
+	signInWithRedirect,
+	getRedirectResult,
+} from "firebase/auth";
 import { auth, googleProvider } from "@/firebaseConfig"; // Import googleProvider
 import { Button } from "@/components/ui/button"; // Use alias
 import { Input } from "@/components/ui/input"; // Use alias
@@ -12,6 +17,31 @@ function Signup({ onSuccess }) {
 	const [error, setError] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+	// Check for redirect result on component mount
+	useEffect(() => {
+		async function checkRedirectResult() {
+			try {
+				const result = await getRedirectResult(auth);
+				if (result) {
+					// User successfully authenticated via redirect
+					trackAuth("signup", "google");
+					if (onSuccess) {
+						onSuccess();
+					}
+				}
+			} catch (err) {
+				console.error("Redirect authentication error:", err);
+				if (err.code !== "auth/credential-already-in-use") {
+					setError(
+						"An error occurred with Google sign-up. Please try again or use email sign-up."
+					);
+				}
+			}
+		}
+
+		checkRedirectResult();
+	}, [onSuccess]);
 
 	const handleSignup = async (e) => {
 		e.preventDefault();
@@ -48,6 +78,7 @@ function Signup({ onSuccess }) {
 		setError(null);
 		setIsGoogleLoading(true);
 		try {
+			// Try popup first
 			await signInWithPopup(auth, googleProvider);
 			// Track successful signup with Google
 			trackAuth("signup", "google");
@@ -57,14 +88,28 @@ function Signup({ onSuccess }) {
 			}
 		} catch (err) {
 			console.error("Google Signup Error:", err);
-			if (err.code === "auth/popup-closed-by-user") {
+
+			// If popup is blocked or domain unauthorized, try redirect
+			if (
+				err.code === "auth/popup-blocked" ||
+				err.code === "auth/unauthorized-domain"
+			) {
+				try {
+					// Use redirect method instead
+					await signInWithRedirect(auth, googleProvider);
+					// Note: We won't reach this point until the user returns from the redirect
+				} catch (redirectErr) {
+					console.error("Redirect auth error:", redirectErr);
+					setError(
+						"Could not sign up with Google. Please try again or use email sign-up."
+					);
+				}
+			} else if (err.code === "auth/popup-closed-by-user") {
 				setError("Sign up cancelled. Please try again.");
-			} else if (err.code === "auth/popup-blocked") {
-				setError(
-					"Pop-up blocked by browser. Please allow pop-ups for this site."
-				);
 			} else {
-				setError("Could not sign up with Google. Please try again.");
+				setError(
+					"Could not sign up with Google. Please try again or use email sign-up."
+				);
 			}
 		} finally {
 			setIsGoogleLoading(false);
