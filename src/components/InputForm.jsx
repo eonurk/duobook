@@ -562,8 +562,8 @@ function InputForm({ onSubmit, isLoading }) {
 							className="underline font-medium hover:text-amber-800"
 						>
 							Log in
-						</button>
-						or
+						</button>{" "}
+						or{" "}
 						<button
 							type="button"
 							onClick={() => {
