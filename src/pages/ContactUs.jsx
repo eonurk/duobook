@@ -162,42 +162,12 @@ function ContactUs() {
 
 					<Button
 						type="submit"
-						className="w-full md:w-auto"
+						className="w-full md:w-auto bg-amber-800 text-white"
 						disabled={isSubmitting}
 					>
 						{isSubmitting ? "Sending..." : "Send Message"}
 					</Button>
 				</form>
-
-				<div className="mt-12 pt-6 border-t">
-					<h2 className="text-xl font-semibold mb-4">Other Ways to Reach Us</h2>
-
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div className="p-4 bg-gray-50 rounded-lg">
-							<h3 className="font-medium mb-2">Support</h3>
-							<p className="text-sm mb-2">
-								For technical issues and general help
-							</p>
-							<a
-								href="mailto:support@duobook.co"
-								className="text-primary hover:underline text-sm"
-							>
-								support@duobook.co
-							</a>
-						</div>
-
-						<div className="p-4 bg-gray-50 rounded-lg">
-							<h3 className="font-medium mb-2">Feedback</h3>
-							<p className="text-sm mb-2">Share your ideas and suggestions</p>
-							<a
-								href="mailto:feedback@duobook.co"
-								className="text-primary hover:underline text-sm"
-							>
-								feedback@duobook.co
-							</a>
-						</div>
-					</div>
-				</div>
 			</div>
 		</div>
 	);
