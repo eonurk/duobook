@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 // Remove Firestore imports
 // import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
@@ -48,7 +48,8 @@ const validateFirebaseConfig = () => {
 
 // Remove db from declaration
 let app, auth, analytics;
-// let app, auth, db;
+// Create a Google auth provider
+let googleProvider;
 
 if (validateFirebaseConfig()) {
 	try {
@@ -57,6 +58,12 @@ if (validateFirebaseConfig()) {
 
 		console.log("Initializing Firebase Auth...");
 		auth = getAuth(app);
+
+		// Initialize Google Auth Provider
+		googleProvider = new GoogleAuthProvider();
+		// Add scopes if needed
+		googleProvider.addScope("https://www.googleapis.com/auth/userinfo.email");
+		googleProvider.addScope("https://www.googleapis.com/auth/userinfo.profile");
 
 		// Initialize Firebase Analytics
 		if (import.meta.env.VITE_FIREBASE_MEASUREMENT_ID) {
@@ -95,6 +102,6 @@ if (validateFirebaseConfig()) {
 }
 
 // Export analytics along with auth and app
-export { auth, app, analytics };
+export { auth, app, analytics, googleProvider };
 // export { auth, db, app };
 export default app;

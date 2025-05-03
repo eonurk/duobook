@@ -32,6 +32,7 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 	const [showAuthDialog, setShowAuthDialog] = useState(false);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile menu
 	const [storyLimit, setStoryLimit] = useState(null); // New state for story generation limit
+	const [activeTab, setActiveTab] = useState("login");
 
 	// Function to fetch story generation limit - converted to useCallback
 	const fetchStoryLimit = useCallback(async () => {
@@ -118,8 +119,9 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 		setIsMobileMenuOpen(false);
 	};
 
-	const handleAuthClick = () => {
+	const handleAuthClick = (tab) => {
 		closeMobileMenu();
+		setActiveTab(tab);
 		setShowAuthDialog(true);
 	};
 
@@ -249,14 +251,20 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 								<Button
 									variant="outline"
 									size="sm"
-									onClick={() => setShowAuthDialog(true)}
+									onClick={() => {
+										setActiveTab("login");
+										setShowAuthDialog(true);
+									}}
 								>
 									Login
 								</Button>
 								<Button
 									variant="default"
 									size="sm"
-									onClick={() => setShowAuthDialog(true)}
+									onClick={() => {
+										setActiveTab("signup");
+										setShowAuthDialog(true);
+									}}
 								>
 									Sign Up
 								</Button>
@@ -430,14 +438,14 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 								<>
 									<Button
 										variant="outline"
-										onClick={handleAuthClick}
+										onClick={() => handleAuthClick("login")}
 										className="w-full justify-start"
 									>
 										Login
 									</Button>
 									<Button
 										variant="default"
-										onClick={handleAuthClick}
+										onClick={() => handleAuthClick("signup")}
 										className="w-full justify-start"
 									>
 										Sign Up
@@ -452,18 +460,41 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 			<Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
 				<DialogContent className="sm:max-w-[425px] p-0">
 					<Card className="border-none shadow-none bg-amber-50">
-						<CardHeader className="text-center">
-							<CardTitle>Authentication Required</CardTitle>
+						<CardHeader className="text-center pb-2">
+							<CardTitle>Sign in to DuoBook</CardTitle>
 							<CardDescription>
-								Please sign in or create an account to continue.
+								Access your stories and track your progress
 							</CardDescription>
 						</CardHeader>
-						<CardContent className="grid gap-4">
-							<Login onSuccess={() => setShowAuthDialog(false)} />
-							<div className="text-center text-muted-foreground text-sm">
-								or
+						<CardContent>
+							<div className="flex border-b mb-4">
+								<button
+									className={`px-4 py-2 text-sm font-medium ${
+										activeTab === "login"
+											? "border-b-2 border-amber-500 text-amber-800"
+											: "text-gray-500 hover:text-gray-700"
+									}`}
+									onClick={() => setActiveTab("login")}
+								>
+									Login
+								</button>
+								<button
+									className={`px-4 py-2 text-sm font-medium ${
+										activeTab === "signup"
+											? "border-b-2 border-amber-500 text-amber-800"
+											: "text-gray-500 hover:text-gray-700"
+									}`}
+									onClick={() => setActiveTab("signup")}
+								>
+									Sign Up
+								</button>
 							</div>
-							<Signup onSuccess={() => setShowAuthDialog(false)} />
+
+							{activeTab === "login" ? (
+								<Login onSuccess={() => setShowAuthDialog(false)} />
+							) : (
+								<Signup onSuccess={() => setShowAuthDialog(false)} />
+							)}
 						</CardContent>
 					</Card>
 				</DialogContent>
