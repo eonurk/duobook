@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext"; // Import useAuth
 import Login from "@/components/Auth/Login"; // Import Login
 import Signup from "@/components/Auth/Signup"; // Import Signup
@@ -155,6 +155,19 @@ function InputForm({ onSubmit, isLoading }) {
 	const [lengthIndex, setLengthIndex] = useState(0); // 0: Short, 1: Medium, 2: Long
 	const [showAuthDialog, setShowAuthDialog] = useState(false); // State for dialog
 	const [activeTab, setActiveTab] = useState("login"); // Added activeTab state
+	const [isMobile, setIsMobile] = useState(false); // State for mobile detection
+
+	// Effect for mobile detection on mount
+	useEffect(() => {
+		const checkIsMobile = () => {
+			// Simple check for touch support
+			const touchSupported =
+				"ontouchstart" in window || navigator.maxTouchPoints > 0;
+			setIsMobile(touchSupported);
+		};
+		checkIsMobile();
+		// Optional: Add resize listener if needed, but touch support is usually enough for this purpose
+	}, []);
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
@@ -427,7 +440,7 @@ function InputForm({ onSubmit, isLoading }) {
 					}
 					className={`button button-primary submit-button py-3 px-6 rounded-lg shadow-md transition-all duration-300 relative group ${
 						isLoading || !description.trim() || sourceLang === targetLang
-							? "bg-gray-100 text-gray-400 border border-gray-300"
+							? "bg-gray-100 text-gray-400 border border-gray-300 cursor-not-allowed"
 							: "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-amber-900 font-medium"
 					}`}
 					aria-label={
@@ -435,11 +448,13 @@ function InputForm({ onSubmit, isLoading }) {
 							? "Please enter a story description"
 							: !currentUser
 							? "Please log in to create a book"
+							: sourceLang === targetLang
+							? "Please select different languages"
 							: "Create Book"
 					}
 				>
 					{isLoading ? (
-						<span className="flex items-center">
+						<span className="flex items-center justify-center">
 							<svg
 								className="animate-spin -ml-1 mr-2 h-4 w-4 text-amber-700"
 								xmlns="http://www.w3.org/2000/svg"
@@ -465,14 +480,13 @@ function InputForm({ onSubmit, isLoading }) {
 					) : (
 						<>
 							<span className="flex items-center justify-center">
-								{(!description.trim() || !currentUser) && (
+								{!isMobile && (!description.trim() || !currentUser) && (
 									<span className="relative w-5 h-5 mr-2 inline-flex">
 										{!description.trim() ? (
 											<BookText className="w-5 h-5 text-amber-600 opacity-70" />
 										) : !currentUser ? (
 											<Heart className="w-5 h-5 text-amber-600 opacity-70" />
 										) : null}
-										{/* Subtle animated pulsing effect */}
 										<span
 											className={`absolute inset-0 rounded-full ${
 												!description.trim() ? "bg-amber-200" : "bg-pink-200"
@@ -483,53 +497,93 @@ function InputForm({ onSubmit, isLoading }) {
 								Create Book
 							</span>
 
-							{/* Improved tooltip that works on mobile */}
-							<div
-								className={`
-									absolute left-0 right-0 mx-auto w-max max-w-[90%] px-3 py-1.5
-									-top-10 sm:-top-9 
-									rounded-full text-xs font-medium leading-tight
-									bg-amber-50 border border-amber-200 text-amber-800
-									shadow-sm
-									opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100
-									transition-all duration-200 group-focus:opacity-100 
-									pointer-events-none
-									flex items-center justify-center
-									${description.trim() && currentUser ? "hidden" : ""}
-								`}
-							>
-								{!description.trim() ? (
-									<>
-										<BookText className="inline w-3.5 h-3.5 mr-1 text-amber-500" />
-										Add a story idea first
-									</>
-								) : !currentUser ? (
-									<>
-										<Heart className="inline w-3.5 h-3.5 mr-1 text-amber-500" />
-										Sign in to create
-									</>
-								) : null}
-								{/* Cute triangle pointer */}
-								<svg
-									className="absolute -bottom-2 h-2 w-4 text-amber-50"
-									fill="currentColor"
-									viewBox="0 0 24 8"
+							{!isMobile && (
+								<div
+									className={`
+										absolute left-0 right-0 mx-auto w-max max-w-[90%] px-3 py-1.5
+										-top-10 sm:-top-9
+										rounded-full text-xs font-medium leading-tight
+										bg-amber-50 border border-amber-200 text-amber-800
+										shadow-sm
+										opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100
+										group-focus:opacity-100 group-focus:scale-100
+										transition-all duration-200 pointer-events-none
+										flex items-center justify-center
+										${description.trim() && currentUser ? "hidden" : ""}
+									`}
 								>
-									<path d="M0,0 L12,8 L24,0"></path>
-								</svg>
-								<svg
-									className="absolute -bottom-2 h-2 w-4 text-amber-200"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="1"
-									viewBox="0 0 24 8"
-								>
-									<path d="M0,0 L12,8 L24,0"></path>
-								</svg>
-							</div>
+									{!description.trim() ? (
+										<>
+											<BookText className="inline w-3.5 h-3.5 mr-1 text-amber-500" />
+											Add a story idea first
+										</>
+									) : !currentUser ? (
+										<>
+											<Heart className="inline w-3.5 h-3.5 mr-1 text-amber-500" />
+											Sign in to create
+										</>
+									) : null}
+									<svg
+										className="absolute -bottom-2 h-2 w-4 text-amber-50"
+										fill="currentColor"
+										viewBox="0 0 24 8"
+									>
+										<path d="M0,0 L12,8 L24,0"></path>
+									</svg>
+									<svg
+										className="absolute -bottom-2 h-2 w-4 text-amber-200"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="1"
+										viewBox="0 0 24 8"
+									>
+										<path d="M0,0 L12,8 L24,0"></path>
+									</svg>
+								</div>
+							)}
 						</>
 					)}
 				</button>
+
+				{/* Mobile conditional messages */}
+				{isMobile && !isLoading && !description.trim() && (
+					<p className="text-center text-sm text-amber-700 mt-3 px-2">
+						Please add a story idea above to create your book.
+					</p>
+				)}
+				{isMobile && !isLoading && description.trim() && !currentUser && (
+					<p className="text-center text-sm text-amber-700 mt-3 px-2">
+						<button
+							type="button"
+							onClick={() => {
+								setActiveTab("login");
+								setShowAuthDialog(true);
+							}}
+							className="underline font-medium hover:text-amber-800"
+						>
+							Log in
+						</button>
+						or
+						<button
+							type="button"
+							onClick={() => {
+								setActiveTab("signup");
+								setShowAuthDialog(true);
+							}}
+							className="underline font-medium hover:text-amber-800"
+						>
+							Sign up
+						</button>
+						to create your book.
+					</p>
+				)}
+
+				{/* Shared conditional message (both mobile/desktop) */}
+				{!isLoading && description.trim() && sourceLang === targetLang && (
+					<p className="text-center text-sm text-red-600 mt-3 px-2">
+						Your language and the language to learn must be different.
+					</p>
+				)}
 			</form>
 
 			{/* Login/Signup Dialog */}
