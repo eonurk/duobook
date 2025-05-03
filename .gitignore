@@ -33,3 +33,6 @@ generated/
 
 # Firebase Admin SDK
 firebase-admin-sdk.json
+
+# built files
+build/
