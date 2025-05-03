@@ -123,6 +123,7 @@ const storyGenerationLimiter = rateLimit({
 	keyGenerator: (req: Request): string => {
 		return req.userId || req.ip || "unknown"; // Added 'unknown' as final fallback
 	},
+	// Use database-based tracking instead of in-memory
 	skip: async (req: Request, res: Response): Promise<boolean> => {
 		// If user is not authenticated for some reason, apply the limit based on IP
 		if (!req.userId) {
@@ -148,15 +149,37 @@ const storyGenerationLimiter = rateLimit({
 				);
 				return true; // Skip the limit for premium users
 			}
+
+			// Check the number of stories generated in the last 24 hours
+			const recentStories = await prisma.story.count({
+				where: {
+					userId: req.userId,
+					createdAt: {
+						gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+					},
+				},
+			});
+
+			const limit = 3; // Same as max in the rate limiter config
+			const remaining = Math.max(0, limit - recentStories);
+
+			// If user has reached the limit, don't skip the limiter
+			if (remaining <= 0) {
+				console.log(
+					`User ${req.userId} has reached the story generation limit`
+				);
+				return false;
+			}
+
+			console.log(
+				`User ${req.userId} has ${remaining} story generations remaining`
+			);
+			return false; // Still apply the limiter but let DB count dictate
 		} catch (error) {
 			console.error("Error fetching user progress for rate limiting:", error);
 			// Fallback: apply limit if DB check fails?
 			return false;
 		}
-
-		// Apply the limit for FREE users or if progress couldn't be found
-		console.log(`Applying rate limit for FREE user: ${req.userId}`);
-		return false;
 	},
 });
 // --- END RATE LIMITER SETUP ---
@@ -275,13 +298,8 @@ app.get(
 				});
 			}
 
-			// Free users - check remaining from rate limiter
-			// For free users, we use the fixed daily limit
+			// For free users, count stories created in the past 24 hours
 			const limit = 3; // Same as in the rate limiter config
-
-			// Due to the implementation details of express-rate-limit, we can't directly access
-			// the hits. Instead, we'll count how many successful generate-story requests
-			// the user has made in the past 24 hours
 			const recentStories = await prisma.story.count({
 				where: {
 					userId: userId,
@@ -292,6 +310,10 @@ app.get(
 			});
 
 			const remaining = Math.max(0, limit - recentStories);
+
+			console.log(
+				`User ${userId} has used ${recentStories}/${limit} story generations in the last 24 hours`
+			);
 
 			return res.status(200).json({
 				limit,
@@ -447,6 +469,36 @@ app.post(
 		}
 
 		try {
+			// Check user's subscription tier
+			const userProgress = await prisma.userProgress.findUnique({
+				where: { userId: userId },
+				select: { subscriptionTier: true },
+			});
+
+			// If user is not premium, verify they haven't exceeded the daily limit
+			if (
+				!userProgress ||
+				(userProgress.subscriptionTier !== SubscriptionTier.PREMIUM &&
+					userProgress.subscriptionTier !== SubscriptionTier.PRO)
+			) {
+				const recentStories = await prisma.story.count({
+					where: {
+						userId: userId,
+						createdAt: {
+							gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+						},
+					},
+				});
+
+				// Free tier users limited to 3 stories per day
+				if (recentStories >= 3) {
+					return res.status(429).json({
+						error:
+							"Daily story limit reached. Upgrade to premium for unlimited stories.",
+					});
+				}
+			}
+
 			const newStory = await prisma.story.create({
 				data: {
 					userId: userId,

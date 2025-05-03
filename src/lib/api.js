@@ -46,10 +46,12 @@ const authenticatedFetch = async (endpoint, options = {}) => {
 				errorData?.error || `HTTP error! status: ${response.status}`;
 			const error = new Error(errorMessage);
 			error.status = response.status; // Attach status code to error
+			error.response = { status: response.status }; // Add response property to match axios format
 
-			// Log specifically for rate limit error
+			// Special handling for rate limit errors
 			if (response.status === 429) {
 				console.warn("Rate limit hit:", errorMessage);
+				error.isRateLimit = true; // Add special flag for rate limit errors
 			}
 
 			throw error; // Throw the error with status and potentially specific message

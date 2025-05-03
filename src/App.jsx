@@ -581,10 +581,14 @@ function App() {
 		} catch (error) {
 			console.error("Error in generateStory (App.jsx):", error);
 
-			// Check if it's the specific rate limit error message
+			// Enhanced rate limit detection - check for isRateLimit flag, response status, or message content
 			if (
-				error instanceof Error &&
-				error.message.includes("Too many story generation requests")
+				error.isRateLimit ||
+				error.response?.status === 429 ||
+				error.status === 429 ||
+				(error.message &&
+					(error.message.includes("limit") ||
+						error.message.includes("Too many")))
 			) {
 				// Show an enhanced toast notification for rate limit
 				toast.error("Daily Limit Reached", {
