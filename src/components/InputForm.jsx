@@ -573,7 +573,7 @@ function InputForm({ onSubmit, isLoading }) {
 							className="underline font-medium hover:text-amber-800"
 						>
 							Sign up
-						</button>
+						</button>{" "}
 						to create your book.
 					</p>
 				)}
