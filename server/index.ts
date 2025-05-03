@@ -17,6 +17,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import rateLimit from "express-rate-limit";
 import { SubscriptionTier } from "@prisma/client"; // Import the enum
+import nodemailer from "nodemailer"; // Add nodemailer import
 
 // Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -164,6 +165,78 @@ const storyGenerationLimiter = rateLimit({
 app.get("/health", (req: Request, res: Response) => {
 	res.status(200).json({ status: "API is running successfully!" });
 });
+
+// Contact form submission endpoint (public)
+app.post(
+	"/api/contact",
+	asyncHandler(async (req: Request, res: Response) => {
+		const { name, email, subject, message } = req.body;
+
+		// Basic validation
+		if (!name || !email || !message) {
+			return res
+				.status(400)
+				.json({ error: "Name, email and message are required" });
+		}
+
+		// Email validation with regex
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(email)) {
+			return res.status(400).json({ error: "Invalid email format" });
+		}
+
+		// Configure transporter (this is a placeholder - you would use real SMTP settings)
+		// For production, use environment variables for sensitive information
+		const transporter = nodemailer.createTransport({
+			host: "smtp.gmail.com",
+			port: 587,
+			secure: false,
+			auth: {
+				user: "help.indicatorinsights@gmail.com",
+				pass: "okqcshzcttqgchug",
+			},
+		});
+
+		// Set up email data
+		const mailOptions = {
+			from: `"DuoBook Contact Form" <help.indicatorinsights@gmail.com>`,
+			to: "support@duobook.co",
+			replyTo: email,
+			subject: `Contact Form: ${subject || "New message from DuoBook website"}`,
+			text: `
+			Name: ${name}
+			Email: ${email}
+			
+			Message:
+			${message}
+		`,
+			html: `
+			<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+				<h2 style="color: #4a5568;">New Contact Form Submission</h2>
+				<p><strong>From:</strong> ${name}</p>
+				<p><strong>Email:</strong> ${email}</p>
+				<p><strong>Subject:</strong> ${subject || "N/A"}</p>
+				<h3 style="margin-top: 20px;">Message:</h3>
+				<div style="background-color: #f7fafc; padding: 15px; border-radius: 5px;">
+					${message.replace(/\n/g, "<br/>")}
+				</div>
+			</div>
+		`,
+		};
+
+		try {
+			// Always send email regardless of environment
+			await transporter.sendMail(mailOptions);
+
+			res
+				.status(200)
+				.json({ success: true, message: "Message sent successfully" });
+		} catch (error) {
+			console.error("Error sending email:", error);
+			res.status(500).json({ error: "Failed to send message" });
+		}
+	})
+);
 
 // --- PROTECTED ROUTES ---
 // Apply the synchronous wrapper middleware

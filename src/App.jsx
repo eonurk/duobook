@@ -22,6 +22,7 @@ import DailyLimitImage from "@/assets/daily-limit.webp"; // Import daily limit i
 import PrivacyPolicy from "@/pages/PrivacyPolicy"; // Import PrivacyPolicy
 import TermsOfService from "@/pages/TermsOfService"; // Import TermsOfService
 import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import Practice Page
+import ContactUs from "@/pages/ContactUs"; // Import Contact Us page
 import { ArrowDown, Sparkles, CheckCircle2 } from "lucide-react"; // Import ArrowDown icon and new icons
 import {
 	trackPageView,
@@ -644,6 +645,7 @@ function App() {
 				<Route path="/story-view" element={<StoryViewPage />} />
 				<Route path="/privacy-policy" element={<PrivacyPolicy />} />
 				<Route path="/terms-of-service" element={<TermsOfService />} />
+				<Route path="/contact" element={<ContactUs />} />
 				<Route
 					path="/profile"
 					element={
