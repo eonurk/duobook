@@ -101,7 +101,6 @@ export const getStoryGenerationLimit = async () => {
 		const result = await authenticatedFetch("/story-limit", {
 			method: "GET",
 		});
-		console.log("Story limit response:", result);
 		return result;
 	} catch (error) {
 		console.error("Error fetching story limit:", error);

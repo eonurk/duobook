@@ -535,10 +535,7 @@ function App() {
 			// 1. Call the backend proxy to get the generated story content
 			const generatedStoryContent = await generateStoryViaBackend(params);
 
-			console.log(
-				"Received story content from backend:",
-				generatedStoryContent
-			);
+			console.log("Received story content from backend.");
 
 			// Ensure the received data has the expected structure (basic check)
 			if (
@@ -559,7 +556,6 @@ function App() {
 				difficulty: difficulty,
 				length: storyLength,
 			});
-			console.log("Story saved successfully:", savedStory);
 
 			// Refresh the story limit in navbar
 			if (navbarRef.current) {

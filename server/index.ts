@@ -371,7 +371,7 @@ app.post(
 		try {
 			console.log("Sending request to OpenAI...");
 			const completion = await openai.chat.completions.create({
-				model: "gpt-4o", // Or your preferred model
+				model: "gpt-4.1-mini", // Or your preferred model
 				messages: [{ role: "user", content: prompt }],
 				response_format: { type: "json_object" }, // Enforce JSON output
 			});
