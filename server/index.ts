@@ -732,10 +732,43 @@ app.put(
 			}
 
 			// Use updateData here
-			const updatedProgress = await prisma.userProgress.update({
+			let updatedProgress = await prisma.userProgress.update({
 				where: { userId: userId }, // Use checked userId
 				data: updateData,
 			});
+
+			// --- START LEVEL UP CHECK ---
+			// Check for level up ONLY if points were added
+			if (updateData.points && updatedProgress) {
+				const currentLevel = updatedProgress.level;
+				const currentPoints = updatedProgress.points;
+				// Calculate points needed for the *next* level (currentLevel * 100)
+				const pointsForLevel = (lvl: number) => (((lvl - 1) * lvl) / 2) * 100;
+				const pointsNeededForNextLevel = pointsForLevel(currentLevel + 1);
+				const currentLevelBasePoints = pointsForLevel(currentLevel);
+
+				// The actual threshold to reach the next level is the base points for that level
+				if (currentPoints >= pointsNeededForNextLevel) {
+					// Calculate how many levels the user *should* be based on total points
+					let newCalculatedLevel = currentLevel;
+					while (currentPoints >= pointsForLevel(newCalculatedLevel + 1)) {
+						newCalculatedLevel++;
+					}
+
+					if (newCalculatedLevel > currentLevel) {
+						console.log(
+							`User ${userId} leveled up from ${currentLevel} to ${newCalculatedLevel}!`
+						);
+						// Update the level in the database
+						updatedProgress = await prisma.userProgress.update({
+							where: { userId: userId },
+							data: { level: newCalculatedLevel },
+						});
+					}
+				}
+			}
+			// --- END LEVEL UP CHECK ---
+
 			res.status(200).json(updatedProgress);
 		} catch (error) {
 			// Attempt to create progress if it doesn't exist before updating

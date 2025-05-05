@@ -548,7 +548,7 @@ function App() {
 
 			// 2. Save the generated story content to the database via API
 			console.log("Saving generated story to database...");
-			const savedStory = await createStory({
+			await createStory({
 				story: JSON.stringify(generatedStoryContent), // Store the whole generated object as JSON string
 				description: description,
 				sourceLanguage: sourceLang,

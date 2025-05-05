@@ -827,3 +827,75 @@
 		padding: 0.3rem 0.6rem; /* Adjust padding slightly */
 	}
 }
+
+/* --- Added for Vocabulary Practice Shake --- */
+@keyframes shake {
+	10%,
+	90% {
+		transform: translate3d(-1px, 0, 0);
+	}
+	20%,
+	80% {
+		transform: translate3d(2px, 0, 0);
+	}
+	30%,
+	50%,
+	70% {
+		transform: translate3d(-3px, 0, 0);
+	}
+	40%,
+	60% {
+		transform: translate3d(3px, 0, 0);
+	}
+}
+
+.animate-shake {
+	animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+/* --- End Shake Animation --- */
+
+/* --- Added for Vocabulary Practice Animations --- */
+@keyframes score-update-anim {
+	0% {
+		transform: scale(1);
+		opacity: 1;
+		color: inherit;
+	}
+	50% {
+		transform: scale(1.3);
+		opacity: 0.8;
+		color: #26a69a;
+	} /* Teal pulse */
+	100% {
+		transform: scale(1);
+		opacity: 1;
+		color: inherit;
+	}
+}
+
+.animate-score-update {
+	display: inline-block; /* Needed for transform */
+	animation: score-update-anim 0.5s ease-out;
+}
+
+@keyframes streak-increment-anim {
+	0% {
+		transform: scale(1);
+		color: #fb923c;
+	} /* Orange-400 */
+	50% {
+		transform: scale(1.25);
+		color: #f97316;
+	} /* Orange-500 */
+	100% {
+		transform: scale(1);
+		color: #fb923c;
+	}
+}
+
+.animate-streak-increment {
+	display: inline-flex; /* Use flex for icon+number alignment */
+	align-items: center;
+	animation: streak-increment-anim 0.4s ease-in-out;
+}
+/* --- End Vocabulary Animations --- */
