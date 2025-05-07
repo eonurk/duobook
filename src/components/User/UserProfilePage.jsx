@@ -3,6 +3,9 @@ import {
 	updatePassword,
 	reauthenticateWithCredential,
 	EmailAuthProvider,
+	deleteUser,
+	GoogleAuthProvider,
+	reauthenticateWithPopup,
 } from "firebase/auth";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -16,6 +19,17 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
 	getUserProgress,
 	getStoryGenerationLimit,
@@ -41,9 +55,20 @@ function UserProfilePage() {
 	const [isLoadingData, setIsLoadingData] = useState(false);
 	const [languageStats, setLanguageStats] = useState({});
 
+	// State for delete confirmation
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
+	const [deleteError, setDeleteError] = useState(null);
+	const [reauthPassword, setReauthPassword] = useState(""); // For re-authentication before deletion
+	const [authProviderId, setAuthProviderId] = useState(null);
+
 	useEffect(() => {
 		if (currentUser) {
 			fetchUserData();
+			// Determine the auth provider
+			if (currentUser.providerData && currentUser.providerData.length > 0) {
+				setAuthProviderId(currentUser.providerData[0].providerId);
+			}
 		}
 	}, [currentUser]);
 
@@ -194,6 +219,72 @@ function UserProfilePage() {
 	const getCompletedAchievements = () => {
 		if (!userAchievements || !userAchievements.length) return 0;
 		return userAchievements.filter((a) => a.completed).length;
+	};
+
+	const handleDeleteAccount = async () => {
+		if (!currentUser) return;
+		setIsDeleting(true);
+		setDeleteError(null);
+
+		try {
+			// Re-authentication
+			if (authProviderId === "password") {
+				if (!currentUser.email) {
+					throw new Error("User email is not available for re-authentication.");
+				}
+				if (!reauthPassword) {
+					setDeleteError("Password is required to delete your account.");
+					setIsDeleting(false);
+					return;
+				}
+				const credential = EmailAuthProvider.credential(
+					currentUser.email,
+					reauthPassword
+				);
+				await reauthenticateWithCredential(currentUser, credential);
+			} else if (authProviderId === "google.com") {
+				const provider = new GoogleAuthProvider();
+				await reauthenticateWithPopup(currentUser, provider);
+			} else {
+				// Handle other OAuth providers if necessary, or throw an error if unsupported
+				throw new Error(
+					`Unsupported auth provider for re-authentication: ${authProviderId}`
+				);
+			}
+
+			// Delete user
+			await deleteUser(currentUser);
+			// Optionally, sign out the user from the client-side if not handled by firebase
+			// await auth.signOut(); // If you have auth instance available
+			alert("Account deleted successfully."); // Or use a more sophisticated notification
+			// Redirect to home page or login page
+			window.location.href = "/";
+		} catch (err) {
+			console.error("Account Deletion Error:", err);
+			if (err.code === "auth/wrong-password") {
+				setDeleteError(
+					"Incorrect password. Please verify your password and try again."
+				);
+			} else if (err.code === "auth/requires-recent-login") {
+				setDeleteError(
+					"This operation is sensitive and requires recent authentication. Please log in again before deleting your account."
+				);
+			} else if (err.code === "auth/too-many-requests") {
+				setDeleteError(
+					"Too many attempts to re-authenticate. Please try again later."
+				);
+			} else {
+				setDeleteError(
+					`Failed to delete account: ${
+						err.message || "An unexpected error occurred."
+					}`
+				);
+			}
+			setShowDeleteConfirm(true); // Keep dialog open if error occurs
+		} finally {
+			setIsDeleting(false);
+			setReauthPassword(""); // Clear password after attempt
+		}
 	};
 
 	return (
@@ -521,6 +612,90 @@ function UserProfilePage() {
 				</CardHeader>
 				<CardContent>
 					<CookieSettings />
+				</CardContent>
+			</Card>
+
+			{/* Danger Zone - Delete Account Card */}
+			<Card className="w-full max-w-md border-red-500">
+				<CardHeader>
+					<CardTitle className="text-red-600">Danger Zone</CardTitle>
+					<CardDescription>
+						Manage potentially risky account actions.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<p className="text-sm text-muted-foreground mb-4 bg-white">
+						Deleting your account is permanent and cannot be undone. All your
+						data, including stories and progress, will be lost.
+					</p>
+
+					<AlertDialog
+						open={showDeleteConfirm}
+						onOpenChange={setShowDeleteConfirm}
+					>
+						<AlertDialogTrigger asChild>
+							<Button
+								variant="destructive"
+								className="w-full bg-red-600"
+								onClick={() => {
+									setDeleteError(null); // Clear previous errors
+									setShowDeleteConfirm(true);
+								}}
+							>
+								Delete Account
+							</Button>
+						</AlertDialogTrigger>
+						<AlertDialogContent className="bg-white">
+							<AlertDialogHeader>
+								<AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+								<AlertDialogDescription>
+									This action cannot be undone. This will permanently delete
+									your account and remove your data from our servers.
+									{authProviderId === "password"
+										? "Please enter your password to confirm."
+										: "To confirm, you may need to sign in with your provider again."}
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							{authProviderId === "password" && (
+								<div className="space-y-2 my-4">
+									<Label htmlFor="reauth-password">Password</Label>
+									<Input
+										id="reauth-password"
+										type="password"
+										placeholder="Enter your password"
+										value={reauthPassword}
+										onChange={(e) => setReauthPassword(e.target.value)}
+										className={deleteError ? "border-red-500" : ""}
+									/>
+									{deleteError && (
+										<p className="text-sm text-red-500">{deleteError}</p>
+									)}
+								</div>
+							)}
+							<AlertDialogFooter>
+								<AlertDialogCancel
+									onClick={() => {
+										setShowDeleteConfirm(false);
+										setDeleteError(null);
+										setReauthPassword("");
+									}}
+									disabled={isDeleting}
+								>
+									Cancel
+								</AlertDialogCancel>
+								<AlertDialogAction
+									onClick={handleDeleteAccount}
+									disabled={
+										isDeleting ||
+										(authProviderId === "password" && !reauthPassword)
+									}
+									className="bg-red-600 hover:bg-red-700"
+								>
+									{isDeleting ? "Deleting..." : "Delete Account"}
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
 				</CardContent>
 			</Card>
 		</div>
