@@ -324,7 +324,7 @@ function InputForm({ onSubmit, isLoading }) {
 					<div className="text-center">
 						{/* Container for all helper buttons */}
 						<div className="grid grid-cols-1 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-center sm:items-center">
-							{storyExamples.slice(0, 3).map((example, index) => (
+							{storyExamples.slice(0, 2).map((example, index) => (
 								<button
 									key={index}
 									type="button"
@@ -342,7 +342,7 @@ function InputForm({ onSubmit, isLoading }) {
 							<button
 								type="button"
 								onClick={handleRandomExampleClick}
-								className="px-4 py-2.5 text-xs font-normal text-white bg-orange-800 border border-orange-800 rounded-md hover:text-orange-800 hover:bg-amber-50 focus:outline-none transition-colors flex items-center gap-1.5"
+								className="px-4 py-2.5 text-xs font-normal  text-orange-800 border border-orange-800 rounded-md hover:bg-orange-800 hover:text-white focus:outline-none transition-colors flex items-center gap-1.5"
 								disabled={isLoading}
 							>
 								<Shuffle className="w-3.5 h-3.5" />
