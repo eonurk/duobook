@@ -153,3 +153,49 @@ export const getGamificationData = async () => {
 		return { progress: null, achievements: [], dailyChallenges: [] };
 	}
 };
+
+// Function to get the latest stories from all users
+export const getLatestStories = async (
+	idToken, // Can be null or undefined for public requests
+	page = 1,
+	limit = 10,
+	excludeCurrentUser = true
+) => {
+	// if (!idToken) { // REMOVED: Allow calls without idToken for public access
+	// 	throw new Error("Authentication token is required.");
+	// }
+	try {
+		const queryParams = new URLSearchParams({
+			page: page.toString(),
+			limit: limit.toString(),
+			excludeCurrentUser: excludeCurrentUser.toString(),
+		});
+
+		const headers = {
+			"Content-Type": "application/json",
+		};
+		if (idToken) {
+			// Conditionally add Authorization header
+			headers.Authorization = `Bearer ${idToken}`;
+		}
+
+		const response = await fetch(
+			`/api/stories/latest?${queryParams.toString()}`,
+			{
+				method: "GET",
+				headers: headers,
+			}
+		);
+
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({})); // Try to parse error, default to empty obj
+			throw new Error(
+				errorData.error || `HTTP error! status: ${response.status}`
+			);
+		}
+		return await response.json();
+	} catch (error) {
+		console.error("Error fetching latest stories:", error);
+		throw error; // Re-throw to be caught by the calling component
+	}
+};

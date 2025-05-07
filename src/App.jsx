@@ -5,6 +5,7 @@ import {
 	Navigate,
 	useLocation,
 	useNavigate,
+	Link,
 } from "react-router-dom";
 import "@/App.css"; // Use alias
 import InputForm from "@/components/InputForm"; // Use alias
@@ -24,6 +25,7 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy"; // Import PrivacyPolicy
 import TermsOfService from "@/pages/TermsOfService"; // Import TermsOfService
 import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import Practice Page
 import ContactUs from "@/pages/ContactUs"; // Import Contact Us page
+import ExploreStoriesPage from "@/pages/ExploreStoriesPage"; // ADDED: Import ExploreStoriesPage
 import { ArrowDown, Sparkles, CheckCircle2 } from "lucide-react"; // Import ArrowDown icon and new icons
 import {
 	trackPageView,
@@ -39,8 +41,10 @@ import {
 	// getAllAchievements, // Commented out: Will be used elsewhere (e.g., Achievements page)
 	// getUserAchievements // Commented out: Will be used elsewhere
 	generateStoryViaBackend, // ADD import for backend generation
+	getLatestStories, // ADDED: Import for fetching latest stories
 } from "./lib/api"; // Import API functions
 import toast, { Toaster } from "react-hot-toast"; // ADD react-hot-toast imports
+import StoryCard from "@/components/StoryCard"; // ADDED: Import StoryCard
 
 // Static Example Story Data
 const exampleStoryData = {
@@ -249,6 +253,37 @@ function MainAppView({ generateStory }) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [formError, setFormError] = useState(null);
 	const [formParams, setFormParams] = useState(null);
+	const { currentUser, idToken } = useAuth(); // Get currentUser and idToken
+
+	// State for latest community stories
+	const [latestCommunityStories, setLatestCommunityStories] = useState([]);
+	const [loadingCommunityStories, setLoadingCommunityStories] = useState(false);
+	const [communityStoriesError, setCommunityStoriesError] = useState(null);
+
+	useEffect(() => {
+		// Fetch community stories regardless of login state, but use idToken if available
+		// The getLatestStories function in api.js is already modified to handle nullable idToken
+		console.log(
+			"MainAppView: useEffect for community stories. idToken:",
+			idToken
+		);
+		const fetchCommunityStories = async () => {
+			setLoadingCommunityStories(true);
+			setCommunityStoriesError(null);
+			try {
+				// Pass idToken (which can be null) to getLatestStories
+				const data = await getLatestStories(idToken, 1, 3, true);
+				setLatestCommunityStories(data.stories || []);
+			} catch (err) {
+				console.error("Error fetching community stories for main page:", err);
+				setCommunityStoriesError(
+					err.message || "Could not load community stories."
+				);
+			}
+			setLoadingCommunityStories(false);
+		};
+		fetchCommunityStories();
+	}, [idToken]); // Depend on idToken so it re-fetches if user logs in/out
 
 	const handleGenerate = async (
 		description,
@@ -470,6 +505,53 @@ function MainAppView({ generateStory }) {
 						/>
 					</div>
 				)}
+
+				{/* ADDED: Latest Community Stories Section */}
+				{!isGenerating &&
+					(latestCommunityStories.length > 0 ||
+						loadingCommunityStories ||
+						communityStoriesError) && (
+						<div className="mt-12 pt-8 border-t">
+							<div className="flex justify-between items-center mb-6">
+								<h2 className="text-2xl font-bold">Latest Community Stories</h2>
+								<Link
+									to="/explore-stories"
+									className="text-sm text-blue-600 hover:underline"
+								>
+									Explore All &rarr;
+								</Link>
+							</div>
+							{loadingCommunityStories && (
+								<div className="text-center py-4">
+									<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+									<p className="mt-2 text-sm text-gray-500">
+										Loading community stories...
+									</p>
+								</div>
+							)}
+							{communityStoriesError && (
+								<p className="text-center text-red-500 text-sm py-4">
+									Error: {communityStoriesError}
+								</p>
+							)}
+							{!loadingCommunityStories &&
+								!communityStoriesError &&
+								latestCommunityStories.length > 0 && (
+									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+										{latestCommunityStories.map((story) => (
+											<StoryCard key={story.id} story={story} />
+										))}
+									</div>
+								)}
+							{!loadingCommunityStories &&
+								!communityStoriesError &&
+								latestCommunityStories.length === 0 && (
+									<p className="text-center text-gray-500 text-sm py-4">
+										No community stories to show right now. Check back later!
+									</p>
+								)}
+						</div>
+					)}
 			</main>
 		</>
 	);
@@ -688,6 +770,7 @@ function App() {
 						</ProtectedRoute>
 					}
 				/>
+				<Route path="/explore-stories" element={<ExploreStoriesPage />} />
 				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
 			<SiteFooter />

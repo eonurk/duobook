@@ -223,6 +223,18 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 									size="sm"
 									asChild
 									className={`px-0 ${
+										location.pathname === "/explore-stories"
+											? "text-primary font-semibold"
+											: "text-foreground/70 hover:text-foreground"
+									}`}
+								>
+									<Link to="/explore-stories">Explore</Link>
+								</Button>
+								<Button
+									variant="link"
+									size="sm"
+									asChild
+									className={`px-0 ${
 										location.pathname === "/practice"
 											? "text-primary font-semibold"
 											: "text-foreground/70 hover:text-foreground"
@@ -401,6 +413,18 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 										onClick={closeMobileMenu}
 									>
 										<Link to="/my-stories">My Stories</Link>
+									</Button>
+									<Button
+										variant="ghost"
+										asChild
+										className={`w-full justify-start ${
+											location.pathname === "/explore-stories"
+												? "text-primary font-semibold bg-accent"
+												: ""
+										}`}
+										onClick={closeMobileMenu}
+									>
+										<Link to="/explore-stories">Explore Stories</Link>
 									</Button>
 									<Button
 										variant="ghost"

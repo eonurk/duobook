@@ -110,6 +110,37 @@ const authenticateTokenMiddleware = (
 };
 // --- END AUTH MIDDLEWARE ---
 
+// --- START OPTIONAL AUTH MIDDLEWARE ---
+const optionalAuthenticateTokenMiddleware = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	const authHeader = req.headers.authorization;
+	const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
+
+	if (token) {
+		try {
+			const decodedToken = await admin.auth().verifyIdToken(token);
+			req.userId = decodedToken.uid;
+		} catch (error) {
+			// Token is present but invalid, could log or just proceed without userId
+			let errorMessage = "Unknown error during optional auth.";
+			if (error instanceof Error) {
+				errorMessage = error.message;
+			}
+			console.warn(
+				"Optional auth: Invalid token received, proceeding as unauthenticated.",
+				errorMessage
+			);
+			// Do not send a 401/403 here, just clear any potentially partially set userId
+			req.userId = undefined;
+		}
+	}
+	next(); // Always proceed
+};
+// --- END OPTIONAL AUTH MIDDLEWARE ---
+
 // --- START RATE LIMITER SETUP ---
 const storyGenerationLimiter = rateLimit({
 	windowMs: 24 * 60 * 60 * 1000, // 24 hours window
@@ -257,6 +288,58 @@ app.post(
 		} catch (error) {
 			console.error("Error sending email:", error);
 			res.status(500).json({ error: "Failed to send message" });
+		}
+	})
+);
+
+// GET latest stories from all users (with pagination) - NOW PUBLIC
+app.get(
+	"/api/stories/latest",
+	optionalAuthenticateTokenMiddleware, // Use optional auth
+	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+		const userId = req.userId; // userId will be populated if token was valid, otherwise undefined
+		const page = parseInt(req.query.page as string) || 1;
+		const limit = parseInt(req.query.limit as string) || 10;
+		const excludeCurrentUser = req.query.excludeCurrentUser === "true";
+
+		if (page < 1) {
+			return res
+				.status(400)
+				.json({ error: "Page number must be 1 or greater." });
+		}
+		if (limit < 1 || limit > 50) {
+			return res.status(400).json({ error: "Limit must be between 1 and 50." });
+		}
+
+		const skip = (page - 1) * limit;
+
+		try {
+			const whereClause: Prisma.StoryWhereInput = {};
+			if (excludeCurrentUser && userId) {
+				whereClause.userId = { not: userId };
+			}
+
+			const storiesFromDb = await prisma.story.findMany({
+				where: whereClause,
+				orderBy: { createdAt: "desc" },
+				skip: skip,
+				take: limit,
+			});
+
+			const actualTotalMatchingStories = await prisma.story.count({
+				where: whereClause,
+			});
+			const displayableTotalStories = Math.min(actualTotalMatchingStories, 50);
+			const totalPages = Math.ceil(displayableTotalStories / limit);
+
+			res.status(200).json({
+				stories: storiesFromDb, // Send original stories, no author names
+				currentPage: page,
+				totalPages,
+				totalStories: displayableTotalStories, // Report the capped total for pagination purposes
+			});
+		} catch (error) {
+			next(error);
 		}
 	})
 );
@@ -412,32 +495,25 @@ app.post(
 app.get(
 	"/api/stories",
 	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-		// Added next param
-		// Access req.userId directly, check if it exists (Uncommented)
 		const userId = req.userId;
 		if (!userId) {
-			// Uncommented
-			// It's better practice to throw an error here for the asyncHandler to catch
-			// or call next() with an error object.
-			// For simplicity, returning response, but error handling middleware would be better.
-			return res.status(401).json({
-				error: "Authentication required (userId missing after auth).",
-			});
-		} // Uncommented
+			const err = new Error(
+				"Authentication required (userId missing after auth)."
+			);
+			(err as any).status = 401;
+			return next(err);
+		}
 		try {
 			const stories = await prisma.story.findMany({
-				where: { userId: userId }, // Use checked userId (Uncommented)
+				where: { userId: userId },
 				orderBy: { createdAt: "desc" },
 			});
 			res.status(200).json(stories);
 		} catch (error) {
-			// Pass error to the Express error handler via next()
 			next(error);
-			// console.error("Error fetching stories:", error);
-			// res.status(500).json({ error: "Could not fetch stories." });
 		}
 	})
-); // End asyncHandler wrapper
+);
 
 // POST a new story for the logged-in user - Apply asyncHandler
 app.post(
