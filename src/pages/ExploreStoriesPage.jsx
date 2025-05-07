@@ -85,7 +85,6 @@ const ExploreStoriesPage = () => {
 			setError(null);
 			try {
 				const response = await getLatestStories(idToken, pageToFetch, 12, true);
-				console.log("ExploreStoriesPage: API response received:", response);
 				setStories(response.stories || []);
 				setCurrentPage(response.currentPage || 1); // Update currentPage from response
 				setTotalPages(response.totalPages || 1);

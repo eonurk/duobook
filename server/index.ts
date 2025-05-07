@@ -438,15 +438,6 @@ app.post(
 			return next(err);
 		}
 
-		console.log("Received generation request:", {
-			userId,
-			description,
-			source,
-			target,
-			difficulty,
-			length,
-		});
-
 		// Construct the prompt (similar to frontend)
 		// TODO: Refine this prompt based on the original frontend logic
 		const prompt = `Create a story based on this description: "${description}". The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}. The story should be ${length} in length. Return the story as a JSON object with two keys: "sentencePairs" (an array of objects, each with "source" and "target" sentences) and "vocabulary" (an array of objects, each with "word" in ${source} and "translation" in ${target}). Use simple language appropriate for the difficulty level. Ensure the JSON is valid. Example SentencePair format: { "source": "Sentence in source language.", "target": "Sentence translated to target language." }. Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }.`;

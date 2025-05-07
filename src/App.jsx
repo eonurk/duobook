@@ -253,7 +253,7 @@ function MainAppView({ generateStory }) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [formError, setFormError] = useState(null);
 	const [formParams, setFormParams] = useState(null);
-	const { currentUser, idToken } = useAuth(); // Get currentUser and idToken
+	const { idToken } = useAuth(); // Get currentUser and idToken
 
 	// State for latest community stories
 	const [latestCommunityStories, setLatestCommunityStories] = useState([]);

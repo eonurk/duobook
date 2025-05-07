@@ -86,7 +86,6 @@ export function AuthProvider({ children }) {
 		setUserProgress(optimisticProgress); // Optimistic update
 
 		try {
-			console.log("Sending progress update to API:", updates);
 			// Assume updateUserProgress sends a PATCH/PUT request with the updates object
 			const updatedProgress = await updateUserProgress(updates);
 			setUserProgress(updatedProgress); // Update with response from server if needed

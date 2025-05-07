@@ -14,6 +14,22 @@ import { postChallengeProgress } from "@/lib/api";
 // Add CSS for mobile responsiveness
 import "./BookView.mobile.css"; // This will be created next
 
+import {
+	Volume2,
+	VolumeX,
+	AlertTriangle,
+	SlidersHorizontal,
+	ChevronLeft,
+	ChevronRight,
+	RotateCcw,
+	Info,
+	CheckCircle,
+	Zap,
+	Languages,
+	BarChart3,
+	CalendarDays,
+} from "lucide-react"; // ADDED Icons
+
 // Helper function to normalize words (lowercase, remove punctuation)
 const normalizeWord = (word) => {
 	return word.toLowerCase().replace(/[.,!?;:()"']/g, "");
@@ -40,6 +56,7 @@ const langNameToCode = {
 	norwegian: "no-NO",
 	danish: "da-DK",
 	polish: "pl-PL",
+	greek: "el-GR",
 };
 
 // Preferred voices for specific languages (these typically sound better)
@@ -138,6 +155,8 @@ function BookView({
 	const [speechPitch, setSpeechPitch] = useState(1.0); // Default speech pitch
 	const [autoPlayEnabled, setAutoPlayEnabled] = useState(false); // Auto-play option
 	const [selectedVoiceURI, setSelectedVoiceURI] = useState(null); // Store selected voice URI
+	const [isVoiceAvailableForTargetLang, setIsVoiceAvailableForTargetLang] =
+		useState(true); // NEW STATE
 	const synth = window.speechSynthesis; // Get synthesis object
 
 	// --- Advanced TTS Controls ---
@@ -147,16 +166,16 @@ function BookView({
 	const populateVoiceList = useCallback(() => {
 		if (!synth) return;
 		const availableVoices = synth.getVoices();
-		// Filter out duplicate voice URIs which can happen sometimes
 		const uniqueVoices = Array.from(
 			new Map(availableVoices.map((v) => [v.voiceURI, v])).values()
 		);
 		setVoices(uniqueVoices);
-		if (uniqueVoices.length > 0) {
-			setTtsReady(true);
-			// We will set the default voice in a separate effect based on ttsReady
+		setTtsReady(uniqueVoices.length > 0);
+		if (uniqueVoices.length === 0) {
+			console.warn("BookView: No voices loaded by the browser.");
+			setIsVoiceAvailableForTargetLang(false); // If no voices at all, then definitely not for target lang
 		}
-	}, [synth]); // Removed targetLanguage and selectedVoiceURI dependencies
+	}, [synth]);
 
 	useEffect(() => {
 		populateVoiceList();
@@ -171,6 +190,36 @@ function BookView({
 			}
 		};
 	}, [populateVoiceList, synth]);
+
+	// Effect to check voice availability for the target language when voices or targetLanguage change
+	useEffect(() => {
+		if (ttsReady && targetLanguage) {
+			// Only proceed if TTS is ready and we have a target language
+			const targetLangCode = getLangCode(targetLanguage);
+			if (voices.length > 0) {
+				// And if voices have been loaded
+				const bestVoice = getBestVoiceForLanguage(voices, targetLangCode);
+				if (
+					bestVoice &&
+					bestVoice.lang &&
+					bestVoice.lang.startsWith(targetLangCode.split("-")[0])
+				) {
+					setSelectedVoiceURI(bestVoice.voiceURI);
+					setIsVoiceAvailableForTargetLang(true);
+				} else {
+					setSelectedVoiceURI(null);
+					setIsVoiceAvailableForTargetLang(false);
+				}
+			} else if (ttsReady && voices.length === 0) {
+				// TTS is ready but no voices loaded at all
+				setIsVoiceAvailableForTargetLang(false);
+				setSelectedVoiceURI(null);
+				console.warn(
+					"BookView: TTS ready but no voices available on the system."
+				);
+			}
+		}
+	}, [voices, targetLanguage, ttsReady]); // Rerun when voices, targetLanguage, or ttsReady changes
 
 	// Reset progress when sentencePairs change (e.g., new book generated)
 	useEffect(() => {
@@ -298,56 +347,82 @@ function BookView({
 	};
 
 	// --- Speak Function ---
-	const handleSpeak = (textToSpeak) => {
-		if (!synth || !ttsReady || !textToSpeak) return;
-		if (synth.speaking) synth.cancel(); // Cancel previous before starting new
+	const handleSpeak = useCallback(
+		(textToSpeak) => {
+			if (
+				!synth ||
+				!ttsReady ||
+				!textToSpeak ||
+				!isVoiceAvailableForTargetLang
+			) {
+				if (!isVoiceAvailableForTargetLang)
+					console.warn(
+						"BookView: Speak called but no voice available for target language."
+					);
+				return;
+			}
+			if (synth.speaking) synth.cancel();
 
-		// Get language code
-		const targetLangCode = getLangCode(targetLanguage);
-
-		// Find the selected voice by URI, or fallback to best voice logic
-		let voiceToUse = voices.find((v) => v.voiceURI === selectedVoiceURI);
-		if (!voiceToUse) {
-			voiceToUse = getBestVoiceForLanguage(voices, targetLangCode);
-			// Update state if we fell back
-			if (voiceToUse) setSelectedVoiceURI(voiceToUse.voiceURI);
-		}
-
-		if (voiceToUse) {
 			const utterance = new SpeechSynthesisUtterance(textToSpeak);
-			utterance.voice = voiceToUse;
-			utterance.lang = voiceToUse.lang;
-			utterance.pitch = speechPitch;
-			utterance.rate = speechRate;
-			utterance.volume = 1;
+			const voiceToUse = selectedVoiceURI
+				? voices.find((v) => v.voiceURI === selectedVoiceURI)
+				: null;
 
-			// Add event handlers for better feedback
-			utterance.onstart = () => {
-				console.log("Speech started with voice:", voiceToUse.name);
-				setIsSpeaking(true);
-			};
+			if (voiceToUse) {
+				utterance.voice = voiceToUse;
+			} else {
+				// This case should ideally not be hit if isVoiceAvailableForTargetLang is true and selectedVoiceURI is set.
+				// But as a fallback, try to find one last time.
+				const targetLangCode = getLangCode(targetLanguage);
+				const fallbackVoice = getBestVoiceForLanguage(voices, targetLangCode);
+				if (
+					fallbackVoice &&
+					fallbackVoice.lang &&
+					fallbackVoice.lang.startsWith(targetLangCode.split("-")[0])
+				) {
+					utterance.voice = fallbackVoice;
+				} else {
+					console.error(
+						"BookView: Critical - Could not find any voice for speech despite isVoiceAvailable=true."
+					);
+					return; // Don't attempt to speak with a potentially wrong voice.
+				}
+			}
+
+			utterance.rate = speechRate;
+			utterance.pitch = speechPitch;
+			utterance.onstart = () => setIsSpeaking(true);
 			utterance.onend = () => {
-				console.log("Speech ended");
 				setIsSpeaking(false);
+				if (
+					autoPlayEnabled &&
+					activeSentenceIndex < sentencePairs.length - 1 &&
+					!isFinished
+				) {
+					handleNextSentence(); // Make sure handleNextSentence is defined
+				}
 			};
 			utterance.onerror = (event) => {
-				console.error("Speech error:", event);
+				console.error("BookView: Speech synthesis error:", event.error);
 				setIsSpeaking(false);
 			};
-
 			synth.speak(utterance);
-
-			// On iOS Safari, we sometimes need to force speech to start
-			// This is a known workaround
-			if (synth.paused) {
-				synth.resume();
-			}
-		} else {
-			console.warn(
-				`No suitable voice found for ${targetLanguage} (code: ${targetLangCode})`
-			);
-		}
-	};
+		},
+		[
+			synth,
+			ttsReady,
+			isVoiceAvailableForTargetLang,
+			selectedVoiceURI,
+			voices,
+			targetLanguage,
+			speechRate,
+			speechPitch,
+			autoPlayEnabled,
+			activeSentenceIndex,
+			sentencePairs,
+			isFinished,
+		]
+	);
 
 	// Auto-play when active sentence changes
 	useEffect(() => {
@@ -363,79 +438,16 @@ function BookView({
 		}
 	}, [activeSentenceIndex, autoPlayEnabled, isFinished, sentencePairs]); // Removed handleSpeak from deps
 
-	// Effect to manage the selected voice based on language and available voices
-	useEffect(() => {
-		if (!ttsReady || voices.length === 0) return; // Don't run until voices are ready
-
-		const targetLangCode = getLangCode(targetLanguage);
-		const currentLangVoices = voices.filter((voice) =>
-			voice.lang.startsWith(targetLangCode.split("-")[0])
-		);
-
-		// Check if the currently selected voice is valid for the current language
-		const isCurrentVoiceValid =
-			selectedVoiceURI &&
-			currentLangVoices.some((v) => v.voiceURI === selectedVoiceURI);
-
-		// If the current voice is not valid (or none is selected), find the best default for the current language
-		if (!isCurrentVoiceValid) {
-			console.log(
-				`Selected voice ${selectedVoiceURI} not valid for ${targetLanguage}, finding default...`
-			);
-			const bestVoice = getBestVoiceForLanguage(voices, targetLangCode);
-			if (bestVoice) {
-				console.log(
-					"Setting default voice:",
-					bestVoice.name,
-					bestVoice.voiceURI
-				);
-				setSelectedVoiceURI(bestVoice.voiceURI);
-			} else {
-				console.log("No suitable default voice found for", targetLanguage);
-				setSelectedVoiceURI(null);
-			}
-		} else {
-			// console.log(`Keeping selected voice ${selectedVoiceURI} for ${targetLanguage}`);
-		}
-	}, [targetLanguage, voices, ttsReady]); // Rerun when language, voices, or readiness changes
-
-	// --- Reset progress on new story / example change ---
-	useEffect(() => {
-		setActiveSentenceIndex(0);
-		setRevealedSourceIndices(new Set());
-		setIsFinished(false);
-		setShowAllSource(false);
-		if (synth?.speaking) synth.cancel();
-	}, [sentencePairs, synth]); // Keep dependencies
-
 	// --- TTS Controls ---
-	const handleToggleAutoPlay = () => {
-		setAutoPlayEnabled(!autoPlayEnabled);
-	};
+	const handleToggleAutoPlay = () => setAutoPlayEnabled((prev) => !prev);
 
-	const handleRateChange = (e) => {
-		setSpeechRate(parseFloat(e.target.value));
-	};
+	const handleRateChange = (e) => setSpeechRate(parseFloat(e.target.value));
 
-	const handlePitchChange = (e) => {
-		setSpeechPitch(parseFloat(e.target.value));
-	};
+	const handlePitchChange = (e) => setSpeechPitch(parseFloat(e.target.value));
 
-	const handleVoiceChange = (e) => {
-		setSelectedVoiceURI(e.target.value);
-	};
+	const handleVoiceChange = (e) => setSelectedVoiceURI(e.target.value);
 
-	const toggleTtsControls = () => {
-		setShowTtsControls(!showTtsControls);
-	};
-
-	// Filter voices for the current target language
-	const targetLangCode = getLangCode(targetLanguage);
-	const availableTargetVoices = useMemo(() => {
-		return voices.filter((voice) =>
-			voice.lang.startsWith(targetLangCode.split("-")[0])
-		);
-	}, [voices, targetLangCode]);
+	const toggleTtsControls = () => setShowTtsControls((prev) => !prev);
 
 	// --- Interaction Logic ---
 	const handleSentenceClick = (index) => {
@@ -506,7 +518,7 @@ function BookView({
 					const result = await postChallengeProgress({
 						challengeType: "READ_STORY",
 					});
-					console.log("Challenge progress READ_STORY response:", result);
+
 					// Optionally show notification
 					if (result?.completedChallenges?.length > 0) {
 						alert(
@@ -881,6 +893,140 @@ function BookView({
 				visible={tooltipVisible}
 			/>
 
+			{/* Audio Controls Section */}
+			{ttsReady && (
+				<div className="audio-controls flex items-center justify-between space-x-2 mb-0 pb-0 p-3 rounded-lg max-w-xs mx-auto">
+					{/* Left part: Auto-Play toggle (conditionally rendered) */}
+					<div className="flex items-center space-x-2">
+						{isVoiceAvailableForTargetLang ? (
+							<label
+								htmlFor="autoplay"
+								className="flex items-center cursor-pointer text-sm text-slate-700 select-none"
+								title={
+									autoPlayEnabled ? "Disable auto-play" : "Enable auto-play"
+								}
+							>
+								<span className="mr-2 ml-2">Auto-Play:</span>
+								<div className="relative">
+									<input
+										type="checkbox"
+										id="autoplay"
+										checked={autoPlayEnabled}
+										onChange={handleToggleAutoPlay}
+										className="sr-only"
+									/>
+									<div
+										className={`block w-10 h-6 rounded-full transition-colors ${
+											autoPlayEnabled ? "bg-amber-500" : "bg-slate-300"
+										}`}
+									></div>
+									<div
+										className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
+											autoPlayEnabled ? "translate-x-full" : ""
+										}`}
+									></div>
+								</div>
+							</label>
+						) : (
+							<div
+								className="flex items-center space-x-1.5 text-sm text-slate-500 px-2 py-1"
+								title={`Text-to-speech (and thus Auto-Play) is not available for ${targetLanguage} on your current browser/OS.`}
+							>
+								<AlertTriangle className="w-4 h-4 flex-shrink-0 text-orange-400" />
+								<span>Auto-Play unavailable</span>
+							</div>
+						)}
+					</div>
+
+					{/* Right part: Settings Button (icon only) */}
+					<button
+						onClick={toggleTtsControls}
+						className="text-sm text-slate-600 hover:text-slate-800 p-2 rounded-md hover:bg-slate-200 transition-colors flex items-center"
+						title="Advanced TTS Settings"
+					>
+						<SlidersHorizontal className="w-4 h-4" />
+					</button>
+				</div>
+			)}
+
+			{/* Advanced TTS Controls Panel - Conditionally render voice selection based on availability */}
+			{showTtsControls && ttsReady && (
+				<div className="advanced-tts-controls p-3 bg-slate-100 rounded-lg mb-4 shadow-md space-y-3 max-w-xs mx-auto">
+					{isVoiceAvailableForTargetLang &&
+					voices.length > 0 &&
+					getLangCode(targetLanguage) ? (
+						<div className="flex flex-col">
+							<label
+								htmlFor="voice-select"
+								className="text-xs font-medium text-slate-600 mb-0.5"
+							>
+								Voice:
+							</label>
+							<select
+								id="voice-select"
+								value={selectedVoiceURI || ""}
+								onChange={handleVoiceChange}
+								className="block w-full text-sm p-1.5 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+							>
+								{voices
+									.filter((voice) =>
+										voice.lang.startsWith(
+											getLangCode(targetLanguage).split("-")[0]
+										)
+									) // Show only relevant language voices
+									.map((voice) => (
+										<option key={voice.voiceURI} value={voice.voiceURI}>
+											{voice.name} ({voice.lang})
+										</option>
+									))}
+							</select>
+						</div>
+					) : (
+						<p className="text-xs text-slate-500">
+							Voice selection is not available for {targetLanguage} as a
+							suitable voice was not found on your system.
+						</p>
+					)}
+					{/* Speed and Pitch controls can remain, as they apply to any voice that might be used (or browser default) */}
+					<div className="flex flex-col">
+						<label
+							htmlFor="rate"
+							className="text-xs font-medium text-slate-600 mb-0.5"
+						>
+							Speed: {speechRate.toFixed(1)}x
+						</label>
+						<input
+							type="range"
+							id="rate"
+							min="0.5"
+							max="2"
+							step="0.1"
+							value={speechRate}
+							onChange={handleRateChange}
+							className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+						/>
+					</div>
+					<div className="flex flex-col">
+						<label
+							htmlFor="pitch"
+							className="text-xs font-medium text-slate-600 mb-0.5"
+						>
+							Pitch: {speechPitch.toFixed(1)}
+						</label>
+						<input
+							type="range"
+							id="pitch"
+							min="0"
+							max="2"
+							step="0.1"
+							value={speechPitch}
+							onChange={handlePitchChange}
+							className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+						/>
+					</div>
+				</div>
+			)}
+
 			{/* Navigation Buttons - Show always */}
 			<div
 				className={`navigation-controls button-container ${
@@ -894,81 +1040,6 @@ function BookView({
 				>
 					&larr; Prev
 				</button>
-
-				{/* TTS Controls Toggle - Moved here */}
-				{ttsReady && (
-					<div
-						className={`tts-controls-container ${
-							showTtsControls ? "open" : ""
-						}`}
-					>
-						<button
-							onClick={toggleTtsControls}
-							className="button button-icon tts-toggle-button-subtle"
-							title="Speech Settings"
-						>
-							⚙️
-						</button>
-						{/* Panel now positioned relative to this container */}
-						{showTtsControls && (
-							<div className="tts-settings-panel">
-								<div className="tts-setting">
-									<label>
-										<input
-											type="checkbox"
-											checked={autoPlayEnabled}
-											onChange={handleToggleAutoPlay}
-										/>
-										Auto-play sentences
-									</label>
-								</div>
-
-								<div className="tts-setting">
-									<label>Speech Rate: {speechRate.toFixed(1)}</label>
-									<input
-										type="range"
-										min="0.5"
-										max="1.5"
-										step="0.1"
-										value={speechRate}
-										onChange={handleRateChange}
-									/>
-								</div>
-
-								<div className="tts-setting">
-									<label>Pitch: {speechPitch.toFixed(1)}</label>
-									<input
-										type="range"
-										min="0.5"
-										max="1.5"
-										step="0.1"
-										value={speechPitch}
-										onChange={handlePitchChange}
-									/>
-								</div>
-
-								{/* Voice Selection Dropdown */}
-								{availableTargetVoices.length > 0 && (
-									<div className="tts-setting">
-										<label htmlFor="voice-select">Voice:</label>
-										<select
-											id="voice-select"
-											value={selectedVoiceURI || ""}
-											onChange={handleVoiceChange}
-											className="tts-voice-select"
-										>
-											{availableTargetVoices.map((voice) => (
-												<option key={voice.voiceURI} value={voice.voiceURI}>
-													{voice.name} ({voice.lang})
-												</option>
-											))}
-										</select>
-									</div>
-								)}
-							</div>
-						)}
-					</div>
-				)}
 
 				<button
 					onClick={() => handleNextSentence()}
