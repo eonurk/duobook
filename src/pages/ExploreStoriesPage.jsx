@@ -4,7 +4,6 @@ import { useAuth } from "@/context/AuthContext"; // Assuming you have AuthContex
 import { getLatestStories } from "@/lib/api"; // We'll need to add this API function
 import toast, { Toaster } from "react-hot-toast";
 import StoryCard from "@/components/StoryCard";
-import { Button } from "@/components/ui/button"; // For potential login/signup buttons
 
 // Placeholder for a story card component
 // const StoryCard = ({ story }) => {
@@ -204,23 +203,23 @@ const ExploreStoriesPage = () => {
 
 			{!showLoginPrompt && totalPages > 1 && (
 				<div className="flex justify-center items-center space-x-4 mt-8">
-					<Button
+					<button
 						onClick={() => handlePageChange(currentPage - 1)}
 						disabled={currentPage === 1}
 						variant="outline"
 					>
 						Previous
-					</Button>
+					</button>
 					<span className="text-gray-700">
 						Page {currentPage} of {totalPages}
 					</span>
-					<Button
+					<button
 						onClick={() => handlePageChange(currentPage + 1)}
 						disabled={currentPage === totalPages}
 						variant="outline"
 					>
 						Next
-					</Button>
+					</button>
 				</div>
 			)}
 		</div>

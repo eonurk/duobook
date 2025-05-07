@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext"; // Import useAuth
 import Login from "@/components/Auth/Login"; // Import Login
 import Signup from "@/components/Auth/Signup"; // Import Signup
-import { BookText, Heart } from "lucide-react"; // Replace existing icons with cuter alternatives
+import { BookText, Heart, Lightbulb, Shuffle } from "lucide-react"; // Replace existing icons with cuter alternatives & ADDED Lightbulb, Shuffle
 import {
 	Dialog,
 	DialogContent,
@@ -19,6 +19,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card"; // Import Card components
 import duobookImg from "../assets/duobook.jpg";
+import { Button } from "@/components/ui/button";
 
 // Common languages for selection
 const languages = [
@@ -143,6 +144,33 @@ const storyExamples = [
 	"A lost puppy looking for its owner in a busy city.",
 	"A cooking competition where the main ingredient is magical mushrooms.",
 	"A lonely robot on Mars who discovers a hidden garden.",
+	"Two pen pals from different centuries who somehow start exchanging letters.",
+	"A detective who can talk to animals tries to solve a series of pet disappearances.",
+	"A group of children find a map leading to a legendary candy treasure.",
+	"An ancient tree in a forest that grants wishes, but with a twist.",
+	"A shy librarian who discovers a secret portal to a world of books.",
+	"A young musician trying to win a battle of the bands against a rival with supernatural powers.",
+	"An inventor creates a machine that can translate dreams into movies.",
+	"A travel blogger gets stranded on a remote island with only a talking parrot for company.",
+	"A knight who is afraid of heights but must rescue a princess from a tall tower.",
+	"An aspiring chef opens a restaurant that only serves food based on emotions.",
+	"A group of friends on a camping trip encounter a friendly Bigfoot.",
+	"A historian discovers a diary that reveals a hidden truth about a famous historical event.",
+	"A gardener discovers a plant that grows objects instead of flowers.",
+	"A time traveler who can only go back 24 hours tries to prevent a disaster.",
+	"A child who can see people's emotions as colors navigates their first day of school.",
+	"An elderly couple who decide to fulfill their bucket list in reverse order.",
+	"A mailman who delivers letters to mythical creatures living in the human world.",
+	"A teenager who wakes up one day able to understand the language of cats.",
+	"A small town where it rains different foods depending on the collective mood.",
+	"A bookstore owner who discovers their bestselling author is actually a ghost.",
+	"A photographer who captures moments from parallel universes in their pictures.",
+	"A baker whose pastries make people remember their happiest memories.",
+	"A night security guard at a museum where the art comes to life after midnight.",
+	"A group of friends who find a map that leads to a hidden underwater city.",
+	"A scientist who accidentally creates a potion that makes inanimate objects talk.",
+	"A shy poet whose poems magically come true when read aloud under moonlight.",
+	"A tour guide in a city of magical creatures disguised as humans.",
 ];
 
 function InputForm({ onSubmit, isLoading }) {
@@ -191,6 +219,12 @@ function InputForm({ onSubmit, isLoading }) {
 	// Function to handle example button click
 	const handleExampleClick = (exampleText) => {
 		setDescription(exampleText);
+	};
+
+	// Function to handle random example button click
+	const handleRandomExampleClick = () => {
+		const randomIndex = Math.floor(Math.random() * storyExamples.length);
+		setDescription(storyExamples[randomIndex]);
 	};
 
 	return (
@@ -267,7 +301,7 @@ function InputForm({ onSubmit, isLoading }) {
 				/>
 
 				{/* Section 1: Story Idea */}
-				<fieldset className="form-section">
+				<fieldset className="form-section mb-0">
 					<legend className="form-section-title">Story Idea</legend>
 					<label
 						htmlFor="storyDescription"
@@ -286,25 +320,35 @@ function InputForm({ onSubmit, isLoading }) {
 						aria-describedby="story-helper-text story-examples"
 					/>
 
-					<div id="story-examples" className="form-examples">
-						<ul className="example-list">
-							{storyExamples.map((example, index) => (
-								<li
+					{/* Example Prompts Section */}
+					<div className="text-center">
+						{/* Container for all helper buttons */}
+						<div className="grid grid-cols-1 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-center sm:items-center">
+							{storyExamples.slice(0, 3).map((example, index) => (
+								<button
 									key={index}
-									className="example-list-item"
-									onClick={() => !isLoading && handleExampleClick(example)}
-									role="button"
-									tabIndex={isLoading ? -1 : 0}
-									onKeyDown={(e) => {
-										if (!isLoading && (e.key === "Enter" || e.key === " ")) {
-											handleExampleClick(example);
-										}
-									}}
+									type="button"
+									onClick={() => handleExampleClick(example)}
+									className="px-4 py-2.5 text-xs font-normal  text-orange-800 border border-orange-800 rounded-md hover:bg-amber-600 hover:text-white focus:outline-none transition-colors flex items-center gap-1.5"
+									disabled={isLoading}
 								>
-									{example}
-								</li>
+									<span>
+										{example.length > 35
+											? example.substring(0, 32) + "..."
+											: example}
+									</span>
+								</button>
 							))}
-						</ul>
+							<button
+								type="button"
+								onClick={handleRandomExampleClick}
+								className="px-4 py-2.5 text-xs font-normal text-white bg-amber-600 border border-orange-800 rounded-md hover:text-orange-800 hover:bg-amber-50 focus:outline-none transition-colors flex items-center gap-1.5"
+								disabled={isLoading}
+							>
+								<Shuffle className="w-3.5 h-3.5" />
+								<span>Random Idea</span>
+							</button>
+						</div>
 					</div>
 				</fieldset>
 
