@@ -751,38 +751,32 @@ function InputForm({ onSubmit, isLoading }) {
 				<p className="text-sm text-gray-500 mt-4">Loading stats...</p>
 			) : (
 				<div className="mt-10 border-t pt-6">
-					<h1 className="text-2xl font-bold text-center text-gray-800 dark:text-gray-200">
+					<h1 className="text-2xl font-bold text-center text-gray-800 ">
 						DuoBook Stats
 					</h1>
 					<div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center ">
 						{totalStories !== null && (
 							<div>
-								<p className="text-4xl font-bold text-gray-800 dark:text-gray-200">
+								<p className="text-4xl font-bold text-gray-800 ">
 									{totalStories.toLocaleString()}+
 								</p>
-								<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-									Stories Generated
-								</p>
+								<p className="text-sm text-gray-500  mt-1">Stories Generated</p>
 							</div>
 						)}
 						{totalUsers !== null && (
 							<div>
-								<p className="text-4xl font-bold text-gray-800 dark:text-gray-200">
+								<p className="text-4xl font-bold text-gray-800 ">
 									{totalUsers.toLocaleString()}+
 								</p>
-								<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-									Language Learners
-								</p>
+								<p className="text-sm text-gray-500  mt-1">Language Learners</p>
 							</div>
 						)}
 						{/* Display Number of Languages Supported */}
 						<div>
-							<p className="text-4xl font-bold text-gray-800 dark:text-gray-200">
+							<p className="text-4xl font-bold text-gray-800 ">
 								{numberOfLanguages}+
 							</p>
-							<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-								Languages Supported
-							</p>
+							<p className="text-sm text-gray-500  mt-1">Languages Supported</p>
 						</div>
 					</div>
 				</div>
