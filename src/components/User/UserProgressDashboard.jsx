@@ -8,6 +8,7 @@ import {
 	Target,
 	BookOpen,
 	BarChart,
+	Filter,
 } from "lucide-react";
 import DailyChallenges from "../Gamification/DailyChallenges";
 import {
@@ -18,6 +19,13 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { getStories } from "@/lib/api";
+import Achievements, {
+	ACHIEVEMENTS,
+	AchievementDetail,
+} from "../Gamification/Achievements";
+import AchievementProgress from "../Gamification/AchievementProgress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 function UserProgressDashboard() {
 	const { userProgress, userAchievements, loading } = useAuth();
@@ -151,19 +159,47 @@ function UserProgressDashboard() {
 						Level {currentLevel} Progress
 					</CardTitle>
 				</CardHeader>
-				<CardContent>
-					<div className="w-full bg-muted rounded-full h-2.5 dark:bg-gray-700 mb-1">
+				<CardContent className="pb-2">
+					{/* Super visible progress bar with img fallback */}
+					<div className="relative w-full h-5 bg-gray-200 dark:bg-gray-800 rounded-md mb-4 overflow-hidden">
+						{/* Gradient background for the progress */}
 						<div
-							className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-out"
-							style={{ width: `${progressInfo.percentage}%` }}
-						></div>
+							className="absolute left-0 top-0 bottom-0 flex items-center rounded-l-md"
+							style={{
+								width: `${
+									progressInfo.percentage <= 0
+										? 2
+										: Math.max(5, progressInfo.percentage)
+								}%`,
+								background: "rgb(59, 130, 246)",
+								boxShadow: "0 0 5px rgba(59, 130, 246, 0.5)",
+							}}
+						>
+							{/* Show percentage text if there's enough space */}
+							{progressInfo.percentage >= 10 && (
+								<span className="text-xs font-bold text-white px-2 z-10">
+									{Math.round(progressInfo.percentage)}%
+								</span>
+							)}
+						</div>
+
+						{/* Border to ensure visibility */}
+						<div className="absolute inset-0 border border-gray-300 dark:border-gray-600 rounded-md pointer-events-none"></div>
 					</div>
-					<div className="text-right">
-						<span className="text-xs font-medium text-muted-foreground">
-							{`${progressInfo.pointsInCurrentLevel} / ${
-								progressInfo.pointsNeededForNextLevel
-							} XP (${Math.round(progressInfo.percentage)}%)`}
-						</span>
+
+					<div className="flex flex-col sm:flex-row sm:justify-between gap-2 text-sm font-medium">
+						<div className="flex items-center gap-1">
+							<div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+							<span>{progressInfo.pointsInCurrentLevel} XP earned</span>
+						</div>
+						<div className="flex items-center gap-1">
+							<div className="w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+							<span>
+								{progressInfo.pointsNeededForNextLevel -
+									progressInfo.pointsInCurrentLevel}{" "}
+								XP to Level {currentLevel + 1}
+							</span>
+						</div>
 					</div>
 				</CardContent>
 			</Card>
@@ -548,42 +584,59 @@ function UserProgressDashboard() {
 				</CardContent>
 			</Card>
 
+			{/* Updated Achievements Card */}
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 					<CardTitle className="text-lg font-semibold">Achievements</CardTitle>
 					<Award className="h-5 w-5 text-muted-foreground" />
 				</CardHeader>
 				<CardContent>
-					{userAchievements && userAchievements.length > 0 ? (
-						<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-							{userAchievements.map((userAch) => (
-								<div
-									key={userAch.id}
-									className="flex flex-col items-center text-center p-3 border rounded-lg bg-background/50 hover:bg-accent transition-colors"
-								>
-									<div
-										className="text-4xl mb-2"
-										title={userAch.achievement.description}
-									>
-										🏆
-									</div>
-									<h3 className="font-medium text-xs leading-tight">
-										{userAch.achievement.name}
-									</h3>
-									<p className="text-xs text-muted-foreground mt-1">
-										{new Date(userAch.unlockedAt).toLocaleDateString()}
+					<Tabs defaultValue="earned">
+						<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+							<TabsList className="w-full sm:w-auto">
+								<TabsTrigger value="earned">
+									Earned ({userAchievements?.length || 0})
+								</TabsTrigger>
+								<TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+								<TabsTrigger value="all">
+									All ({ACHIEVEMENTS.length})
+								</TabsTrigger>
+							</TabsList>
+						</div>
+
+						<TabsContent value="earned">
+							{userAchievements && userAchievements.length > 0 ? (
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+									{userAchievements.map((userAch) => (
+										<AchievementDetail
+											key={userAch.id}
+											achievement={userAch.achievement}
+											earned={true}
+											unlockedAt={userAch.unlockedAt}
+										/>
+									))}
+								</div>
+							) : (
+								<div className="text-center py-4 text-muted-foreground">
+									<p className="mb-1">No achievements unlocked yet.</p>
+									<p className="text-sm">
+										Complete stories and challenges to earn them!
 									</p>
 								</div>
-							))}
-						</div>
-					) : (
-						<div className="text-center py-4 text-muted-foreground">
-							<p className=" mb-1">No achievements unlocked yet.</p>
-							<p className="text-sm ">
-								Complete stories and challenges to earn them!
-							</p>
-						</div>
-					)}
+							)}
+						</TabsContent>
+
+						<TabsContent value="upcoming">
+							<AchievementProgress />
+						</TabsContent>
+
+						<TabsContent value="all">
+							<Achievements
+								userProgress={userProgress}
+								userAchievements={userAchievements}
+							/>
+						</TabsContent>
+					</Tabs>
 				</CardContent>
 			</Card>
 

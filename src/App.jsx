@@ -19,6 +19,7 @@ import UserProfilePage from "@/components/User/UserProfilePage"; // Use alias
 import MyStoriesPage from "@/components/User/MyStoriesPage"; // Use alias
 import UserProgressDashboard from "@/components/User/UserProgressDashboard"; // Import ProgressDashboard
 import Achievements from "@/components/Gamification/Achievements"; // Import Achievements component
+import AchievementNotifier from "@/components/Gamification/AchievementNotifier"; // Import AchievementNotifier
 import DuoBookExplain from "@/assets/duobook-explain.webp"; // Use alias
 import DailyLimitImage from "@/assets/daily-limit.webp"; // Import daily limit image
 import PrivacyPolicy from "@/pages/PrivacyPolicy"; // Import PrivacyPolicy
@@ -774,6 +775,8 @@ function App() {
 				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
 			<SiteFooter />
+			<Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
+			<AchievementNotifier />
 		</div>
 	);
 }

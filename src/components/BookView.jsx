@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 // Import API function for challenge progress
 import { postChallengeProgress } from "@/lib/api";
+import toast from "react-hot-toast"; // Import toast
 
 // Add CSS for mobile responsiveness
 import "./BookView.mobile.css"; // This will be created next
@@ -111,7 +112,7 @@ function BookView({
 	onGoBack,
 	isExample = false,
 }) {
-	const { currentUser } = useAuth(); // Removed userProgress, fetchUserProgress if not needed directly
+	const { currentUser, userProgress, updateProgressData } = useAuth(); // Get updateProgressData
 
 	// Default implementation for onGoBack if not provided
 	const handleGoBack = useCallback(() => {
@@ -511,22 +512,53 @@ function BookView({
 			// At the end, mark as finished
 			setIsFinished(true);
 
-			// If finishing a non-example story, post progress for READ_STORY challenge
+			// If finishing a non-example story, post progress
 			if (!isExample && currentUser) {
+				// 1. Update general progress for achievements
+				try {
+					const updates = {
+						storiesCompleted: 1, // Increment by 1
+						pointsToAdd: 25, // Example points
+						sentencesRead: sentencePairs.length, // Add sentences read
+					};
+
+					// Handle advanced story completion
+					// TODO: Determine actual difficulty here (needs to be passed down or fetched)
+					// Assuming difficulty is stored somewhere accessible, like in a story object prop
+					// if (story.difficulty === "Advanced") {
+					//   updates.advancedStoriesCompleted = 1;
+					// }
+
+					// Handle new language explored
+					const currentLanguages = userProgress?.languagesExplored || [];
+					if (targetLanguage && !currentLanguages.includes(targetLanguage)) {
+						updates.newLanguage = targetLanguage; // Backend needs to handle adding this
+					}
+
+					console.log("BookView: Updating user progress", updates);
+					await updateProgressData(updates);
+					toast.success("Story finished! Progress saved.", { duration: 2000 });
+				} catch (error) {
+					console.error("BookView: Failed to update user progress:", error);
+					toast.error("Could not save progress.");
+				}
+
+				// 2. Update daily challenges (existing logic)
 				try {
 					console.log("Attempting to post READ_STORY challenge progress...");
 					const result = await postChallengeProgress({
 						challengeType: "READ_STORY",
 					});
 
-					// Optionally show notification
 					if (result?.completedChallenges?.length > 0) {
-						alert(
-							`Challenge Completed: ${result.completedChallenges[0].title}! +${result.completedChallenges[0].xpReward} Points`
+						// Consider using toast instead of alert
+						toast.success(
+							`Challenge Completed: ${result.completedChallenges[0].title}! +${result.completedChallenges[0].xpReward} XP`
 						);
 					}
 				} catch (error) {
 					console.error("Error posting READ_STORY challenge progress:", error);
+					// Don't necessarily show error toast for challenge update failure
 				}
 			}
 		}

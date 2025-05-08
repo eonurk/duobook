@@ -716,7 +716,7 @@ function VocabularyPracticePage() {
 					<Button
 						onClick={handleStartQuiz}
 						disabled={!canStartQuiz}
-						className="w-full mt-2 py-5 sm:py-3 text-base sm:text-lg font-semibold bg-green-600 text-white hover:bg-green-700 shadow-md hover:shadow-lg transition-all duration-200 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none disabled:cursor-not-allowed"
+						className="w-full py-5 text-base sm:text-lg font-semibold bg-green-600 text-white hover:bg-green-700 shadow-md hover:shadow-lg transition-all duration-200 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none disabled:cursor-not-allowed"
 						aria-label={`Start quiz for ${selectedLanguage} language`}
 					>
 						<Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Start Quiz
