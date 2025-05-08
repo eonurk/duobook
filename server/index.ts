@@ -1101,6 +1101,35 @@ app.get(
 	})
 );
 
+// Endpoint to get total number of stories
+app.get("/api/stats/total-stories", async (req, res) => {
+	try {
+		// Correct model name from your schema is 'Story'
+		const count = await prisma.story.count();
+		res.json({ totalStories: count });
+	} catch (error) {
+		console.error("Error fetching total stories:", error);
+		res.status(500).json({ error: "Failed to fetch total stories" });
+	}
+});
+
+// Endpoint to get total number of users
+app.get("/api/stats/total-users", async (req, res) => {
+	try {
+		// Counting distinct userIds from 'UserProgress' model
+		// as there isn't a separate 'User' model in your schema
+		const count = await prisma.userProgress.count(); // This counts all UserProgress entries.
+		// If a user can have multiple UserProgress entries
+		// and you want unique users, this might need adjustment.
+		// However, UserProgress.userId is marked @unique,
+		// so count() on UserProgress should be equivalent to distinct users.
+		res.json({ totalUsers: count });
+	} catch (error) {
+		console.error("Error fetching total users:", error);
+		res.status(500).json({ error: "Failed to fetch total users" });
+	}
+});
+
 // POST progress towards a specific challenge TYPE
 app.post(
 	"/api/user/challenges/progress",

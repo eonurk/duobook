@@ -16,7 +16,6 @@ const formatTimeAgo = (dateString) => {
 	const days = Math.round(hours / 24);
 	const weeks = Math.round(days / 7);
 	const months = Math.round(days / 30.44); // Average days in month
-	const years = Math.round(days / 365);
 
 	if (seconds < 60) return `${seconds}s ago`;
 	if (minutes < 60) return `${minutes}m ago`;
@@ -85,7 +84,7 @@ const StoryCard = ({ story }) => {
 						length: story.length,
 					},
 				}}
-				className="mt-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors self-start group"
+				className="mt-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors self-start group"
 			>
 				Read Story <ArrowRight className="w-4 h-4 ml-2" />
 			</Link>

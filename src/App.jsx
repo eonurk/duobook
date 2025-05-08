@@ -375,7 +375,7 @@ function MainAppView({ generateStory }) {
 				{!isGenerating && (
 					<>
 						<h1 className="text-2xl font-semibold text-center mb-2">DuoBook</h1>
-						<p className="text-center text-muted-foreground mb-6">
+						<p className="text-center text-muted-foreground mb-4">
 							Generate bilingual stories to learn any language
 						</p>
 						<InputForm onSubmit={handleGenerate} isLoading={isGenerating} />
@@ -514,12 +514,6 @@ function MainAppView({ generateStory }) {
 						<div className="mt-12 pt-8 border-t">
 							<div className="flex justify-between items-center mb-6">
 								<h2 className="text-2xl font-bold">Latest Community Stories</h2>
-								<Link
-									to="/explore-stories"
-									className="text-sm text-blue-600 hover:underline"
-								>
-									Explore All &rarr;
-								</Link>
 							</div>
 							{loadingCommunityStories && (
 								<div className="text-center py-4">
@@ -541,6 +535,12 @@ function MainAppView({ generateStory }) {
 										{latestCommunityStories.map((story) => (
 											<StoryCard key={story.id} story={story} />
 										))}
+										<Link
+											to="/explore-stories"
+											className="text-sm text-orange-600 hover:underline mt-2 ml-2"
+										>
+											Explore All &rarr;
+										</Link>
 									</div>
 								)}
 							{!loadingCommunityStories &&

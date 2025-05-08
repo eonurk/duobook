@@ -19,7 +19,8 @@ import {
 	CardTitle,
 } from "@/components/ui/card"; // Import Card components
 import duobookImg from "../assets/duobook.jpg";
-import { Button } from "@/components/ui/button";
+import { getTotalStoriesCount, getTotalUsersCount } from "@/lib/api"; // Import stats API functions
+// Removed unused HNLogo import
 
 // Common languages for selection
 const languages = [
@@ -185,16 +186,72 @@ function InputForm({ onSubmit, isLoading }) {
 	const [activeTab, setActiveTab] = useState("login"); // Added activeTab state
 	const [isMobile, setIsMobile] = useState(false); // State for mobile detection
 
-	// Effect for mobile detection on mount
+	// Stats State
+	const [totalStories, setTotalStories] = useState(null);
+	const [totalUsers, setTotalUsers] = useState(null);
+	const [statsLoading, setStatsLoading] = useState(true);
+
+	// Calculate the number of supported languages
+	const numberOfLanguages = languages.length;
+
+	// Effect for mobile detection on mount and for loading story parameters from URL
 	useEffect(() => {
 		const checkIsMobile = () => {
-			// Simple check for touch support
 			const touchSupported =
 				"ontouchstart" in window || navigator.maxTouchPoints > 0;
 			setIsMobile(touchSupported);
 		};
 		checkIsMobile();
-		// Optional: Add resize listener if needed, but touch support is usually enough for this purpose
+
+		// Load story parameters from URL
+		const params = new URLSearchParams(window.location.search);
+		const sharedDesc = params.get("desc");
+		const sharedSL = params.get("sl");
+		const sharedTL = params.get("tl");
+		const sharedDI = params.get("di");
+		const sharedLI = params.get("li");
+
+		if (sharedDesc) {
+			setDescription(decodeURIComponent(sharedDesc));
+		}
+		if (sharedSL) {
+			setSourceLang(decodeURIComponent(sharedSL));
+		}
+		if (sharedTL) {
+			setTargetLang(decodeURIComponent(sharedTL));
+		}
+		if (sharedDI) {
+			const di = parseInt(sharedDI, 10);
+			if (!isNaN(di) && di >= 0 && di < difficultyMap.length) {
+				setDifficultyIndex(di);
+			}
+		}
+		if (sharedLI) {
+			const li = parseInt(sharedLI, 10);
+			if (!isNaN(li) && li >= 0 && li < lengthMap.length) {
+				setLengthIndex(li);
+			}
+		}
+	}, []); // Empty dependency array ensures this runs only once on mount
+
+	// Effect to load site statistics
+	useEffect(() => {
+		const fetchStats = async () => {
+			try {
+				setStatsLoading(true);
+				const storiesData = await getTotalStoriesCount();
+				setTotalStories(storiesData.totalStories);
+
+				const usersData = await getTotalUsersCount();
+				setTotalUsers(usersData.totalUsers);
+			} catch (error) {
+				console.error("Failed to fetch site statistics:", error);
+			} finally {
+				setStatsLoading(false);
+			}
+		};
+
+		fetchStats();
 	}, []);
 
 	const handleSubmit = (e) => {
@@ -229,6 +286,22 @@ function InputForm({ onSubmit, isLoading }) {
 
 	return (
 		<>
+			{/* Site Stats and Badge Section */}
+			<div className="text-center">
+				<a
+					href="https://news.ycombinator.com/item?id=43886381"
+					target="_blank"
+					rel="noopener noreferrer"
+					className="inline-block"
+					// Classes for a more badge-like appearance: smaller, rounded, specific colors
+				>
+					<img
+						src="https://hackerbadge.vercel.app/api?id=43886381"
+						alt="Hacker News Logo"
+						className="aspect-auto w-48 mb-4"
+					/>
+				</a>
+			</div>
 			<style>{`
 				.custom-select {
 					background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23777' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
@@ -673,6 +746,47 @@ function InputForm({ onSubmit, isLoading }) {
 					</Card>
 				</DialogContent>
 			</Dialog>
+
+			{statsLoading ? (
+				<p className="text-sm text-gray-500 mt-4">Loading stats...</p>
+			) : (
+				<div className="mt-10 border-t pt-6">
+					<h1 className="text-2xl font-bold text-center text-gray-800 dark:text-gray-200">
+						DuoBook Stats
+					</h1>
+					<div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center ">
+						{totalStories !== null && (
+							<div>
+								<p className="text-4xl font-bold text-gray-800 dark:text-gray-200">
+									{totalStories.toLocaleString()}+
+								</p>
+								<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+									Stories Generated
+								</p>
+							</div>
+						)}
+						{totalUsers !== null && (
+							<div>
+								<p className="text-4xl font-bold text-gray-800 dark:text-gray-200">
+									{totalUsers.toLocaleString()}+
+								</p>
+								<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+									Language Learners
+								</p>
+							</div>
+						)}
+						{/* Display Number of Languages Supported */}
+						<div>
+							<p className="text-4xl font-bold text-gray-800 dark:text-gray-200">
+								{numberOfLanguages}+
+							</p>
+							<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+								Languages Supported
+							</p>
+						</div>
+					</div>
+				</div>
+			)}
 		</>
 	);
 }

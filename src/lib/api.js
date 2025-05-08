@@ -199,3 +199,9 @@ export const getLatestStories = async (
 		throw error; // Re-throw to be caught by the calling component
 	}
 };
+
+// Statistics
+export const getTotalStoriesCount = () =>
+	authenticatedFetch("/stats/total-stories");
+export const getTotalUsersCount = () =>
+	authenticatedFetch("/stats/total-users");
