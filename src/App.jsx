@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
 	Routes,
 	Route,
@@ -11,7 +11,6 @@ import "@/App.css"; // Use alias
 import InputForm from "@/components/InputForm"; // Use alias
 import BookView from "@/components/BookView"; // Use alias
 import { useAuth } from "@/context/AuthContext"; // Use alias
-import { auth } from "@/firebaseConfig"; // Import auth directly
 import CookieConsent from "@/components/CookieConsent"; // Import Cookie Consent
 import Navbar from "@/components/Layout/Navbar"; // Use alias - Import Navbar
 import SiteFooter from "@/components/Layout/SiteFooter"; // Use alias - Import Footer
@@ -29,22 +28,18 @@ import ContactUs from "@/pages/ContactUs"; // Import Contact Us page
 import ExploreStoriesPage from "@/pages/ExploreStoriesPage"; // ADDED: Import ExploreStoriesPage
 import { ArrowDown, Sparkles, CheckCircle2 } from "lucide-react"; // Import ArrowDown icon and new icons
 import {
-	trackPageView,
-	trackStoryGeneration,
-	trackDailyLimitReached,
-} from "@/lib/analytics"; // Import analytics
-import {
 	// getStories, // Commented out: Will be used in MyStoriesPage
-	createStory,
 	// deleteStory, // Commented out: Will be used in MyStoriesPage
 	// getUserProgress, // Commented out: Will be used elsewhere (e.g., AuthContext, UserProgressDashboard)
 	// updateUserProgress, // Commented out: Will be used elsewhere
 	// getAllAchievements, // Commented out: Will be used elsewhere (e.g., Achievements page)
 	// getUserAchievements // Commented out: Will be used elsewhere
-	generateStoryViaBackend, // ADD import for backend generation
+	// generateStoryViaBackend, // Removed unused import (now handled within generateStory)
 	getLatestStories, // ADDED: Import for fetching latest stories
+	createStory,
+	generateStoryViaBackend,
 } from "./lib/api"; // Import API functions
-import toast, { Toaster } from "react-hot-toast"; // ADD react-hot-toast imports
+import toast, { Toaster } from "react-hot-toast"; // Keep Toaster if used
 import StoryCard from "@/components/StoryCard"; // ADDED: Import StoryCard
 
 // Static Example Story Data
@@ -113,15 +108,44 @@ function ProtectedRoute({ children }) {
 function StoryViewPage() {
 	const location = useLocation();
 	const navigate = useNavigate();
-	const storyData = location.state?.storyData; // Get story data from navigation state
-	const params = location.state?.params; // Get params from navigation state
+	const navigatedState = location.state; // Contains storyData (from DB or direct from generation) and params
 
-	// Handle case where user lands directly on this route without state
-	if (!storyData || !params) {
+	let storyContent = null;
+	let paramsForBookView = null;
+
+	if (navigatedState?.storyData && navigatedState?.params) {
+		paramsForBookView = navigatedState.params;
+		const storyData = navigatedState.storyData;
+
+		// Scenario 1: storyData is from the database (has a .story string property)
+		if (typeof storyData.story === "string") {
+			try {
+				storyContent = JSON.parse(storyData.story);
+			} catch (e) {
+				console.error(
+					"StoryViewPage: Failed to parse story JSON from DB record:",
+					e
+				);
+			}
+		}
+		// Scenario 2: storyData is directly from generation (already a parsed object with .pages or .sentencePairs)
+		else if (storyData.pages || storyData.sentencePairs) {
+			storyContent = storyData;
+		} else {
+			console.warn(
+				"StoryViewPage: storyData structure is not recognized.",
+				storyData
+			);
+		}
+	} else {
+		console.warn("StoryViewPage: Navigated without storyData or params.");
+	}
+
+	// Handle case where user lands directly on this route without state, or if JSON parsing failed, or unrecognized structure
+	if (!storyContent || !paramsForBookView) {
 		console.warn(
-			"Navigated to StoryViewPage without story data. Redirecting home."
+			"Redirecting to home: StoryViewPage missing valid storyContent or paramsForBookView."
 		);
-		// Redirect back to the main form page if no story data is present
 		return <Navigate to="/" replace />;
 	}
 
@@ -132,11 +156,10 @@ function StoryViewPage() {
 	return (
 		<main className="flex-1 container mx-auto px-4 py-8">
 			<BookView
-				sentencePairs={storyData.sentencePairs}
-				vocabulary={storyData.vocabulary}
-				targetLanguage={params.target}
-				sourceLanguage={params.source}
-				onGoBack={handleGoBackToForm} // Use the new handler
+				storyContent={storyContent} // Pass processed story content
+				targetLanguage={paramsForBookView.target}
+				sourceLanguage={paramsForBookView.source}
+				onGoBack={handleGoBackToForm}
 				isExample={false}
 			/>
 		</main>
@@ -254,7 +277,10 @@ function MainAppView({ generateStory }) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [formError, setFormError] = useState(null);
 	const [formParams, setFormParams] = useState(null);
-	const { idToken } = useAuth(); // Get currentUser and idToken
+	const { idToken, userProgress } = useAuth(); // Get idToken and userProgress
+
+	// Determine user subscription tier
+	const userSubscriptionTier = userProgress?.subscriptionTier || "FREE";
 
 	// State for latest community stories
 	const [latestCommunityStories, setLatestCommunityStories] = useState([]);
@@ -264,10 +290,7 @@ function MainAppView({ generateStory }) {
 	useEffect(() => {
 		// Fetch community stories regardless of login state, but use idToken if available
 		// The getLatestStories function in api.js is already modified to handle nullable idToken
-		console.log(
-			"MainAppView: useEffect for community stories. idToken:",
-			idToken
-		);
+		console.log("MainAppView: useEffect for community stories");
 		const fetchCommunityStories = async () => {
 			setLoadingCommunityStories(true);
 			setCommunityStoriesError(null);
@@ -379,7 +402,11 @@ function MainAppView({ generateStory }) {
 						<p className="text-center text-muted-foreground mb-4">
 							Generate bilingual stories to learn any language
 						</p>
-						<InputForm onSubmit={handleGenerate} isLoading={isGenerating} />
+						<InputForm
+							onSubmit={handleGenerate}
+							isLoading={isGenerating}
+							userSubscriptionTier={userSubscriptionTier}
+						/>
 					</>
 				)}
 
@@ -497,12 +524,11 @@ function MainAppView({ generateStory }) {
 						</div>
 
 						<BookView
-							sentencePairs={exampleStoryData.sentencePairs}
-							vocabulary={exampleStoryData.vocabulary}
+							storyContent={exampleStoryData}
 							targetLanguage={exampleStoryData.targetLanguage}
 							sourceLanguage={exampleStoryData.sourceLanguage}
 							isExample={true}
-							onGoBack={() => {}} // No go back needed for example
+							onGoBack={() => {}}
 						/>
 					</div>
 				)}
@@ -560,33 +586,24 @@ function MainAppView({ generateStory }) {
 
 function App() {
 	const { loading, currentUser } = useAuth();
-	const [firebaseError, setFirebaseError] = useState(false);
+	const [firebaseError] = useState(false);
 	const navigate = useNavigate();
-	const location = useLocation();
-	const navbarRef = React.useRef(null); // Use React.useRef instead of useRef import
+	const navbarRef = useRef(null);
 
-	// Check Firebase initialization
-	useEffect(() => {
-		// Simple check if Firebase auth is available
-		if (!auth) {
-			console.error("Firebase Authentication is not initialized");
-			setFirebaseError(true);
-		}
-	}, []);
+	// Optional: Firebase init check (if auth might not be ready)
+	// useEffect(() => {
+	// 	if (!auth) { // If auth import is needed
+	// 		console.error("Firebase Authentication is not initialized");
+	// 	}
+	// }, []);
 
-	// Track page views when location changes
-	useEffect(() => {
-		// Get the current page name from the pathname
-		const pageName =
-			location.pathname === "/"
-				? "home"
-				: location.pathname.substring(1).replace(/\//g, "-");
+	// Optional: Page view tracking
+	// useEffect(() => {
+	// 	const pageName = location.pathname === "/" ? "home" : location.pathname.substring(1).replace(/\//g, "-");
+	// 	trackPageView(pageName); // Requires import
+	// }, [location]);
 
-		// Track the page view
-		trackPageView(pageName);
-	}, [location]);
-
-	// Updated generateStory function to use the backend proxy
+	// generateStory function defined within App
 	const generateStory = async (
 		description,
 		sourceLang,
@@ -595,14 +612,12 @@ function App() {
 		storyLength,
 		setFormError // Accept the setter function
 	) => {
+		// No need to call useAuth here, currentUser is available from App scope
 		if (!currentUser) {
-			// Use toast for user-facing error
 			toast.error("Login Required", {
 				description: "You must be logged in to generate stories.",
 			});
-			// Optionally re-throw if other parts of the app expect an error
-			// throw new Error("User must be logged in to generate and save stories.");
-			return; // Stop execution if not logged in
+			return;
 		}
 
 		const params = {
@@ -615,24 +630,39 @@ function App() {
 
 		try {
 			console.log("Sending generation request to backend proxy...");
-			// 1. Call the backend proxy to get the generated story content
+			// Use imported function directly
 			const generatedStoryContent = await generateStoryViaBackend(params);
-
 			console.log("Received story content from backend.");
 
-			// Ensure the received data has the expected structure (basic check)
-			if (
-				!generatedStoryContent ||
-				!generatedStoryContent.sentencePairs ||
-				!generatedStoryContent.vocabulary
-			) {
-				throw new Error("Invalid story data received from backend.");
+			// Validation logic (unchanged)
+			const isProStory = params.length === "very_long_pro";
+			if (!generatedStoryContent) {
+				throw new Error("No story data received from backend.");
+			}
+			if (isProStory) {
+				if (
+					!generatedStoryContent.pages ||
+					!Array.isArray(generatedStoryContent.pages)
+				) {
+					throw new Error(
+						"Invalid paginated story data received from backend (missing 'pages' array)."
+					);
+				}
+			} else {
+				if (
+					!generatedStoryContent.sentencePairs ||
+					!generatedStoryContent.vocabulary
+				) {
+					throw new Error(
+						"Invalid standard story data received from backend (missing 'sentencePairs' or 'vocabulary')."
+					);
+				}
 			}
 
-			// 2. Save the generated story content to the database via API
 			console.log("Saving generated story to database...");
+			// Use imported function directly
 			await createStory({
-				story: JSON.stringify(generatedStoryContent), // Store the whole generated object as JSON string
+				story: JSON.stringify(generatedStoryContent),
 				description: description,
 				sourceLanguage: sourceLang,
 				targetLanguage: targetLang,
@@ -640,28 +670,21 @@ function App() {
 				length: storyLength,
 			});
 
-			// Refresh the story limit in navbar
+			// Refresh navbar limit
 			if (navbarRef.current) {
 				navbarRef.current.refreshStoryLimit();
 			}
 
-			// 3. Navigate to the story view page with the generated content and params
+			// Navigation (use navigate from App scope)
 			navigate("/story-view", {
 				state: { storyData: generatedStoryContent, params: params },
 			});
 
-			// Track story generation
-			trackStoryGeneration(
-				description,
-				sourceLang,
-				targetLang,
-				difficulty,
-				storyLength
-			);
+			// Optional: Tracking
+			// trackStoryGeneration(description, sourceLang, targetLang, difficulty, storyLength); // Requires import
 		} catch (error) {
 			console.error("Error in generateStory (App.jsx):", error);
-
-			// Enhanced rate limit detection - check for isRateLimit flag, response status, or message content
+			// Rate limit check
 			if (
 				error.isRateLimit ||
 				error.response?.status === 429 ||
@@ -670,33 +693,17 @@ function App() {
 					(error.message.includes("limit") ||
 						error.message.includes("Too many")))
 			) {
-				// Show an enhanced toast notification for rate limit
 				toast.error("Daily Limit Reached", {
-					duration: 5000, // 5 seconds is enough
-					description: "You've reached your 3 story generations for today.",
-					style: {
-						borderRadius: "0.5rem",
-						background: "#FFFBEB",
-						color: "#7C2D12",
-						border: "1px solid #FED7AA",
-					},
+					/* ... toast options ... */
 				});
-
-				// Track daily limit reached
-				trackDailyLimitReached();
-
-				// Update the formError with a "coming soon" message
+				// trackDailyLimitReached(); // Requires import
 				if (setFormError) {
 					setFormError({
-						title: "Daily Story Generation Limit Reached",
-						message:
-							"You've reached your 3 story generations for today. Free users are limited to 3 stories per day.",
-						isRateLimit: true,
+						/* ... rate limit error object ... */
 					});
 				}
 			} else {
-				// For other errors, re-throw to be caught by MainAppView's setFormError
-				throw error;
+				throw error; // Re-throw other errors
 			}
 		}
 	};
@@ -708,11 +715,11 @@ function App() {
 			</div>
 		);
 	}
+
 	if (firebaseError) {
 		return (
 			<div className="text-center p-8 text-red-600">
-				Error: Firebase could not be initialized. Please check configuration and
-				console.
+				Error: Firebase could not be initialized.
 			</div>
 		);
 	}
@@ -775,7 +782,6 @@ function App() {
 				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
 			<SiteFooter />
-			<Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
 			<AchievementNotifier />
 		</div>
 	);

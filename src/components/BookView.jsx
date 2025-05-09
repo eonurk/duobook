@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 // Import API function for challenge progress
 import { postChallengeProgress } from "@/lib/api";
-import toast from "react-hot-toast"; // Import toast
+// import toast from "react-hot-toast"; // Removed unused import
 
 // Add CSS for mobile responsiveness
 import "./BookView.mobile.css"; // This will be created next
@@ -105,14 +105,20 @@ const getBestVoiceForLanguage = (voices, langCode) => {
 };
 
 function BookView({
-	sentencePairs,
-	vocabulary,
+	storyContent, // New prop: parsed JSON from Story.story
 	targetLanguage,
 	sourceLanguage,
 	onGoBack,
 	isExample = false,
 }) {
-	const { currentUser, userProgress, updateProgressData } = useAuth(); // Get updateProgressData
+	const { currentUser } = useAuth(); // Only currentUser is used directly in this component for now
+
+	// --- Pagination State ---
+	const [currentPageIndex, setCurrentPageIndex] = useState(0);
+	const [isPaginated, setIsPaginated] = useState(false);
+	const [currentSentencePairs, setCurrentSentencePairs] = useState([]);
+	const [currentVocabulary, setCurrentVocabulary] = useState([]);
+	const [totalPages, setTotalPages] = useState(0);
 
 	// Default implementation for onGoBack if not provided
 	const handleGoBack = useCallback(() => {
@@ -222,14 +228,59 @@ function BookView({
 		}
 	}, [voices, targetLanguage, ttsReady]); // Rerun when voices, targetLanguage, or ttsReady changes
 
-	// Reset progress when sentencePairs change (e.g., new book generated)
+	// Reset progress when sentencePairs change (e.g., new book generated OR page changed)
 	useEffect(() => {
 		setActiveSentenceIndex(0);
 		setRevealedSourceIndices(new Set());
 		setIsFinished(false);
 		setShowAllSource(false); // Reset toggle too
-		if (synth?.speaking) synth.cancel(); // Stop speech if generating new story
-	}, [sentencePairs, synth]); // Add synth here
+		if (synth?.speaking) synth.cancel(); // Stop speech
+	}, [currentSentencePairs, synth]); // Now depends on currentSentencePairs
+
+	// --- Effect to process storyContent and initialize/update page data ---
+	useEffect(() => {
+		if (storyContent) {
+			const hasPages =
+				storyContent.pages &&
+				Array.isArray(storyContent.pages) &&
+				storyContent.pages.length > 0;
+			setIsPaginated(hasPages);
+
+			if (hasPages) {
+				setTotalPages(storyContent.pages.length);
+				// Ensure currentPageIndex is valid if storyContent changes to a shorter paginated story
+				const newPageIndex = Math.min(
+					currentPageIndex,
+					storyContent.pages.length - 1
+				);
+				// If currentPageIndex was reset due to content change, ensure it's not negative.
+				// This check is more for safety, Math.min should handle it for valid array lengths.
+				const finalPageIndex = Math.max(0, newPageIndex);
+				setCurrentPageIndex(finalPageIndex);
+
+				setCurrentSentencePairs(
+					storyContent.pages[finalPageIndex]?.sentencePairs || []
+				);
+				setCurrentVocabulary(
+					storyContent.pages[finalPageIndex]?.vocabulary || []
+				);
+			} else {
+				// Standard non-paginated story
+				setTotalPages(0);
+				setCurrentPageIndex(0); // Reset for non-paginated
+				setCurrentSentencePairs(storyContent.sentencePairs || []);
+				setCurrentVocabulary(storyContent.vocabulary || []);
+			}
+		} else {
+			// No storyContent, clear everything
+			setIsPaginated(false);
+			setTotalPages(0);
+			setCurrentPageIndex(0);
+			setCurrentSentencePairs([]);
+			setCurrentVocabulary([]);
+		}
+		// Reset sentence-level progress when content changes (delegated to the other useEffect based on currentSentencePairs)
+	}, [storyContent, currentPageIndex]); // Re-run if storyContent changes OR if currentPageIndex changes externally (though it shouldn't)
 
 	// Tooltip State (remains the same)
 	const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -239,14 +290,14 @@ function BookView({
 	// --- Word Hover Logic ---
 	const vocabularyMap = useMemo(() => {
 		const map = new Map();
-		if (vocabulary) {
-			// Check if vocabulary exists
-			vocabulary.forEach((item) => {
+		// Use currentVocabulary which is page-specific for paginated stories
+		if (currentVocabulary) {
+			currentVocabulary.forEach((item) => {
 				map.set(item.word.toLowerCase(), item.translation);
 			});
 		}
 		return map;
-	}, [vocabulary]);
+	}, [currentVocabulary]); // Depends on currentVocabulary
 
 	// New state for tracking word interactions and gamification
 	const [wordsLearned, setWordsLearned] = useState(new Set());
@@ -333,8 +384,9 @@ function BookView({
 
 	// Calculate Progress
 	const progressPercent =
-		sentencePairs.length > 0
-			? ((activeSentenceIndex + (isFinished ? 1 : 0)) / sentencePairs.length) *
+		currentSentencePairs.length > 0
+			? ((activeSentenceIndex + (isFinished ? 1 : 0)) /
+					currentSentencePairs.length) *
 			  100
 			: 0;
 
@@ -397,7 +449,7 @@ function BookView({
 				setIsSpeaking(false);
 				if (
 					autoPlayEnabled &&
-					activeSentenceIndex < sentencePairs.length - 1 &&
+					activeSentenceIndex < currentSentencePairs.length - 1 &&
 					!isFinished
 				) {
 					handleNextSentence(); // Make sure handleNextSentence is defined
@@ -420,15 +472,15 @@ function BookView({
 			speechPitch,
 			autoPlayEnabled,
 			activeSentenceIndex,
-			sentencePairs,
+			currentSentencePairs,
 			isFinished,
 		]
 	);
 
 	// Auto-play when active sentence changes
 	useEffect(() => {
-		if (autoPlayEnabled && !isFinished && sentencePairs.length > 0) {
-			const currentSentence = sentencePairs[activeSentenceIndex]?.target;
+		if (autoPlayEnabled && !isFinished && currentSentencePairs.length > 0) {
+			const currentSentence = currentSentencePairs[activeSentenceIndex]?.target;
 			if (currentSentence) {
 				handleSpeak(currentSentence);
 			}
@@ -437,7 +489,7 @@ function BookView({
 		if (!autoPlayEnabled && synth?.speaking) {
 			synth.cancel();
 		}
-	}, [activeSentenceIndex, autoPlayEnabled, isFinished, sentencePairs]); // Removed handleSpeak from deps
+	}, [activeSentenceIndex, autoPlayEnabled, isFinished, currentSentencePairs]); // Removed handleSpeak from deps
 
 	// --- TTS Controls ---
 	const handleToggleAutoPlay = () => setAutoPlayEnabled((prev) => !prev);
@@ -496,71 +548,29 @@ function BookView({
 		if (isNavigating) return;
 		setIsNavigating(true);
 
-		// Reveal the current source sentence if not already revealed
 		if (!revealedSourceIndices.has(activeSentenceIndex)) {
 			const newRevealedIndices = new Set(revealedSourceIndices);
 			newRevealedIndices.add(activeSentenceIndex);
 			setRevealedSourceIndices(newRevealedIndices);
 		}
 
-		const isFinishing = activeSentenceIndex === sentencePairs.length - 1;
+		const isOnLastSentenceOfPage =
+			activeSentenceIndex === currentSentencePairs.length - 1;
 
-		if (!isFinishing) {
-			// Move to next sentence
-			setActiveSentenceIndex((prevIndex) => prevIndex + 1);
-		} else {
-			// At the end, mark as finished
-			setIsFinished(true);
-
-			// If finishing a non-example story, post progress
-			if (!isExample && currentUser) {
-				// 1. Update general progress for achievements
-				try {
-					const updates = {
-						storiesCompleted: 1, // Increment by 1
-						pointsToAdd: 25, // Example points
-						sentencesRead: sentencePairs.length, // Add sentences read
-					};
-
-					// Handle advanced story completion
-					// TODO: Determine actual difficulty here (needs to be passed down or fetched)
-					// Assuming difficulty is stored somewhere accessible, like in a story object prop
-					// if (story.difficulty === "Advanced") {
-					//   updates.advancedStoriesCompleted = 1;
-					// }
-
-					// Handle new language explored
-					const currentLanguages = userProgress?.languagesExplored || [];
-					if (targetLanguage && !currentLanguages.includes(targetLanguage)) {
-						updates.newLanguage = targetLanguage; // Backend needs to handle adding this
-					}
-
-					console.log("BookView: Updating user progress", updates);
-					await updateProgressData(updates);
-					toast.success("Story finished! Progress saved.", { duration: 2000 });
-				} catch (error) {
-					console.error("BookView: Failed to update user progress:", error);
-					toast.error("Could not save progress.");
-				}
-
-				// 2. Update daily challenges (existing logic)
-				try {
-					console.log("Attempting to post READ_STORY challenge progress...");
-					const result = await postChallengeProgress({
-						challengeType: "READ_STORY",
-					});
-
-					if (result?.completedChallenges?.length > 0) {
-						// Consider using toast instead of alert
-						toast.success(
-							`Challenge Completed: ${result.completedChallenges[0].title}! +${result.completedChallenges[0].xpReward} XP`
-						);
-					}
-				} catch (error) {
-					console.error("Error posting READ_STORY challenge progress:", error);
-					// Don't necessarily show error toast for challenge update failure
-				}
+		if (isOnLastSentenceOfPage) {
+			if (isPaginated && currentPageIndex < totalPages - 1) {
+				// Go to the next page by updating the index directly
+				setCurrentPageIndex(currentPageIndex + 1);
+				// isFinished for the current page context can be considered true before navigating
+				setIsFinished(true); // Mark page as finished before flipping
+			} else {
+				// Last sentence of the last page (or non-paginated story)
+				setIsFinished(true);
+				// Potentially call overall story completion logic here if needed in the future
 			}
+		} else {
+			// Not the last sentence of the page, just advance the sentence
+			setActiveSentenceIndex((prevIndex) => prevIndex + 1);
 		}
 
 		setTimeout(() => setIsNavigating(false), 300);
@@ -601,6 +611,20 @@ function BookView({
 		setRevealedSourceIndices(newRevealedIndices);
 	};
 
+	// If no sentence pairs at all (e.g. storyContent is null or empty), show loading or error
+	if (
+		!storyContent ||
+		(!isPaginated &&
+			(!currentSentencePairs || currentSentencePairs.length === 0)) ||
+		(isPaginated && (!storyContent.pages || storyContent.pages.length === 0))
+	) {
+		return (
+			<div className="loading-container">
+				<p>Loading story content...</p>
+			</div>
+		);
+	}
+
 	// --- Rendering ---
 	return (
 		<div
@@ -621,9 +645,11 @@ function BookView({
 
 			{/* Book View itself */}
 			<div
-				className={`book-view ${isExample ? "book-view-example" : ""} ${
-					isFinished ? "book-view-finished" : ""
-				} ${isMobileView ? "book-view-mobile" : ""}`}
+				className={`book-view relative ${
+					isExample ? "book-view-example" : ""
+				} ${isFinished ? "book-view-finished" : ""} ${
+					isMobileView ? "book-view-mobile" : ""
+				}`}
 				data-language={targetLanguage || "Story"}
 			>
 				{/* If mobile, render sentences as pairs in vertical layout */}
@@ -637,7 +663,7 @@ function BookView({
 						</div>
 
 						{/* Only render 3 cards: previous (if exists), current and next (if exists) */}
-						{sentencePairs.map((pair, index) => {
+						{currentSentencePairs.map((pair, index) => {
 							// Only show cards that are adjacent to the active sentence
 							// For first sentence, there's no previous one
 							// For last sentence, there's no next one
@@ -679,7 +705,7 @@ function BookView({
 									<div className="card-header">
 										<div></div> {/* Empty div to maintain flex structure */}
 										<span className="sentence-number">
-											Sentence {index + 1} of {sentencePairs.length}
+											Sentence {index + 1} of {currentSentencePairs.length}
 										</span>
 									</div>
 
@@ -769,13 +795,16 @@ function BookView({
 						})}
 					</div>
 				) : (
-					// Original desktop layout (two columns)
-					<>
+					// Wrap desktop pages in a keyed container for animation
+					<div
+						key={`page-${currentPageIndex}`}
+						className="book-page-container flex"
+					>
 						{/* Target Language Page */}
 						<div className="page page-target">
 							<h3>{targetLanguage || "Target Language"}</h3>
 							<div className="story-content">
-								{sentencePairs.map((pair, index) => {
+								{currentSentencePairs.map((pair, index) => {
 									// Determine sentence state based on active index
 									let sentenceClass = "";
 									if (index < activeSentenceIndex) {
@@ -848,7 +877,7 @@ function BookView({
 						<div className="page page-source">
 							<h3>{sourceLanguage || "Your Language"}</h3>
 							<div className="story-content">
-								{sentencePairs.map((pair, index) => {
+								{currentSentencePairs.map((pair, index) => {
 									const isRevealed = revealedSourceIndices.has(index);
 									const finishedClass =
 										isFinished && !isExample ? "sentence-finished" : "";
@@ -915,7 +944,14 @@ function BookView({
 								})}
 							</div>
 						</div>
-					</>
+					</div>
+				)}
+
+				{/* Page Number Display (Inside Book View) - Added absolute positioning */}
+				{isPaginated && totalPages > 0 && (
+					<div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-gray-300 bg-opacity-60 text-white text-xs rounded-full">
+						Page {currentPageIndex + 1} of {totalPages}
+					</div>
 				)}
 			</div>
 
@@ -1059,7 +1095,7 @@ function BookView({
 				</div>
 			)}
 
-			{/* Navigation Buttons - Show always */}
+			{/* Navigation Buttons - Show always now */}
 			<div
 				className={`navigation-controls button-container ${
 					isMobileView ? "mobile-navigation" : ""
@@ -1068,23 +1104,94 @@ function BookView({
 				<button
 					onClick={handlePrevSentence}
 					className="button button-tertiary nav-button"
-					disabled={activeSentenceIndex === 0}
+					disabled={activeSentenceIndex === 0 && currentPageIndex === 0} // Disabled only if first sent of first page
 				>
 					&larr; Prev
 				</button>
 
 				<button
-					onClick={() => handleNextSentence()}
+					onClick={handleNextSentence}
 					className="button button-primary nav-button next-button"
-					disabled={isFinished}
+					// Disable if truly finished: last sentence of last page OR (if not paginated) last sentence
+					disabled={
+						isFinished && (!isPaginated || currentPageIndex === totalPages - 1)
+					}
 				>
-					{activeSentenceIndex === sentencePairs.length - 1 ? "Finish" : "Next"}{" "}
+					{/* Labeling needs to be context-aware if it's truly the end of book vs end of page */}
+					{activeSentenceIndex === currentSentencePairs.length - 1 &&
+					(!isPaginated || currentPageIndex === totalPages - 1)
+						? "Finish"
+						: "Next"}{" "}
 					&rarr;
 				</button>
 			</div>
 
-			{/* Congratulatory Message - Show always when finished */}
-			{isFinished && (
+			{/* --- PAGINATION CONTROLS --- */}
+			{isPaginated && totalPages > 1 && (
+				<div className="flex justify-center items-center space-x-2 my-6 pt-4 border-t flex-wrap">
+					{/* Previous Button (Common) */}
+					<button
+						onClick={() => setCurrentPageIndex(currentPageIndex - 1)} // Simpler navigation
+						disabled={currentPageIndex === 0}
+						className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150 text-sm"
+					>
+						<ChevronLeft size={18} className="mr-1" /> Prev
+					</button>
+
+					{/* Page Numbers - Conditional Rendering */}
+					{isMobileView ? (
+						// Mobile: Show limited page numbers (Prev, Current, Next if they exist)
+						<>
+							{[currentPageIndex - 1, currentPageIndex, currentPageIndex + 1]
+								.filter((pn) => pn >= 0 && pn < totalPages)
+								.map((pageNumber) => (
+									<button
+										key={`page-mobile-${pageNumber}`}
+										onClick={() => setCurrentPageIndex(pageNumber)}
+										disabled={currentPageIndex === pageNumber}
+										className={`px-3 py-2 rounded-md transition-colors duration-150 text-sm font-medium ${
+											currentPageIndex === pageNumber
+												? "bg-amber-500 text-white cursor-default"
+												: "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+										}`}
+									>
+										{pageNumber + 1}
+									</button>
+								))}
+						</>
+					) : (
+						// Desktop: Show all page numbers
+						<>
+							{[...Array(totalPages).keys()].map((pageNumber) => (
+								<button
+									key={`page-desktop-${pageNumber}`}
+									onClick={() => setCurrentPageIndex(pageNumber)}
+									disabled={currentPageIndex === pageNumber}
+									className={`px-3 py-2 rounded-md transition-colors duration-150 text-sm font-medium ${
+										currentPageIndex === pageNumber
+											? "bg-amber-500 text-white cursor-default"
+											: "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+									}`}
+								>
+									{pageNumber + 1}
+								</button>
+							))}
+						</>
+					)}
+
+					{/* Next Button (Common) */}
+					<button
+						onClick={() => setCurrentPageIndex(currentPageIndex + 1)} // Simpler navigation
+						disabled={currentPageIndex === totalPages - 1}
+						className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150 text-sm"
+					>
+						Next <ChevronRight size={18} className="ml-1" />
+					</button>
+				</div>
+			)}
+
+			{/* Congratulatory Message - Show always when finished (applies to page finish if paginated AND it's the last page) */}
+			{isFinished && (!isPaginated || currentPageIndex === totalPages - 1) && (
 				<div className="congrats-message">
 					🎉 Well done! You finished the story! 🎉
 				</div>
@@ -1097,14 +1204,14 @@ function BookView({
 						className="vocabulary-header"
 						onClick={() => setIsVocabExpanded(!isVocabExpanded)}
 					>
-						<h3>Key Vocabulary ({vocabulary?.length || 0})</h3>
+						<h3>Key Vocabulary ({currentVocabulary?.length || 0})</h3>
 						<span className="expand-icon">{isVocabExpanded ? "▼" : "▶"}</span>
 					</div>
 					{isVocabExpanded && (
 						<div className="vocabulary-list">
-							{vocabulary && vocabulary.length > 0 ? (
+							{currentVocabulary && currentVocabulary.length > 0 ? (
 								<ul className="simple-vocab-list">
-									{vocabulary.map((item, index) => (
+									{currentVocabulary.map((item, index) => (
 										<li key={`vocab-${index}`}>
 											<strong>{item.word}</strong>: {item.translation}
 										</li>
@@ -1117,7 +1224,11 @@ function BookView({
 					)}
 				</div>
 			) : (
-				<VocabularyList vocabulary={vocabulary} />
+				<VocabularyList
+					vocabulary={currentVocabulary}
+					isExpanded={isVocabExpanded}
+					setIsExpanded={setIsVocabExpanded}
+				/>
 			)}
 
 			{/* Action Buttons - Show always */}
@@ -1142,5 +1253,13 @@ function BookView({
 		</div>
 	);
 }
+
+BookView.propTypes = {
+	storyContent: PropTypes.object.isRequired,
+	targetLanguage: PropTypes.string.isRequired,
+	sourceLanguage: PropTypes.string,
+	onGoBack: PropTypes.func,
+	isExample: PropTypes.bool,
+};
 
 export default BookView;

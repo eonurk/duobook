@@ -438,31 +438,67 @@ app.post(
 			return next(err);
 		}
 
-		// Construct the prompt (similar to frontend)
-		// TODO: Refine this prompt based on the original frontend logic
-		const prompt = `Create a story based on this description: "${description}". The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}. The story should be ${length} in length. Return the story as a JSON object with two keys: "sentencePairs" (an array of objects, each with "source" and "target" sentences) and "vocabulary" (an array of objects, each with "word" in ${source} and "translation" in ${target}). Use simple language appropriate for the difficulty level. Ensure the JSON is valid. Example SentencePair format: { "source": "Sentence in source language.", "target": "Sentence translated to target language." }. Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }.`;
+		let prompt;
+		const isProStoryRequest = length === "very_long_pro";
+
+		if (isProStoryRequest) {
+			// Pro user requesting a long, paginated story
+			// TODO: Potentially check user's tier here already if we want to prevent even calling OpenAI for non-PRO for this length
+			const numPages = 10; // Updated to 10 pages
+			prompt = `Create a story based on this description: \"${description}\".
+The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}.
+The story should have approximately ${numPages} pages.
+Return the story as a JSON object with a single key "pages".
+"pages" should be an array of page objects. Each page object must have two keys:
+1.  "sentencePairs": An array of objects, where each object has a "source" sentence (in ${source}) and a "target" sentence (translated to ${target}). Each "sentencePairs" array should contain between 6 and 8 sentence pairs.
+2.  "vocabulary": An array of objects, where each object has a "word" (in ${source}) and its "translation" (in ${target}), relevant to that page's content.
+Use simple language appropriate for the difficulty level. Ensure the JSON is valid.
+Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /* ...6 to 8 pairs total */], "vocabulary": [{ "word": "...", "translation": "..." }] }`;
+		} else {
+			// Standard story request
+			prompt = `Create a story based on this description: \"${description}\". The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}. The story should be ${length} in length. Return the story as a JSON object with two keys: "sentencePairs" (an array of objects, each with "source" and "target" sentences) and "vocabulary" (an array of objects, each with "word" in ${source} and "translation" in ${target}). Use simple language appropriate for the difficulty level. Ensure the JSON is valid. Example SentencePair format: { "source": "Sentence in source language.", "target": "Sentence translated to target language." }. Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }.`;
+		}
 
 		try {
 			console.log("Sending request to OpenAI...");
+			console.log(
+				`Using model: ${isProStoryRequest ? "gpt-4.1-mini" : "gpt-4.1-mini"}`
+			); // Log which model is being used
 			const completion = await openai.chat.completions.create({
-				model: "gpt-4.1-mini", // Or your preferred model
+				model: isProStoryRequest ? "gpt-4.1-mini" : "gpt-4.1-mini",
 				messages: [{ role: "user", content: prompt }],
 				response_format: { type: "json_object" }, // Enforce JSON output
 			});
 
 			const storyContent = completion.choices[0]?.message?.content;
 
+			// Log the raw story content received from OpenAI
+			console.log("Raw story content from OpenAI:", storyContent);
+
 			if (!storyContent) {
 				throw new Error("OpenAI did not return story content.");
 			}
 
-			console.log("Received story content from OpenAI.");
+			console.log(
+				"Received story content from OpenAI (this log might be redundant now but keeping for safety)."
+			);
 			// Optionally, validate the structure of storyContent before sending
 			try {
 				const parsedStory = JSON.parse(storyContent);
-				// Minimal validation - check if keys exist
-				if (!parsedStory.sentencePairs || !parsedStory.vocabulary) {
-					throw new Error("Invalid JSON structure received from OpenAI.");
+				// Minimal validation - check if keys exist based on request type
+				if (isProStoryRequest) {
+					if (!parsedStory.pages || !Array.isArray(parsedStory.pages)) {
+						throw new Error(
+							"Invalid JSON structure for paginated story received from OpenAI (missing 'pages' array)."
+						);
+					}
+					// Could add deeper validation for each page object here if needed
+				} else {
+					if (!parsedStory.sentencePairs || !parsedStory.vocabulary) {
+						throw new Error(
+							"Invalid JSON structure for standard story received from OpenAI."
+						);
+					}
 				}
 				res.status(200).json(parsedStory); // Send parsed JSON back
 			} catch (parseError) {
@@ -520,12 +556,12 @@ app.post(
 		}
 		// Destructure all expected fields from the body
 		const {
-			story,
+			story, // This is the JSON string of the story content
 			description,
 			sourceLanguage,
 			targetLanguage,
 			difficulty,
-			length,
+			length, // This 'length' param is crucial for the PRO check
 		} = req.body;
 
 		// Only the story JSON string is strictly required now
@@ -542,27 +578,40 @@ app.post(
 				select: { subscriptionTier: true },
 			});
 
-			// If user is not premium, verify they haven't exceeded the daily limit
-			if (
-				!userProgress ||
-				(userProgress.subscriptionTier !== SubscriptionTier.PREMIUM &&
-					userProgress.subscriptionTier !== SubscriptionTier.PRO)
-			) {
-				const recentStories = await prisma.story.count({
-					where: {
-						userId: userId,
-						createdAt: {
-							gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
-						},
-					},
-				});
-
-				// Free tier users limited to 3 stories per day
-				if (recentStories >= 3) {
-					return res.status(429).json({
+			// If length indicates a "very_long_pro" story, enforce PRO tier
+			if (length === "very_long_pro") {
+				if (
+					!userProgress ||
+					userProgress.subscriptionTier !== SubscriptionTier.PRO
+				) {
+					return res.status(403).json({
 						error:
-							"Daily story limit reached. Upgrade to premium for unlimited stories.",
+							"You must have a PRO subscription to create very long stories. Please upgrade your plan.",
 					});
+				}
+			} else {
+				// Existing logic for non-PRO (or non-very_long_pro) stories: daily limit for FREE tier
+				if (
+					!userProgress ||
+					(userProgress.subscriptionTier !== SubscriptionTier.PREMIUM &&
+						userProgress.subscriptionTier !== SubscriptionTier.PRO)
+				) {
+					const recentStories = await prisma.story.count({
+						where: {
+							userId: userId,
+							createdAt: {
+								gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+							},
+						},
+					});
+
+					// Free tier users limited to 3 stories per day (can be configured)
+					const dailyLimit = 3;
+					if (recentStories >= dailyLimit) {
+						return res.status(429).json({
+							error: `Daily story limit of ${dailyLimit} reached for your current plan. Upgrade for more stories.`,
+						});
+					}
 				}
 			}
 
@@ -1004,99 +1053,82 @@ app.get(
 				const allChallenges = await prisma.challenge.findMany();
 				if (allChallenges.length === 0) {
 					console.warn("No challenge definitions found in database to assign.");
-					return res.status(200).json([]);
+					return res.status(200).json([]); // Return empty array if no definitions
 				}
 
 				// Separate core and random challenges
 				const coreChallenges = allChallenges.filter((c: any) => c.isCore);
 				const randomChallenges = allChallenges.filter((c: any) => !c.isCore);
-
-				// Determine how many random challenges to pick (aim for 3 total)
 				const totalDesired = 3;
 				const numRandomNeeded = Math.max(
 					0,
 					totalDesired - coreChallenges.length
 				);
-
-				// Shuffle and select random challenges
 				const shuffledRandom = randomChallenges.sort(() => 0.5 - Math.random());
 				const selectedRandom = shuffledRandom.slice(
 					0,
 					Math.min(numRandomNeeded, randomChallenges.length)
 				);
-
-				// Combine core and selected random challenges
 				const selectedChallenges = [...coreChallenges, ...selectedRandom];
 
-				// Transaction to create assignments for the selected challenges
-				const transactionResult = await prisma.$transaction(
-					async (tx: Prisma.TransactionClient) => {
-						// Use the combined selectedChallenges list here
-						const createPromises = selectedChallenges.map((challenge: any) =>
-							tx.userDailyChallenge
-								.create({
-									data: {
-										userId: userId,
-										challengeId: challenge.id,
-										day: todayStart,
-										progress: 0,
-										completed: false,
-									},
-									include: { challenge: true },
-								})
-								.catch((e: any) => {
-									// Explicitly type error 'e'
-									if (e.code === "P2002") {
-										// Prisma unique constraint violation code
-										console.warn(
-											`Challenge ${
-												challenge.id
-											} already exists for user ${userId} on ${todayStart.toISOString()}. Skipping.`
-										);
-										// Optionally fetch and return the existing one instead of null
-										return tx.userDailyChallenge.findUnique({
-											where: {
-												userId_challengeId_day: {
-													userId,
-													challengeId: challenge.id,
-													day: todayStart,
-												},
-											},
-											include: { challenge: true },
-										});
-									} else {
-										throw e; // Re-throw other errors
-									}
-								})
-						);
-						const newDailyChallengesRaw = await Promise.all(createPromises);
-						// Filter out null results from skipped creations
-						const newDailyChallenges = newDailyChallengesRaw.filter(Boolean);
+				// Transaction to create assignments using createMany and update timestamp
+				await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+					const challengesToCreate = selectedChallenges.map(
+						(challenge: any) => ({
+							userId: userId,
+							challengeId: challenge.id,
+							day: todayStart,
+							progress: 0,
+							completed: false,
+						})
+					);
 
-						await tx.userProgress.update({
-							where: { userId: userId },
-							data: { dailyChallengesLastGenerated: today },
+					if (challengesToCreate.length > 0) {
+						await tx.userDailyChallenge.createMany({
+							data: challengesToCreate,
+							skipDuplicates: true, // Ignore P2002 errors silently
 						});
-
-						return newDailyChallenges;
+						console.log(
+							`Attempted to create ${challengesToCreate.length} challenges (duplicates skipped).`
+						);
 					}
-				);
+
+					await tx.userProgress.update({
+						where: { userId: userId },
+						data: { dailyChallengesLastGenerated: today },
+					});
+				}); // End transaction
+
+				// --- After generation attempt, fetch ALL challenges for today ---
+				const finalDailyChallenges = await prisma.userDailyChallenge.findMany({
+					where: {
+						userId: userId,
+						day: todayStart,
+					},
+					include: { challenge: true }, // Include challenge details
+					orderBy: { challengeId: "asc" }, // Consistent ordering
+				});
+
 				console.log(
-					`Generated/retrieved ${transactionResult.length} challenges.`
+					`Returning ${
+						finalDailyChallenges.length
+					} daily challenges for user ${userId} for day ${todayStart.toISOString()}`
 				);
-				res.status(200).json(transactionResult);
+				res.status(200).json(finalDailyChallenges); // Return all challenges for the day
 			} else {
 				console.log(
-					`Returning existing daily challenges for user ${userId} for day ${todayStart.toISOString()}`
+					`Returning existing daily challenges for user ${userId} for day ${todayStart.toISOString()} (no generation needed)`
 				);
-				res.status(200).json(userProgress.userDailyChallenges);
+				res.status(200).json(userProgress.userDailyChallenges); // Return existing challenges fetched earlier via include
 			}
 		} catch (error) {
 			console.error(
-				`Error fetching/generating daily challenges for user ${userId}:`,
-				error
+				`Error in GET /api/user/daily-challenges for user ${userId}:`,
+				error // Log the actual error
 			);
-			next(error);
+			// Ensure the error passed to next() has a stack trace if possible
+			const err = error instanceof Error ? error : new Error(String(error));
+			next(err); // Pass the detailed error to the central handler
 		}
 	})
 );

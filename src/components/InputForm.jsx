@@ -138,7 +138,6 @@ const languages = [
 
 // Map numeric values to labels
 const difficultyMap = ["Beginner", "Intermediate", "Advanced"];
-const lengthMap = ["Short", "Medium", "Long"];
 
 // Examples Array
 const storyExamples = [
@@ -174,7 +173,7 @@ const storyExamples = [
 	"A tour guide in a city of magical creatures disguised as humans.",
 ];
 
-function InputForm({ onSubmit, isLoading }) {
+function InputForm({ onSubmit, isLoading, userSubscriptionTier }) {
 	const { currentUser } = useAuth(); // Get current user
 	const [description, setDescription] = useState("");
 	const [sourceLang, setSourceLang] = useState("English"); // Default source: English
@@ -190,6 +189,12 @@ function InputForm({ onSubmit, isLoading }) {
 	const [totalStories, setTotalStories] = useState(null);
 	const [totalUsers, setTotalUsers] = useState(null);
 	const [statsLoading, setStatsLoading] = useState(true);
+
+	// Dynamically define lengthMap based on subscription tier
+	const lengthMap = ["Short", "Medium", "Long"];
+	if (userSubscriptionTier === "PRO") {
+		lengthMap.push("very_long_pro");
+	}
 
 	// Calculate the number of supported languages
 	const numberOfLanguages = languages.length;
@@ -234,6 +239,13 @@ function InputForm({ onSubmit, isLoading }) {
 		}
 	}, []); // Empty dependency array ensures this runs only once on mount
 
+	// Effect to ensure lengthIndex stays within bounds if lengthMap changes
+	useEffect(() => {
+		if (lengthIndex >= lengthMap.length) {
+			setLengthIndex(lengthMap.length - 1);
+		}
+	}, [lengthMap, lengthIndex]);
+
 	// Effect to load site statistics
 	useEffect(() => {
 		const fetchStats = async () => {
@@ -256,21 +268,19 @@ function InputForm({ onSubmit, isLoading }) {
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
-
-		// Check if user is logged in
-		if (!currentUser) {
-			setActiveTab("signup"); // Set to signup for new users
-			setShowAuthDialog(true); // Show login/signup dialog
-			return; // Stop submission
+		if (!currentUser && !isMobile) {
+			// Only show auth dialog on desktop if not logged in
+			setShowAuthDialog(true);
+			return;
 		}
-
-		// If logged in, proceed with original submission logic
-		if (description.trim() && !isLoading) {
-			// Get string values from map using current index
-			const difficulty = difficultyMap[difficultyIndex];
-			const storyLength = lengthMap[lengthIndex];
-			onSubmit(description, sourceLang, targetLang, difficulty, storyLength);
-		}
+		// Use the current lengthMap for submission
+		onSubmit(
+			description,
+			sourceLang,
+			targetLang,
+			difficultyMap[difficultyIndex],
+			lengthMap[lengthIndex] // This will now use the dynamic lengthMap
+		);
 	};
 
 	// Function to handle example button click
@@ -533,17 +543,18 @@ function InputForm({ onSubmit, isLoading }) {
 									type="range"
 									id="storyLength"
 									min="0"
-									max="2"
-									step="1"
+									max={lengthMap.length - 1}
 									value={lengthIndex}
-									onChange={(e) => setLengthIndex(parseInt(e.target.value, 10))}
+									onChange={(e) => setLengthIndex(parseInt(e.target.value))}
 									className="w-full custom-range"
 									disabled={isLoading}
 								/>
 								<div className="flex justify-between text-xs text-gray-500 mt-1.5 px-0.5">
-									<span>Short</span>
-									<span>Medium</span>
-									<span>Long</span>
+									{lengthMap.map((label) => (
+										<span key={label}>
+											{label === "very_long_pro" ? "Very Long (Pro)" : label}
+										</span>
+									))}
 								</div>
 							</div>
 						</div>

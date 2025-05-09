@@ -136,7 +136,16 @@ function MyStoriesPage() {
 				<div className="flex flex-col gap-4">
 					{savedStories.map((story) => {
 						const storyDataPreview = parseStoryData(story.story);
-						const sentenceCount = storyDataPreview?.sentencePairs?.length || 0;
+						let sentenceCount = 0;
+						if (storyDataPreview) {
+							if (Array.isArray(storyDataPreview.pages)) {
+								sentenceCount = storyDataPreview.pages.reduce((total, page) => {
+									return total + (page.sentencePairs?.length || 0);
+								}, 0);
+							} else if (Array.isArray(storyDataPreview.sentencePairs)) {
+								sentenceCount = storyDataPreview.sentencePairs.length;
+							}
+						}
 
 						return (
 							<div
