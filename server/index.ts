@@ -344,6 +344,26 @@ app.get(
 	})
 );
 
+// Endpoint to get total number of stories
+app.get(
+	"/api/stats/total-stories",
+	asyncHandler(async (req: Request, res: Response) => {
+		const totalStories = await prisma.story.count();
+		res.json({ totalStories });
+		// try-catch removed for brevity as asyncHandler handles it
+	})
+);
+
+// Endpoint to get total number of users
+app.get(
+	"/api/stats/total-users",
+	asyncHandler(async (req: Request, res: Response) => {
+		const totalUsers = await prisma.userProgress.count(); // Assuming userProgress table tracks all users
+		res.json({ totalUsers });
+		// try-catch removed for brevity as asyncHandler handles it
+	})
+);
+
 // --- PROTECTED ROUTES ---
 // Apply the synchronous wrapper middleware
 app.use(authenticateTokenMiddleware);

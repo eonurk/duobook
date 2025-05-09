@@ -74,6 +74,40 @@ const authenticatedFetch = async (endpoint, options = {}) => {
 	}
 };
 
+// Helper for public GET requests (simplified from authenticatedFetch)
+const publicGetFetch = async (endpoint) => {
+	try {
+		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+			method: "GET", // Explicitly GET
+			headers: {
+				"Content-Type": "application/json", // Expect JSON response
+			},
+		});
+
+		if (!response.ok) {
+			let errorData;
+			try {
+				errorData = await response.json();
+			} catch {
+				// Ignore if response is not JSON
+			}
+			const errorMessage =
+				errorData?.error || `HTTP error! status: ${response.status}`;
+			const error = new Error(errorMessage);
+			error.status = response.status;
+			throw error;
+		}
+
+		if (response.status === 204) {
+			return null;
+		}
+		return response.json();
+	} catch (error) {
+		console.error(`Public API call failed: GET ${endpoint}`, error);
+		throw error; // Re-throw
+	}
+};
+
 // --- API Function Examples ---
 
 // Stories
@@ -202,6 +236,5 @@ export const getLatestStories = async (
 
 // Statistics
 export const getTotalStoriesCount = () =>
-	authenticatedFetch("/stats/total-stories");
-export const getTotalUsersCount = () =>
-	authenticatedFetch("/stats/total-users");
+	publicGetFetch("/stats/total-stories");
+export const getTotalUsersCount = () => publicGetFetch("/stats/total-users");
