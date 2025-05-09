@@ -171,7 +171,11 @@ function MyStoriesPage() {
 									<p className="text-sm text-muted-foreground">
 										{story.targetLanguage || "N/A"} /{" "}
 										{story.sourceLanguage || "N/A"} ({story.difficulty || "N/A"}
-										, {story.length || "N/A"}) - {sentenceCount} sentences
+											,{" "}
+										{story.length === "very_long_pro"
+											? <span className="text-purple-500 font-semibold">Very Long</span>
+											: story.length || "N/A"}
+										) - {sentenceCount} sentences
 									</p>
 									<p className="text-xs text-muted-foreground mt-1">
 										Created: {formatTimestamp(story.createdAt)}

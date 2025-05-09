@@ -374,14 +374,15 @@ app.get(
 					userProgress.subscriptionTier === SubscriptionTier.PRO)
 			) {
 				return res.status(200).json({
-					limit: Infinity,
-					remaining: Infinity,
+					limit: 10,
+					remaining: 10,
 					isPremium: true,
 					subscriptionTier: userProgress.subscriptionTier,
 				});
 			}
 
 			// For free users, count stories created in the past 24 hours
+
 			const limit = 3; // Same as in the rate limiter config
 			const recentStories = await prisma.story.count({
 				where: {
@@ -445,15 +446,15 @@ app.post(
 			// Pro user requesting a long, paginated story
 			// TODO: Potentially check user's tier here already if we want to prevent even calling OpenAI for non-PRO for this length
 			const numPages = 10; // Updated to 10 pages
-			prompt = `Create a story based on this description: \"${description}\".
+			prompt = `Create an interesting story based on this description: \"${description}\".
 The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}.
 The story should have approximately ${numPages} pages.
 Return the story as a JSON object with a single key "pages".
 "pages" should be an array of page objects. Each page object must have two keys:
-1.  "sentencePairs": An array of objects, where each object has a "source" sentence (in ${source}) and a "target" sentence (translated to ${target}). Each "sentencePairs" array should contain between 6 and 8 sentence pairs.
+1.  "sentencePairs": An array of objects, where each object has a "source" sentence (in ${source}) and a "target" sentence (translated to ${target}). Each "sentencePairs" array should contain between 10 and 12 sentence pairs.
 2.  "vocabulary": An array of objects, where each object has a "word" (in ${source}) and its "translation" (in ${target}), relevant to that page's content.
 Use simple language appropriate for the difficulty level. Ensure the JSON is valid.
-Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /* ...6 to 8 pairs total */], "vocabulary": [{ "word": "...", "translation": "..." }] }`;
+Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /* ...10 to 12 pairs total */], "vocabulary": [{ "word": "...", "translation": "..." }] }`;
 		} else {
 			// Standard story request
 			prompt = `Create a story based on this description: \"${description}\". The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}. The story should be ${length} in length. Return the story as a JSON object with two keys: "sentencePairs" (an array of objects, each with "source" and "target" sentences) and "vocabulary" (an array of objects, each with "word" in ${source} and "translation" in ${target}). Use simple language appropriate for the difficulty level. Ensure the JSON is valid. Example SentencePair format: { "source": "Sentence in source language.", "target": "Sentence translated to target language." }. Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }.`;
@@ -471,9 +472,6 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 			});
 
 			const storyContent = completion.choices[0]?.message?.content;
-
-			// Log the raw story content received from OpenAI
-			console.log("Raw story content from OpenAI:", storyContent);
 
 			if (!storyContent) {
 				throw new Error("OpenAI did not return story content.");

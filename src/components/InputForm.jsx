@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/card"; // Import Card components
 import duobookImg from "../assets/duobook.jpg";
 import { getTotalStoriesCount, getTotalUsersCount } from "@/lib/api"; // Import stats API functions
-// Removed unused HNLogo import
+
 
 // Common languages for selection
 const languages = [
@@ -521,7 +521,7 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier }) {
 									className="w-full custom-range"
 									disabled={isLoading}
 								/>
-								<div className="flex justify-between text-xs text-gray-500 mt-1.5 px-0.5">
+								<div className="flex justify-between text-xs text-gray-500 mt-1.5">
 									<span>Beginner</span>
 									<span>Intermediate</span>
 									<span>Advanced</span>
@@ -549,12 +549,43 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier }) {
 									className="w-full custom-range"
 									disabled={isLoading}
 								/>
-								<div className="flex justify-between text-xs text-gray-500 mt-1.5 px-0.5">
-									{lengthMap.map((label) => (
-										<span key={label}>
-											{label === "very_long_pro" ? "Very Long (Pro)" : label}
-										</span>
-									))}
+								{/* Story Length Labels - New Absolute Positioning Implementation */}
+								<div className="relative w-full text-xs text-gray-500 mt-1.5 h-6">
+									{lengthMap.map((label, index) => {
+										const numLabels = lengthMap.length;
+										let style = {};
+										let textAlignmentClass = "";
+
+										if (numLabels === 1) {
+											style = { left: '50%', transform: 'translateX(-50%)' };
+											textAlignmentClass = "text-center";
+										} else {
+											const positionPercent = (index / (numLabels - 1)) * 100;
+											if (index === 0) {
+												style = { left: '0%', transform: 'translateX(0%)' };
+												textAlignmentClass = "text-left";
+											} else if (index === numLabels - 1) {
+												style = { left: '100%', transform: 'translateX(-100%)' };
+												textAlignmentClass = "text-right";
+											} else {
+												style = { left: `${positionPercent}%`, transform: 'translateX(-50%)' };
+												textAlignmentClass = "text-center";
+											}
+										}
+
+										return (
+											<span key={label} className={`absolute ${textAlignmentClass}`} style={style}>
+												{label === "very_long_pro" ? (
+													
+													<span className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2.5 py-1 rounded-md shadow-md whitespace-nowrap">
+														XL
+													</span>
+												) : (
+													<span className="whitespace-nowrap">{label}</span>
+												)}
+											</span>
+										);
+									})}
 								</div>
 							</div>
 						</div>

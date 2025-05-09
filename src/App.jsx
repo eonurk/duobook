@@ -413,7 +413,7 @@ function MainAppView({ generateStory }) {
 				{isGenerating && (
 					<div className="loading-indicator flex items-center justify-center flex-col text-center p-8">
 						<div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mb-4"></div>
-						Generating your {formParams?.length} {formParams?.difficulty} story
+						Generating your {formParams?.length === "very_long_pro" ? "Very Long (Pro)" : formParams?.length} {formParams?.difficulty} story
 						in {formParams?.target} / {formParams?.source}... Please wait.
 					</div>
 				)}
