@@ -29,6 +29,8 @@ model UserProgress {
   lastLogin  DateTime?
   streak     Int      @default(0)
   subscriptionTier SubscriptionTier @default(FREE)
+  moderationWarnings Int @default(0) // Added field for moderation warnings
+  isBanned   Boolean  @default(false) // Added field for tracking ban status
 
   // Add field to track challenge generation date
   dailyChallengesLastGenerated DateTime?

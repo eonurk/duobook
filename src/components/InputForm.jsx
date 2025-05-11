@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react"; // Added useMemo
 import { useAuth } from "@/context/AuthContext"; // Import useAuth
 import Login from "@/components/Auth/Login"; // Import Login
 import Signup from "@/components/Auth/Signup"; // Import Signup
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/card"; // Import Card components
 import duobookImg from "../assets/duobook.jpg";
 import { getTotalStoriesCount, getTotalUsersCount } from "@/lib/api"; // Import stats API functions
-
+import toast, {Toaster} from "react-hot-toast"; // Added for moderation feedback
 
 // Common languages for selection
 const languages = [
@@ -173,7 +173,7 @@ const storyExamples = [
 	"A tour guide in a city of magical creatures disguised as humans.",
 ];
 
-function InputForm({ onSubmit, isLoading, userSubscriptionTier }) {
+function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails }) { // Added apiErrorDetails prop
 	const { currentUser } = useAuth(); // Get current user
 	const [description, setDescription] = useState("");
 	const [sourceLang, setSourceLang] = useState("English"); // Default source: English
@@ -190,11 +190,14 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier }) {
 	const [totalUsers, setTotalUsers] = useState(null);
 	const [statsLoading, setStatsLoading] = useState(true);
 
-	// Dynamically define lengthMap based on subscription tier
-	const lengthMap = ["Short", "Medium", "Long"];
-	if (userSubscriptionTier === "PRO") {
-		lengthMap.push("very_long_pro");
-	}
+	// Dynamically define lengthMap based on subscription tier, memoized
+	const lengthMap = useMemo(() => {
+		const baseLengthMap = ["Short", "Medium", "Long"];
+		if (userSubscriptionTier === "PRO") {
+			return [...baseLengthMap, "very_long_pro"];
+		}
+		return baseLengthMap;
+	}, [userSubscriptionTier]);
 
 	// Calculate the number of supported languages
 	const numberOfLanguages = languages.length;
@@ -237,7 +240,7 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier }) {
 				setLengthIndex(li);
 			}
 		}
-	}, []); // Empty dependency array ensures this runs only once on mount
+	}, [lengthMap]); // Added lengthMap to dependency array
 
 	// Effect to ensure lengthIndex stays within bounds if lengthMap changes
 	useEffect(() => {
@@ -265,6 +268,26 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier }) {
 
 		fetchStats();
 	}, []);
+
+	// Effect for displaying API error toasts (e.g., moderation feedback)
+	useEffect(() => {
+		if (apiErrorDetails && (apiErrorDetails.message || apiErrorDetails.warningMessage)) {
+			if (apiErrorDetails.userBanned) {
+				toast.error(apiErrorDetails.message || "Your account has been banned due to content policy violations.", {
+					duration: 10000,
+				});
+			} else if (apiErrorDetails.warningMessage) {
+				toast(apiErrorDetails.warningMessage + (apiErrorDetails.moderationWarnings ? ` (Total warnings: ${apiErrorDetails.moderationWarnings})` : ''), {
+					duration: 8000,
+					// icon: '⚠️', // Example: You can add an icon for warnings
+				});
+			} else if (apiErrorDetails.message) { // Generic error
+				toast.error(apiErrorDetails.message, {
+					duration: 8000,
+				});
+			}
+		}
+	}, [apiErrorDetails]);
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
@@ -592,13 +615,47 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier }) {
 					</div>
 				</fieldset>
 
+				{isMobile && !isLoading && !currentUser && (
+					<p className="text-center text-xs px-2 text-slate-500 mb-0">
+						<button
+							type="button"
+							onClick={() => {
+								setActiveTab("login");
+								setShowAuthDialog(true);
+							}}
+							className="underline font-normal hover:text-amber-800"
+						>
+							Log in
+						</button>{" "}
+						or{" "}
+						<button
+							type="button"
+							onClick={() => {
+								setActiveTab("signup");
+								setShowAuthDialog(true);
+							}}
+							className="underline font-normal hover:text-amber-800"
+						>
+							Sign up
+						</button>{" "}
+						to create your story.
+					</p>
+				)}
+
 				<button
 					type="submit"
-					disabled={
-						isLoading || !description.trim() || sourceLang === targetLang
+						disabled={ // Updated disabled logic
+						isLoading ||
+						!description.trim() ||
+						sourceLang === targetLang ||
+						!currentUser
 					}
 					className={`button button-primary submit-button py-3 px-6 rounded-lg shadow-md transition-all duration-300 relative group ${
-						isLoading || !description.trim() || sourceLang === targetLang
+						// Updated className logic
+						isLoading ||
+						!description.trim() ||
+						sourceLang === targetLang ||
+						!currentUser
 							? "bg-gray-100 text-gray-400 border border-gray-300 cursor-not-allowed"
 							: "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-amber-900 font-medium"
 					}`}
@@ -638,8 +695,9 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier }) {
 						</span>
 					) : (
 						<>
+						
 							<span className="flex items-center justify-center">
-								{!isMobile && (!description.trim() || !currentUser) && (
+								{(!description.trim() || !currentUser) && (
 									<span className="relative w-5 h-5 mr-2 inline-flex">
 										{!description.trim() ? (
 											<BookText className="w-5 h-5 text-amber-600 opacity-70" />
@@ -704,45 +762,44 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier }) {
 					)}
 				</button>
 
-				{/* Mobile conditional messages */}
-				{isMobile && !isLoading && !description.trim() && (
+				{/* Subtle call-to-action to view a sample DuoBook */}
+				{!currentUser && (
+						<div className="flex justify-center mt-1.5">
+							<button
+								type="button"
+								onClick={() => {
+									document.getElementById('story-examples-section')?.scrollIntoView({ behavior: 'smooth' });
+								}}
+								className="group flex items-center gap-2 text-xs text-slate-500 hover:text-orange-600 transition-colors py-1.5 px-3 rounded-full hover:bg-amber-50"
+								aria-label="See a DuoBook example"
+							>
+								
+								<span>
+									<span className="mx-1 text-slate-500">or</span>
+									<span className="underline font-semibold decoration-dotted group-hover:decoration-solid transition-all text-slate-600">
+										see an example
+									</span>
+								</span>
+							</button>
+						</div>
+				)}
+
+				{isMobile && !isLoading && !description.trim() && currentUser && (
 					<p className="text-center text-sm text-amber-700 mt-3 px-2">
 						Please add a story idea above to create your book.
 					</p>
 				)}
-				{isMobile && !isLoading && description.trim() && !currentUser && (
-					<p className="text-center text-sm text-amber-700 mt-3 px-2">
-						<button
-							type="button"
-							onClick={() => {
-								setActiveTab("login");
-								setShowAuthDialog(true);
-							}}
-							className="underline font-medium hover:text-amber-800"
-						>
-							Log in
-						</button>{" "}
-						or{" "}
-						<button
-							type="button"
-							onClick={() => {
-								setActiveTab("signup");
-								setShowAuthDialog(true);
-							}}
-							className="underline font-medium hover:text-amber-800"
-						>
-							Sign up
-						</button>{" "}
-						to create your book.
-					</p>
-				)}
 
-				{/* Shared conditional message (both mobile/desktop) */}
+				
+
+				
 				{!isLoading && description.trim() && sourceLang === targetLang && (
 					<p className="text-center text-sm text-red-600 mt-3 px-2">
 						Your language and the language to learn must be different.
 					</p>
 				)}
+
+
 			</form>
 
 			{/* Login/Signup Dialog */}

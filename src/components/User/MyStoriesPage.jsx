@@ -181,7 +181,9 @@ function MyStoriesPage() {
 										Created: {formatTimestamp(story.createdAt)}
 									</p>
 								</div>
-								<AlertDialog>
+								
+
+								<AlertDialog>	
 									<AlertDialogTrigger asChild>
 										<Button
 											variant="ghost"
@@ -203,7 +205,7 @@ function MyStoriesPage() {
 											)}
 										</Button>
 									</AlertDialogTrigger>
-									<AlertDialogContent>
+									<AlertDialogContent className=" bg-white">
 										<AlertDialogHeader>
 											<AlertDialogTitle>Are you sure?</AlertDialogTitle>
 											<AlertDialogDescription>
@@ -216,7 +218,7 @@ function MyStoriesPage() {
 											<AlertDialogCancel>Cancel</AlertDialogCancel>
 											<AlertDialogAction
 												onClick={() => performDeleteStory(story.id)}
-												className="bg-destructive hover:bg-destructive/90"
+												className="bg-red-500 text-white hover:bg-destructive/90"
 											>
 												Delete
 											</AlertDialogAction>

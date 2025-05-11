@@ -43,10 +43,15 @@ const authenticatedFetch = async (endpoint, options = {}) => {
 
 			// Construct the error message, prioritizing backend message
 			const errorMessage =
-				errorData?.error || `HTTP error! status: ${response.status}`;
+				errorData?.error ||
+				errorData?.message ||
+				`HTTP error! status: ${response.status}`;
 			const error = new Error(errorMessage);
 			error.status = response.status; // Attach status code to error
-			error.response = { status: response.status }; // Add response property to match axios format
+			// Attach the full error data from the response, if available
+			if (errorData) {
+				error.data = errorData;
+			}
 
 			// Special handling for rate limit errors
 			if (response.status === 429) {

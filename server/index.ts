@@ -91,6 +91,25 @@ const authenticateTokenAsync = async (
 		const decodedToken = await admin.auth().verifyIdToken(token);
 		// Now assigns to req.userId directly, relying on module augmentation
 		req.userId = decodedToken.uid;
+
+		// Check if the user is banned
+		if (req.userId) {
+			const userProgress = await prisma.userProgress.findUnique({
+				where: { userId: req.userId },
+				select: { isBanned: true },
+			});
+
+			if (userProgress && userProgress.isBanned) {
+				console.warn(
+					`Banned user attempt: User ${req.userId} tried to access a protected route.`
+				);
+				return res.status(403).json({
+					error:
+						"Your account has been suspended due to policy violations. Please contact support if you believe this is an error.",
+				});
+			}
+		}
+		// If user is not banned or UserProgress record doesn't exist (which might be an edge case for new users if not created on signup)
 		next(); // Proceed to the next middleware or route handler
 	} catch (error) {
 		console.error("Error verifying Firebase token:", error);
@@ -466,18 +485,33 @@ app.post(
 			// Pro user requesting a long, paginated story
 			// TODO: Potentially check user's tier here already if we want to prevent even calling OpenAI for non-PRO for this length
 			const numPages = 10; // Updated to 10 pages
-			prompt = `Create an interesting story based on this description: \"${description}\".
+			prompt = `Analyze the user's description: \"${description}\".
+			
+If the description contains profanity, hate speech, incitement to violence, or other severely harmful content, then do not generate the story. Instead, return a JSON object with a single key "moderation_error", and its value being a string explaining the violation. For example: { "moderation_error": "The story description contains prohibited content (e.g., profanity or hate speech). Please revise." }
+If the description is acceptable, proceed to generate a story as requested below. 
+			
+Create an interesting story based on this description. 
 The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}.
 The story should have approximately ${numPages} pages.
 Return the story as a JSON object with a single key "pages".
 "pages" should be an array of page objects. Each page object must have two keys:
 1.  "sentencePairs": An array of objects, where each object has a "source" sentence (in ${source}) and a "target" sentence (translated to ${target}). Each "sentencePairs" array should contain between 10 and 12 sentence pairs.
-2.  "vocabulary": An array of objects, where each object has a "word" (in ${source}) and its "translation" (in ${target}), relevant to that page's content.
+2.  "vocabulary": An array of objects, where each object has a "word" (in ${source}) and its "translation" (in ${target}), relevant to that page\'s content.
 Use simple language appropriate for the difficulty level. Ensure the JSON is valid.
-Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /* ...10 to 12 pairs total */], "vocabulary": [{ "word": "...", "translation": "..." }] }`;
+Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /* ...10 to 12 pairs total */], "vocabulary": [{ "word": "...", "translation": "..." }] }.`;
 		} else {
 			// Standard story request
-			prompt = `Create a story based on this description: \"${description}\". The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}. The story should be ${length} in length. Return the story as a JSON object with two keys: "sentencePairs" (an array of objects, each with "source" and "target" sentences) and "vocabulary" (an array of objects, each with "word" in ${source} and "translation" in ${target}). Use simple language appropriate for the difficulty level. Ensure the JSON is valid. Example SentencePair format: { "source": "Sentence in source language.", "target": "Sentence translated to target language." }. Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }.`;
+			prompt = `Analyze the user's description: \"${description}\".
+			
+If the description contains profanity, hate speech, incitement to violence, or other severely harmful content, then do not generate the story. Instead, return a JSON object with a single key "moderation_error", and its value being a string explaining the violation. For example: { "moderation_error": "The story description contains prohibited content (e.g., profanity or hate speech). Please revise." }
+If the description is acceptable, proceed to generate a story as requested below. 
+
+Create an interesting story based on this description. 
+The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}. 
+The story should be ${length} in length. 
+Return the story as a JSON object with two keys: "sentencePairs" (an array of objects, each with "source" and "target" sentences) and "vocabulary" (an array of objects, each with "word" in ${source} and "translation" in ${target}). Use simple language appropriate for the difficulty level. Ensure the JSON is valid. Example SentencePair format: { "source": "Sentence in source language.", "target": "Sentence translated to target language." }. 
+Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }.
+`;
 		}
 
 		try {
@@ -504,6 +538,120 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 			try {
 				const parsedStory = JSON.parse(storyContent);
 				// Minimal validation - check if keys exist based on request type
+
+				// START MODERATION CHECK
+				if (parsedStory.moderation_error) {
+					console.warn(
+						`Moderation error for user ${req.userId || "unknown"}: ${
+							parsedStory.moderation_error
+						}`
+					);
+
+					let userWasJustBanned = false; // Tracks if ban occurred in this request
+					let userIsCurrentlyBanned = false; // Tracks final ban state after this request
+					let currentWarningCount = 0;
+					const BAN_THRESHOLD = 3;
+
+					if (req.userId) {
+						try {
+							const existingUserProgress = await prisma.userProgress.findUnique(
+								{
+									where: { userId: req.userId },
+									select: { isBanned: true, moderationWarnings: true },
+								}
+							);
+
+							if (existingUserProgress && existingUserProgress.isBanned) {
+								console.log(
+									`User ${req.userId} is already banned. Moderation error occurred: ${parsedStory.moderation_error}`
+								);
+								userIsCurrentlyBanned = true;
+								currentWarningCount = existingUserProgress.moderationWarnings;
+							} else {
+								// User is not currently banned, or no progress record exists.
+								// Upsert will create or update.
+								const progressAfterWarning = await prisma.userProgress.upsert({
+									where: { userId: req.userId },
+									update: { moderationWarnings: { increment: 1 } },
+									create: {
+										userId: req.userId,
+										moderationWarnings: 1,
+										// Rely on schema defaults for other fields like points, dailyStreak, etc.
+									},
+									select: { moderationWarnings: true, isBanned: true }, // isBanned is pre-this-request's potential ban
+								});
+
+								currentWarningCount = progressAfterWarning.moderationWarnings;
+								userIsCurrentlyBanned = progressAfterWarning.isBanned; // Reflects if banned *before* this warning increment
+
+								console.log(
+									`User ${req.userId} moderation warnings is now ${currentWarningCount}`
+								);
+
+								if (
+									currentWarningCount >= BAN_THRESHOLD &&
+									!userIsCurrentlyBanned
+								) {
+									// Ban the user if threshold met AND they weren't already banned
+									await prisma.userProgress.update({
+										where: { userId: req.userId },
+										data: { isBanned: true },
+									});
+									userWasJustBanned = true; // Set to true as they were banned in THIS request
+									userIsCurrentlyBanned = true; // Update final status
+									console.log(
+										`User ${req.userId} has been banned due to reaching ${BAN_THRESHOLD} moderation warnings.`
+									);
+								}
+							}
+						} catch (dbError) {
+							console.error(
+								`Failed to update moderation warnings/ban status for user ${req.userId}:`,
+								dbError
+							);
+							// Fall through: userWasJustBanned remains false. currentWarningCount might be 0 or stale.
+							// Client will get a generic moderation error in this case.
+						}
+					}
+
+					// Construct response based on moderation outcome
+					if (userWasJustBanned) {
+						return res.status(403).json({
+							error:
+								"Your account has been suspended due to repeated policy violations. This story was not generated. Please contact support if you believe this is an error.",
+							original_moderation_issue: parsedStory.moderation_error,
+							userBanned: true,
+							moderationWarnings: currentWarningCount, // This will be BAN_THRESHOLD or more
+						});
+					} else if (req.userId && userIsCurrentlyBanned) {
+						// User was already banned (and not just banned in this request)
+						// This path is taken if existingUserProgress.isBanned was true.
+						return res.status(403).json({
+							error:
+								"Your account is currently suspended. Story generation failed.",
+							original_moderation_issue: parsedStory.moderation_error,
+							userBanned: true,
+							moderationWarnings: currentWarningCount, // Their existing warning count
+						});
+					} else if (req.userId && currentWarningCount > 0) {
+						// User received a warning, is not banned, and DB operations were successful to get a reliable count.
+						return res.status(422).json({
+							error: parsedStory.moderation_error, // OpenAI's original message
+							userBanned: false,
+							moderationWarnings: currentWarningCount,
+							warningMessage: `Your story idea was flagged by our safety system. This is warning ${currentWarningCount} of ${BAN_THRESHOLD}. Reaching ${BAN_THRESHOLD} warnings will result in account suspension. Original issue: "${parsedStory.moderation_error}"`,
+						});
+					} else {
+						// This covers:
+						// 1. Anonymous user (req.userId is null)
+						// 2. Authenticated user, but a DB error occurred during warning update (currentWarningCount might be 0 or stale)
+						return res.status(422).json({
+							error: parsedStory.moderation_error,
+						});
+					}
+				}
+				// END MODERATION CHECK
+
 				if (isProStoryRequest) {
 					if (!parsedStory.pages || !Array.isArray(parsedStory.pages)) {
 						throw new Error(

@@ -38,6 +38,7 @@ import {
 	getLatestStories, // ADDED: Import for fetching latest stories
 	createStory,
 	generateStoryViaBackend,
+	getStoryGenerationLimit, // Ensure getStoryGenerationLimit is imported from the correct path
 } from "./lib/api"; // Import API functions
 import toast, { Toaster } from "react-hot-toast"; // Keep Toaster if used
 import StoryCard from "@/components/StoryCard"; // ADDED: Import StoryCard
@@ -358,14 +359,14 @@ function MainAppView({ generateStory }) {
 			{formError && (
 				<div
 					className={`mb-6 rounded-lg ${
-						formError.isRateLimit
+						formError.type === "rateLimit" // Changed from formError.isRateLimit
 							? "bg-amber-50 border border-amber-100"
 							: "bg-red-50 text-red-800 dark:bg-gray-800 dark:text-red-400"
 					}`}
 					role="alert"
 				>
 					<div className="flex">
-						{formError.isRateLimit ? (
+						{formError.type === "rateLimit" ? ( // Changed from formError.isRateLimit
 							<div className="w-full">
 								<div className="flex justify-center p-4 pb-0">
 									<img
@@ -413,8 +414,12 @@ function MainAppView({ generateStory }) {
 				{isGenerating && (
 					<div className="loading-indicator flex items-center justify-center flex-col text-center p-8">
 						<div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mb-4"></div>
-						Generating your {formParams?.length === "very_long_pro" ? "Very Long (Pro)" : formParams?.length} {formParams?.difficulty} story
-						in {formParams?.target} / {formParams?.source}... Please wait.
+						Generating your{" "}
+						{formParams?.length === "very_long_pro"
+							? "Very Long (Pro)"
+							: formParams?.length}{" "}
+						{formParams?.difficulty} story in {formParams?.target} /{" "}
+						{formParams?.source}... Please wait.
 					</div>
 				)}
 
@@ -629,6 +634,21 @@ function App() {
 		};
 
 		try {
+			console.log("Checking story generation limit...");
+			const limitData = await getStoryGenerationLimit();
+
+			if (!limitData.isPremium && limitData.remaining <= 0) {
+				console.log("Daily story generation limit reached for free tier.");
+				if (setFormError) {
+					setFormError({
+						type: "rateLimit", // Reusing existing type for UI consistency
+						message:
+							"You've reached your daily story generation limit for the free tier. Please upgrade or try again tomorrow.",
+					});
+				}
+				return; // Stop execution before calling the generation API
+			}
+
 			console.log("Sending generation request to backend proxy...");
 			// Use imported function directly
 			const generatedStoryContent = await generateStoryViaBackend(params);
@@ -684,26 +704,59 @@ function App() {
 			// trackStoryGeneration(description, sourceLang, targetLang, difficulty, storyLength); // Requires import
 		} catch (error) {
 			console.error("Error in generateStory (App.jsx):", error);
+
+			// Moderation error check
+			if (error.isModerationError) {
+				let toastMessage;
+				if (error.userBanned) {
+					// For banned users, the message from backend (error.message) is likely specific to the ban.
+					toastMessage = error.message || "Your account has been banned due to content policy violations.";
+				} else {
+					// For non-ban moderation flags, provide a more descriptive default if backend message is generic or missing.
+					if (error.message && error.message.toLowerCase() !== "content moderation" && error.message.toLowerCase() !== "moderation event triggered") {
+						toastMessage = error.message;
+					} else {
+						toastMessage = "Your story input was flagged for potentially violating our content policy. Please revise your description and try again. Repeated violations may lead to account restrictions.";
+					}
+				}
+
+				if (setFormError) {
+					setFormError({
+						type: "moderation",
+						message: toastMessage, // This message will be used by InputForm.jsx
+						userBanned: error.userBanned || false,
+					});
+				}
+			}
 			// Rate limit check
-			if (
+			else if (
 				error.isRateLimit ||
-				error.response?.status === 429 ||
-				error.status === 429 ||
+				(error.response && error.response.status === 429) ||
 				(error.message &&
 					(error.message.includes("limit") ||
 						error.message.includes("Too many")))
 			) {
-				toast.error("Daily Limit Reached", {
-					/* ... toast options ... */
-				});
+				// Removed direct toast.error call from here
 				// trackDailyLimitReached(); // Requires import
 				if (setFormError) {
 					setFormError({
-						/* ... rate limit error object ... */
+						type: "rateLimit",
+						message:
+							error.message ||
+							"You've reached your daily story generation limit. Upgrade or try again tomorrow.",
 					});
 				}
+				// Do not re-throw, error is handled by form error state
 			} else {
-				throw error; // Re-throw other errors
+				// For other errors, set a generic form error
+				const genericErrorMessage =
+					error.message ||
+					"An unexpected error occurred during story generation.";
+				// Removed direct toast.error call from here
+				if (setFormError) {
+					setFormError({ type: "general", message: genericErrorMessage });
+				}
+				// Error is handled by form error state
 			}
 		}
 	};

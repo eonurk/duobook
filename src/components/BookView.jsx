@@ -628,7 +628,7 @@ function BookView({
 	// --- Rendering ---
 	return (
 		<div
-			className={`${isExample ? "example-book-container" : ""} ${
+			id={isExample ? "story-examples-section": ""} className={`${isExample ? "example-book-container" : ""} ${
 				isFinished ? "story-finished-container" : ""
 			} ${isMobileView ? "mobile-view" : ""}`}
 		>
