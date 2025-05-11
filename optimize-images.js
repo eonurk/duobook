@@ -7,20 +7,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const images = [
+	// {
+	// 	input: "src/assets/duobook.jpg",
+	// 	output: "src/assets/duobook.jpg",
+	// 	options: { quality: 75 },
+	// },
+	// {
+	// 	input: "src/assets/duobook-explain.png",
+	// 	output: "src/assets/duobook-explain.webp",
+	// 	options: { quality: 80 },
+	// },
+	// {
+	// 	input: "src/assets/daily-limit.png",
+	// 	output: "src/assets/daily-limit.webp",
+	// 	options: { quality: 80 },
+	// },
 	{
-		input: "src/assets/duobook.jpg",
-		output: "src/assets/duobook.jpg",
-		options: { quality: 75 },
-	},
-	{
-		input: "src/assets/duobook-explain.png",
-		output: "src/assets/duobook-explain.webp",
-		options: { quality: 80 },
-	},
-	{
-		input: "src/assets/daily-limit.png",
-		output: "src/assets/daily-limit.webp",
-		options: { quality: 80 },
+		input: "../pics/logo.png",
+		output: "src/assets/logo.webp",
+		options: { quality: 100 },
 	},
 ];
 
