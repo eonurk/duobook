@@ -21,10 +21,58 @@
     <meta name="og:locale" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://duobook.co/logo.png">
-    
+    <style>
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1); /* Track color */
+        width: 36px;
+        height: 36px;
+        /* border-radius will be animated */
+        border-left-color: #ba4100; /* Accent color for the spinning part */
+        animation: coolSpinnerAnimation 1.8s linear infinite; /* Using the new animation */
+      }
+
+      /* Removed the old @keyframes spin as it's replaced by coolSpinnerAnimation */
+
+      @keyframes coolSpinnerAnimation { /* New keyframes for a cooler animation */
+        0% {
+          transform: rotate(0deg);
+          border-radius: 50%; /* Circle */
+        }
+        25% {
+          transform: rotate(90deg);
+          border-radius: 10%; /* Rounded square */
+        }
+        50% {
+          transform: rotate(180deg);
+          border-radius: 50%; /* Circle */
+        }
+        75% {
+          transform: rotate(270deg);
+          border-radius: 10%; /* Rounded square */
+        }
+        100% {
+          transform: rotate(360deg);
+          border-radius: 50%; /* Circle */
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- React will render into this div. The ::before pseudo-element provides initial text. -->
+    <div id="loading-placeholder" style="position: fixed; /* Cover the whole screen */
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Removed text color, font styles as spinner replaces text */
+        transition: opacity 1s ease-in-out;">
+      <div class="spinner"></div>
+    </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

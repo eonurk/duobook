@@ -14,3 +14,9 @@ createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </StrictMode>,
 )
+
+// Remove the loading placeholder after the app is rendered
+const loadingPlaceholder = document.getElementById('loading-placeholder');
+if (loadingPlaceholder) {
+  loadingPlaceholder.remove();
+}
