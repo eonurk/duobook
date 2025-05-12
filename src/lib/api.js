@@ -129,18 +129,32 @@ export const getStories = () => authenticatedFetch("/stories");
 // The endpoint is /api/stories/:shareId - this is a public endpoint that doesn't need authentication
 export const getStoryById = (storyId) => {
   console.log(`Fetching story with ID: ${storyId}`);
-  console.log(`Full request URL: /api/stories/${storyId}`);
   
-  // Use publicGetFetch instead of direct fetch
-  return publicGetFetch(`/stories/${storyId}`)
-    .then(story => {
-      console.log(`Successfully fetched story with ID ${storyId}`);
-      return story;
-    })
-    .catch(error => {
-      console.error(`Story fetch failed for ID ${storyId}:`, error);
-      throw error;
-    });
+  // Try direct fetch to the correct endpoint URL
+  const url = `/api/stories/${storyId}`;
+  console.log(`Making direct fetch to: ${url}`);
+  
+  return fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+  .then(response => {
+    console.log(`Direct fetch response status: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(story => {
+    console.log(`Successfully fetched story with ID ${storyId}`);
+    return story;
+  })
+  .catch(error => {
+    console.error(`Story fetch failed for ID ${storyId}:`, error);
+    throw error;
+  });
 };
 
 export const createStory = (storyData) =>

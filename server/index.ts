@@ -388,17 +388,24 @@ app.get(
 	"/api/stories/:shareId", // Changed from :id to :shareId
 	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 		const { shareId } = req.params; // Use shareId directly as a string
+		console.log(`[DEBUG] Received request for story with shareId: ${shareId}`);
+		
+		// Log headers for debugging
+		console.log('[DEBUG] Request headers:', req.headers);
 
 		try {
+			console.log(`[DEBUG] Attempting to find story with shareId: ${shareId}`);
 			// No need to parseInt, shareId is a CUID string
 			const story = await prisma.story.findUnique({
 				where: { shareId: shareId }, // Query by shareId
 			});
 
 			if (!story) {
+				console.log(`[DEBUG] No story found with shareId: ${shareId}`);
 				return res.status(404).json({ error: "Story not found" });
 			}
 			
+			console.log(`[DEBUG] Found story with shareId: ${shareId}, returning it`);
 			// Publicly return the story
 			res.json(story);
 		} catch (error) {
