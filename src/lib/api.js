@@ -1,5 +1,6 @@
 import { auth } from "../firebaseConfig";
 
+// Latest version of the API
 // Base URL for your backend API
 // Ensure this matches where your server is running (e.g., http://localhost:3000)
 // You might want to use environment variables for this in a real app
