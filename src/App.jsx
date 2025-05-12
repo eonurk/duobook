@@ -6,6 +6,7 @@ import {
 	useLocation,
 	useNavigate,
 	Link,
+	useParams, // Import useParams
 } from "react-router-dom";
 import "@/App.css"; // Use alias
 import InputForm from "@/components/InputForm"; // Use alias
@@ -26,7 +27,7 @@ import TermsOfService from "@/pages/TermsOfService"; // Import TermsOfService
 import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import Practice Page
 import ContactUs from "@/pages/ContactUs"; // Import Contact Us page
 import ExploreStoriesPage from "@/pages/ExploreStoriesPage"; // ADDED: Import ExploreStoriesPage
-import { ArrowDown, Sparkles, CheckCircle2 } from "lucide-react"; // Import ArrowDown icon and new icons
+import { ArrowDown, Sparkles, CheckCircle2, Loader2 } from "lucide-react"; // Import ArrowDown icon and new icons
 import {
 	// getStories, // Commented out: Will be used in MyStoriesPage
 	// deleteStory, // Commented out: Will be used in MyStoriesPage
@@ -39,6 +40,7 @@ import {
 	createStory,
 	generateStoryViaBackend,
 	getStoryGenerationLimit, // Ensure getStoryGenerationLimit is imported from the correct path
+	getStoryById, // Make sure this is imported for StoryViewPage
 } from "./lib/api"; // Import API functions
 import toast, { Toaster } from "react-hot-toast"; // Keep Toaster if used
 import StoryCard from "@/components/StoryCard"; // ADDED: Import StoryCard
@@ -109,50 +111,121 @@ function ProtectedRoute({ children }) {
 function StoryViewPage() {
 	const location = useLocation();
 	const navigate = useNavigate();
-	const navigatedState = location.state; // Contains storyData (from DB or direct from generation) and params
+	const { shareId } = useParams(); // Get shareId from URL
 
-	let storyContent = null;
-	let paramsForBookView = null;
+	// Try to get initial data from location state (if navigated from creation)
+	const initialStoryData = location.state?.storyData;
+	const initialParams = location.state?.params;
 
-	if (navigatedState?.storyData && navigatedState?.params) {
-		paramsForBookView = navigatedState.params;
-		const storyData = navigatedState.storyData;
+	const [storyContent, setStoryContent] = useState(null);
+	const [paramsForBookView, setParamsForBookView] = useState(initialParams);
+	const [isLoading, setIsLoading] = useState(true); // Start with loading true
+	const [error, setError] = useState(null);
 
-		// Scenario 1: storyData is from the database (has a .story string property)
-		if (typeof storyData.story === "string") {
-			try {
-				storyContent = JSON.parse(storyData.story);
-			} catch (e) {
-				console.error(
-					"StoryViewPage: Failed to parse story JSON from DB record:",
-					e
-				);
+	useEffect(() => {
+		const loadStory = async () => {
+			setIsLoading(true);
+			setError(null);
+
+			if (initialStoryData && initialStoryData.shareId === shareId) {
+				// Story data passed via state and shareId matches URL
+				// Process storyData if it's a string (from DB) or use directly
+				if (typeof initialStoryData.story === "string") {
+					try {
+						setStoryContent(JSON.parse(initialStoryData.story));
+						// Ensure paramsForBookView is set if not already from initialParams
+						if (!initialParams) {
+							setParamsForBookView({
+								target: initialStoryData.targetLanguage,
+								source: initialStoryData.sourceLanguage,
+								// Add other relevant params from initialStoryData
+							});
+						}
+					} catch (e) {
+						console.error("StoryViewPage: Failed to parse story JSON from state:", e);
+						setError("Failed to load story: Invalid format from state.");
+					}
+				} else if (initialStoryData.pages || initialStoryData.sentencePairs) {
+					setStoryContent(initialStoryData); // Already parsed
+					if (!initialParams) {
+						setParamsForBookView({
+							target: initialStoryData.targetLanguage,
+							source: initialStoryData.sourceLanguage,
+							// Add other relevant params
+						});
+					}
+				} else {
+					console.warn("StoryViewPage: storyData from state structure not recognized.");
+					setError("Failed to load story: Unrecognized format from state.");
+				}
+				setIsLoading(false);
+			} else if (shareId) {
+				// No valid state data, or shareId mismatch, fetch from API using shareId
+				console.log(`StoryViewPage: Fetching story with shareId: ${shareId}`);
+				try {
+					// Assuming getStoryById can take the shareId (string CUID)
+					const fetchedStory = await getStoryById(shareId);
+					if (fetchedStory && fetchedStory.story) {
+						setStoryContent(JSON.parse(fetchedStory.story));
+						setParamsForBookView({
+							target: fetchedStory.targetLanguage,
+							source: fetchedStory.sourceLanguage,
+							difficulty: fetchedStory.difficulty,
+							length: fetchedStory.length,
+							description: fetchedStory.description,
+						});
+					} else {
+						console.warn("StoryViewPage: Story not found or no content from API.");
+						setError("Story not found.");
+					}
+				} catch (err) {
+					console.error("StoryViewPage: Error fetching story by shareId:", err);
+					setError(err.message || "Failed to fetch story.");
+				}
+				setIsLoading(false);
+			} else {
+				// No shareId in URL and no state
+				console.warn("StoryViewPage: No shareId in URL and no state data.");
+				setError("No story specified.");
+				setIsLoading(false);
 			}
-		}
-		// Scenario 2: storyData is directly from generation (already a parsed object with .pages or .sentencePairs)
-		else if (storyData.pages || storyData.sentencePairs) {
-			storyContent = storyData;
-		} else {
-			console.warn(
-				"StoryViewPage: storyData structure is not recognized.",
-				storyData
-			);
-		}
-	} else {
-		console.warn("StoryViewPage: Navigated without storyData or params.");
-	}
+		};
 
-	// Handle case where user lands directly on this route without state, or if JSON parsing failed, or unrecognized structure
-	if (!storyContent || !paramsForBookView) {
-		console.warn(
-			"Redirecting to home: StoryViewPage missing valid storyContent or paramsForBookView."
-		);
-		return <Navigate to="/" replace />;
-	}
+		loadStory();
+	}, [shareId, initialStoryData, initialParams]); // Re-run if shareId or initial data changes
 
 	const handleGoBackToForm = () => {
 		navigate("/"); // Navigate back to the InputForm page
 	};
+
+	if (isLoading) {
+		return (
+			<div className="flex justify-center items-center h-screen">
+				<Loader2 className="h-12 w-12 animate-spin text-primary" />
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div className="flex flex-col justify-center items-center h-screen text-center">
+				<p className="text-red-500 text-xl mb-4">Error: {error}</p>
+				<button
+					onClick={() => navigate("/")}
+					className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+				>
+					Go Home
+				</button>
+			</div>
+		);
+	}
+
+	if (!storyContent || !paramsForBookView) {
+		console.warn(
+			"Redirecting to home: StoryViewPage missing valid storyContent or paramsForBookView after loading."
+		);
+		return <Navigate to="/" replace />;
+	}
 
 	return (
 		<main className="flex-1 container mx-auto px-4 py-8">
@@ -681,7 +754,7 @@ function App() {
 
 			console.log("Saving generated story to database...");
 			// Use imported function directly
-			await createStory({
+			const savedStory = await createStory({
 				story: JSON.stringify(generatedStoryContent),
 				description: description,
 				sourceLanguage: sourceLang,
@@ -696,7 +769,7 @@ function App() {
 			}
 
 			// Navigation (use navigate from App scope)
-			navigate("/story-view", {
+			navigate(`/story/${savedStory.shareId}`, {
 				state: { storyData: generatedStoryContent, params: params },
 			});
 
@@ -787,7 +860,7 @@ function App() {
 					path="/"
 					element={<MainAppView generateStory={generateStory} />}
 				/>
-				<Route path="/story-view" element={<StoryViewPage />} />
+				<Route path="/story/:shareId" element={<StoryViewPage />} />
 				<Route path="/privacy-policy" element={<PrivacyPolicy />} />
 				<Route path="/terms-of-service" element={<TermsOfService />} />
 				<Route path="/contact" element={<ContactUs />} />

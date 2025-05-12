@@ -45,6 +45,7 @@ model Story {
   userId    String
   story     String   // This will store the JSON string of sentencePairs & vocabulary
   createdAt DateTime @default(now())
+  shareId   String   @unique @default(cuid()) // Now required, unique, and defaults to CUID
 
   // Add fields for storing generation parameters
   description    String?  // Optional description used for generation

@@ -117,6 +117,10 @@ const publicGetFetch = async (endpoint) => {
 
 // Stories
 export const getStories = () => authenticatedFetch("/stories");
+
+// ADDED: Function to get a single story by its ID (publicly accessible)
+export const getStoryById = (storyId) => publicGetFetch(`/stories/${storyId}`);
+
 export const createStory = (storyData) =>
 	authenticatedFetch("/stories", {
 		method: "POST",

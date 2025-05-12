@@ -383,6 +383,32 @@ app.get(
 	})
 );
 
+// NEW: PUBLIC ROUTE to GET a specific story by its shareId
+app.get(
+	"/api/stories/:shareId", // Changed from :id to :shareId
+	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+		const { shareId } = req.params; // Use shareId directly as a string
+
+		try {
+			// No need to parseInt, shareId is a CUID string
+			const story = await prisma.story.findUnique({
+				where: { shareId: shareId }, // Query by shareId
+			});
+
+			if (!story) {
+				return res.status(404).json({ error: "Story not found" });
+			}
+			
+			// Publicly return the story
+			res.json(story);
+		} catch (error) {
+			console.error(`Failed to fetch story with shareId ${shareId}:`, error);
+			next(error); // Pass to centralized error handler
+		}
+	})
+);
+
+
 // --- PROTECTED ROUTES ---
 // Apply the synchronous wrapper middleware
 app.use(authenticateTokenMiddleware);
@@ -800,52 +826,6 @@ app.post(
 			res.status(201).json(newStory);
 		} catch (error) {
 			// Pass database or other errors to the central handler
-			next(error);
-		}
-	})
-);
-
-// GET a specific story by ID (ensure it belongs to the user)
-app.get(
-	"/api/stories/:id",
-	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-		const userId = req.userId;
-		if (!userId) {
-			const err = new Error(
-				"Authentication required (userId missing after auth)."
-			);
-			(err as any).status = 401;
-			return next(err);
-		}
-		const { id } = req.params;
-
-		try {
-			const storyId = parseInt(id, 10);
-			if (isNaN(storyId)) {
-				const err = new Error("Invalid story ID format.");
-				(err as any).status = 400;
-				return next(err);
-			}
-
-			const story = await prisma.story.findUnique({
-				where: { id: storyId },
-			});
-
-			if (!story) {
-				const err = new Error("Story not found.");
-				(err as any).status = 404;
-				return next(err);
-			}
-
-			// Verify ownership
-			if (story.userId !== userId) {
-				const err = new Error("You do not have permission to view this story.");
-				(err as any).status = 403;
-				return next(err);
-			}
-
-			res.status(200).json(story);
-		} catch (error) {
 			next(error);
 		}
 	})

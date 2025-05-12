@@ -74,9 +74,15 @@ function MyStoriesPage() {
 
 		trackStoryView(story);
 
-		navigate("/story-view", {
-			state: { storyData: storyData, params: params },
-		});
+		// Navigate to the correct dynamic route using shareId
+		if (story.shareId) {
+			navigate(`/story/${story.shareId}`, {
+				state: { storyData: storyData, params: params },
+			});
+		} else {
+			console.error("Story object is missing shareId:", story);
+			alert("Cannot navigate to story: Shareable ID is missing.");
+		}
 	};
 
 	const performDeleteStory = async (storyIdToDelete) => {

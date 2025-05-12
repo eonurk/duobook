@@ -74,16 +74,8 @@ const StoryCard = ({ story }) => {
 			</div>
 
 			<Link
-				to={`/story-view`}
-				state={{
-					storyData: JSON.parse(story.story),
-					params: {
-						source: story.sourceLanguage,
-						target: story.targetLanguage,
-						difficulty: story.difficulty,
-						length: story.length,
-					},
-				}}
+				to={`/story/${story.shareId}`} // Updated to use story shareId in the URL
+				// Remove state passing as story will be fetched based on ID
 				className="mt-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors self-start group"
 			>
 				Read Story <ArrowRight className="w-4 h-4 ml-2" />
