@@ -5,7 +5,9 @@ import {
 	BarChart3, // Or SignalLow, SignalMedium, SignalHigh based on difficulty value
 	CalendarDays,
 	ArrowRight,
+	Share2,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const formatTimeAgo = (dateString) => {
 	const date = new Date(dateString);
@@ -43,6 +45,17 @@ const StoryCard = ({ story }) => {
 		? formatTimeAgo(story.createdAt)
 		: "Some time ago";
 
+	const handleShare = () => {
+		const storyUrl = `${window.location.origin}/story/${story.shareId}`;
+		try {
+			navigator.clipboard.writeText(storyUrl);
+			toast.success("Story link copied to clipboard!");
+		} catch (err) {
+			console.error("Failed to copy story link: ", err);
+			toast.error("Could not copy link.");
+		}
+	};
+
 	return (
 		<div className="bg-white shadow-lg rounded-xl p-5 hover:shadow-xl transition-shadow h-full flex flex-col justify-between border border-slate-100">
 			<div className="flex-grow">
@@ -73,13 +86,22 @@ const StoryCard = ({ story }) => {
 				</div>
 			</div>
 
-			<Link
-				to={`/story/${story.shareId}`} // Updated to use story shareId in the URL
-				// Remove state passing as story will be fetched based on ID
-				className="mt-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors self-start group"
-			>
-				Read Story <ArrowRight className="w-4 h-4 ml-2" />
-			</Link>
+			<div className="flex items-center justify-between mt-auto">
+				<Link
+					to={`/story/${story.shareId}`} // Updated to use story shareId in the URL
+					// Remove state passing as story will be fetched based on ID
+					className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors group"
+				>
+					Read Story <ArrowRight className="w-4 h-4 ml-2" />
+				</Link>
+				<button
+					onClick={handleShare}
+					className="inline-flex items-center justify-center p-2 border border-transparent text-sm font-medium rounded-md text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+					title="Share Story"
+				>
+					<Share2 className="w-5 h-5" />
+				</button>
+			</div>
 		</div>
 	);
 };
