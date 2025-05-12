@@ -82,10 +82,11 @@ const authenticatedFetch = async (endpoint, options = {}) => {
 // Helper for public GET requests (simplified from authenticatedFetch)
 const publicGetFetch = async (endpoint) => {
 	// Add debug log to see the full URL being requested
-	console.log(`Making public API request to: ${API_BASE_URL}${endpoint}`);
-	
+	const fullUrl = `${API_BASE_URL}${endpoint}`;
+	console.log(`Making public API request to: ${fullUrl}`);
+
 	try {
-		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+		const response = await fetch(fullUrl, {
 			method: "GET", // Explicitly GET
 			headers: {
 				"Content-Type": "application/json", // Expect JSON response
@@ -125,7 +126,7 @@ const publicGetFetch = async (endpoint) => {
 export const getStories = () => authenticatedFetch("/stories");
 
 // UPDATED: Function to get a single story by its ID (publicly accessible)
-// The correct endpoint is /stories/:shareId, with API_BASE_URL already being prepended by publicGetFetch
+// The endpoint is /api/stories/:shareId, but publicGetFetch already prepends the /api part
 export const getStoryById = (storyId) => publicGetFetch(`/stories/${storyId}`);
 
 export const createStory = (storyData) =>
