@@ -389,9 +389,9 @@ app.get(
 	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 		const { shareId } = req.params; // Use shareId directly as a string
 		console.log(`[DEBUG] Received request for story with shareId: ${shareId}`);
-		
+
 		// Log headers for debugging
-		console.log('[DEBUG] Request headers:', req.headers);
+		console.log("[DEBUG] Request headers:", req.headers);
 
 		try {
 			console.log(`[DEBUG] Attempting to find story with shareId: ${shareId}`);
@@ -404,7 +404,7 @@ app.get(
 				console.log(`[DEBUG] No story found with shareId: ${shareId}`);
 				return res.status(404).json({ error: "Story not found" });
 			}
-			
+
 			console.log(`[DEBUG] Found story with shareId: ${shareId}, returning it`);
 			// Publicly return the story
 			res.json(story);
@@ -414,42 +414,10 @@ app.get(
 		}
 	})
 );
-
 
 // --- PROTECTED ROUTES ---
 // Apply the synchronous wrapper middleware
 app.use(authenticateTokenMiddleware);
-
-// PUBLIC ROUTE to GET a specific story by its shareId
-app.get(
-	"/api/stories/:shareId",
-	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-		const { shareId } = req.params;
-		console.log(`[DEBUG] Received request for story with shareId: ${shareId}`);
-		
-		try {
-			console.log(`[DEBUG] Attempting to find story with shareId: ${shareId}`);
-			// Use regular where clause with field name
-			const story = await prisma.story.findFirst({
-				where: {
-					shareId: shareId
-				}
-			});
-
-			if (!story) {
-				console.log(`[DEBUG] No story found with shareId: ${shareId}`);
-				return res.status(404).json({ error: "Story not found" });
-			}
-			
-			console.log(`[DEBUG] Found story with shareId: ${shareId}, returning it`);
-			// Publicly return the story
-			res.json(story);
-		} catch (error) {
-			console.error(`Failed to fetch story with shareId ${shareId}:`, error);
-			next(error); // Pass to centralized error handler
-		}
-	})
-);
 
 // Get remaining story generation limit for current user
 app.get(

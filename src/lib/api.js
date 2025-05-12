@@ -126,12 +126,12 @@ const publicGetFetch = async (endpoint) => {
 export const getStories = () => authenticatedFetch("/stories");
 
 // UPDATED: Function to get a single story by its ID (publicly accessible)
-// The endpoint is /api/stories/public/:shareId - this is a public endpoint that doesn't need authentication
+// The endpoint is /api/stories/:shareId - this is a public endpoint that doesn't need authentication
 export const getStoryById = (storyId) => {
   console.log(`Fetching story with ID: ${storyId}`);
   
   // Use publicGetFetch instead of direct fetch to ensure correct URL and error handling
-  return publicGetFetch(`/stories/public/${storyId}`)
+  return publicGetFetch(`/stories/${storyId}`)
     .then(story => {
       console.log(`Successfully fetched story with ID ${storyId}`);
       return story;
