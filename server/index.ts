@@ -396,6 +396,7 @@ app.get(
 		try {
 			console.log(`[DEBUG] Attempting to find story with shareId: ${shareId}`);
 			// No need to parseInt, shareId is a CUID string
+			// Use findUnique as shareId is marked @unique in the schema
 			const story = await prisma.story.findUnique({
 				where: { shareId: shareId }, // Query by shareId
 			});
