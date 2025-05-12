@@ -387,11 +387,6 @@ app.get(
 app.get(
 	"/api/stories/:shareId", // Changed from :id to :shareId
 	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-		// IMMEDIATE TEST RESPONSE
-		return res
-			.status(200)
-			.json({ message: "TESTING /api/stories/:shareId REACHED" });
-
 		const { shareId } = req.params; // Use shareId directly as a string
 		console.log(`[DEBUG] Received request for story with shareId: ${shareId}`);
 
