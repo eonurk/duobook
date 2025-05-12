@@ -142,7 +142,10 @@ function StoryViewPage() {
 							});
 						}
 					} catch (e) {
-						console.error("StoryViewPage: Failed to parse story JSON from state:", e);
+						console.error(
+							"StoryViewPage: Failed to parse story JSON from state:",
+							e
+						);
 						setError("Failed to load story: Invalid format from state.");
 					}
 				} else if (initialStoryData.pages || initialStoryData.sentencePairs) {
@@ -155,7 +158,9 @@ function StoryViewPage() {
 						});
 					}
 				} else {
-					console.warn("StoryViewPage: storyData from state structure not recognized.");
+					console.warn(
+						"StoryViewPage: storyData from state structure not recognized."
+					);
 					setError("Failed to load story: Unrecognized format from state.");
 				}
 				setIsLoading(false);
@@ -175,7 +180,9 @@ function StoryViewPage() {
 							description: fetchedStory.description,
 						});
 					} else {
-						console.warn("StoryViewPage: Story not found or no content from API.");
+						console.warn(
+							"StoryViewPage: Story not found or no content from API."
+						);
 						setError("Story not found.");
 					}
 				} catch (err) {
@@ -364,7 +371,6 @@ function MainAppView({ generateStory }) {
 	useEffect(() => {
 		// Fetch community stories regardless of login state, but use idToken if available
 		// The getLatestStories function in api.js is already modified to handle nullable idToken
-		console.log("MainAppView: useEffect for community stories");
 		const fetchCommunityStories = async () => {
 			setLoadingCommunityStories(true);
 			setCommunityStoriesError(null);
@@ -707,11 +713,9 @@ function App() {
 		};
 
 		try {
-			console.log("Checking story generation limit...");
 			const limitData = await getStoryGenerationLimit();
 
 			if (!limitData.isPremium && limitData.remaining <= 0) {
-				console.log("Daily story generation limit reached for free tier.");
 				if (setFormError) {
 					setFormError({
 						type: "rateLimit", // Reusing existing type for UI consistency
@@ -722,10 +726,8 @@ function App() {
 				return; // Stop execution before calling the generation API
 			}
 
-			console.log("Sending generation request to backend proxy...");
 			// Use imported function directly
 			const generatedStoryContent = await generateStoryViaBackend(params);
-			console.log("Received story content from backend.");
 
 			// Validation logic (unchanged)
 			const isProStory = params.length === "very_long_pro";
@@ -783,13 +785,20 @@ function App() {
 				let toastMessage;
 				if (error.userBanned) {
 					// For banned users, the message from backend (error.message) is likely specific to the ban.
-					toastMessage = error.message || "Your account has been banned due to content policy violations.";
+					toastMessage =
+						error.message ||
+						"Your account has been banned due to content policy violations.";
 				} else {
 					// For non-ban moderation flags, provide a more descriptive default if backend message is generic or missing.
-					if (error.message && error.message.toLowerCase() !== "content moderation" && error.message.toLowerCase() !== "moderation event triggered") {
+					if (
+						error.message &&
+						error.message.toLowerCase() !== "content moderation" &&
+						error.message.toLowerCase() !== "moderation event triggered"
+					) {
 						toastMessage = error.message;
 					} else {
-						toastMessage = "Your story input was flagged for potentially violating our content policy. Please revise your description and try again. Repeated violations may lead to account restrictions.";
+						toastMessage =
+							"Your story input was flagged for potentially violating our content policy. Please revise your description and try again. Repeated violations may lead to account restrictions.";
 					}
 				}
 

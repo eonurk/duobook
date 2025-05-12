@@ -24,9 +24,7 @@ export function AuthProvider({ children }) {
 	const fetchApiGamificationData = async (user) => {
 		if (!user) return { progress: null, achievements: [] };
 		try {
-			console.log("AuthContext: Fetching gamification data from API...");
 			const data = await getGamificationData(); // Calls API endpoints
-			console.log("AuthContext: Received gamification data.");
 			setUserProgress(data.progress);
 			setUserAchievements(data.achievements || []); // Ensure achievements is always an array
 			return data;

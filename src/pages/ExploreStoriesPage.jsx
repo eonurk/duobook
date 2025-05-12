@@ -5,42 +5,8 @@ import { getLatestStories } from "@/lib/api"; // We'll need to add this API func
 import toast, { Toaster } from "react-hot-toast";
 import StoryCard from "@/components/StoryCard";
 
-// Placeholder for a story card component
-// const StoryCard = ({ story }) => {
-// 	// Basic card structure - can be enhanced later
-// 	return (
-// 		<div className="bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition-shadow">
-// 			<h3
-// 				className="text-lg font-semibold mb-1 truncate"
-// 				title={story.description || "User Story"}
-// 			>
-// 				{story.description || "A User-Generated Story"}
-// 			</h3>
-// 			<p className="text-sm text-gray-600 mb-1">
-// 				{story.sourceLanguage} to {story.targetLanguage} ({story.difficulty})
-// 			</p>
-// 			<p className="text-xs text-gray-500 mb-2">
-// 				Created: {new Date(story.createdAt).toLocaleDateString()}
-// 			</p>
-// 			{/*
-//         TODO: Decide how to link to view the story.
-//         If story.story is the JSON string, we might need to pass it via state to /story-view
-//         or fetch the full story content if /story-view expects an ID.
-//       */}
-// 			{/* <Link
-//         to={`/story-view`}
-//         state={{ storyData: JSON.parse(story.story), params: { source: story.sourceLanguage, target: story.targetLanguage, difficulty: story.difficulty, length: story.length } }}
-//         className="text-blue-500 hover:underline text-sm"
-//       >
-//         Read Story
-//       </Link> */}
-// 			<p className="text-xs text-gray-400">(Story reading functionality TBD)</p>
-// 		</div>
-// 	);
-// };
-
 const ExploreStoriesPage = () => {
-	const { currentUser, idToken } = useAuth();
+	const { idToken } = useAuth();
 	const [stories, setStories] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState(null);
@@ -65,9 +31,6 @@ const ExploreStoriesPage = () => {
 	const fetchStoriesCallback = useCallback(
 		async (pageToFetch) => {
 			if (!idToken && pageToFetch > 1) {
-				console.log(
-					"ExploreStoriesPage: Logged-out user trying to access page > 1. Showing prompt."
-				);
 				setShowLoginPrompt(true);
 				setIsLoading(false); // Ensure loading is off if we don't fetch
 				setStories([]); // Clear stories if prompt is shown for non-first page
@@ -76,10 +39,6 @@ const ExploreStoriesPage = () => {
 			}
 			setShowLoginPrompt(false); // Clear prompt if we are fetching
 
-			console.log(
-				"ExploreStoriesPage: Starting fetchStories for page:",
-				pageToFetch
-			);
 			setIsLoading(true);
 			setError(null);
 			try {
@@ -103,9 +62,6 @@ const ExploreStoriesPage = () => {
 				setStories([]); // Clear stories on error
 				setTotalPages(1); // Reset pagination on error
 			} finally {
-				console.log(
-					"ExploreStoriesPage: fetchStories finished, setting isLoading to false."
-				);
 				setIsLoading(false);
 			}
 		},
@@ -113,16 +69,6 @@ const ExploreStoriesPage = () => {
 	); // Added setSearchParams to dependency array
 
 	useEffect(() => {
-		console.log(
-			"ExploreStoriesPage useEffect triggered. currentUser:",
-			currentUser,
-			"idToken:",
-			idToken,
-			"currentPage from state:",
-			currentPage,
-			"URL searchParam page:",
-			searchParams.get("page")
-		);
 		const pageFromUrl = parseInt(searchParams.get("page")) || 1;
 		if (pageFromUrl !== currentPage) {
 			setCurrentPage(pageFromUrl); // Sync state with URL on initial load or back/forward

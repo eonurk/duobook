@@ -194,9 +194,6 @@ const storyGenerationLimiter = rateLimit({
 				(userProgress.subscriptionTier === SubscriptionTier.PREMIUM ||
 					userProgress.subscriptionTier === SubscriptionTier.PRO)
 			) {
-				console.log(
-					`Skipping rate limit for ${userProgress.subscriptionTier} user: ${req.userId}`
-				);
 				return true; // Skip the limit for premium users
 			}
 
@@ -215,15 +212,9 @@ const storyGenerationLimiter = rateLimit({
 
 			// If user has reached the limit, don't skip the limiter
 			if (remaining <= 0) {
-				console.log(
-					`User ${req.userId} has reached the story generation limit`
-				);
 				return false;
 			}
 
-			console.log(
-				`User ${req.userId} has ${remaining} story generations remaining`
-			);
 			return false; // Still apply the limiter but let DB count dictate
 		} catch (error) {
 			console.error("Error fetching user progress for rate limiting:", error);
@@ -388,13 +379,10 @@ app.get(
 	"/api/stories/:shareId", // Changed from :id to :shareId
 	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 		const { shareId } = req.params; // Use shareId directly as a string
-		console.log(`[DEBUG] Received request for story with shareId: ${shareId}`);
 
 		// Log headers for debugging
-		console.log("[DEBUG] Request headers:", req.headers);
 
 		try {
-			console.log(`[DEBUG] Attempting to find story with shareId: ${shareId}`);
 			// No need to parseInt, shareId is a CUID string
 			// Use findUnique as shareId is marked @unique in the schema
 			const story = await prisma.story.findUnique({
@@ -402,11 +390,9 @@ app.get(
 			});
 
 			if (!story) {
-				console.log(`[DEBUG] No story found with shareId: ${shareId}`);
 				return res.status(404).json({ error: "Story not found" });
 			}
 
-			console.log(`[DEBUG] Found story with shareId: ${shareId}, returning it`);
 			// Publicly return the story
 			res.json(story);
 		} catch (error) {
@@ -466,10 +452,6 @@ app.get(
 			});
 
 			const remaining = Math.max(0, limit - recentStories);
-
-			console.log(
-				`User ${userId} has used ${recentStories}/${limit} story generations in the last 24 hours`
-			);
 
 			return res.status(200).json({
 				limit,
@@ -564,9 +546,6 @@ Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }
 				throw new Error("OpenAI did not return story content.");
 			}
 
-			console.log(
-				"Received story content from OpenAI (this log might be redundant now but keeping for safety)."
-			);
 			// Optionally, validate the structure of storyContent before sending
 			try {
 				const parsedStory = JSON.parse(storyContent);
@@ -595,9 +574,6 @@ Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }
 							);
 
 							if (existingUserProgress && existingUserProgress.isBanned) {
-								console.log(
-									`User ${req.userId} is already banned. Moderation error occurred: ${parsedStory.moderation_error}`
-								);
 								userIsCurrentlyBanned = true;
 								currentWarningCount = existingUserProgress.moderationWarnings;
 							} else {
@@ -617,10 +593,6 @@ Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }
 								currentWarningCount = progressAfterWarning.moderationWarnings;
 								userIsCurrentlyBanned = progressAfterWarning.isBanned; // Reflects if banned *before* this warning increment
 
-								console.log(
-									`User ${req.userId} moderation warnings is now ${currentWarningCount}`
-								);
-
 								if (
 									currentWarningCount >= BAN_THRESHOLD &&
 									!userIsCurrentlyBanned
@@ -632,9 +604,6 @@ Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }
 									});
 									userWasJustBanned = true; // Set to true as they were banned in THIS request
 									userIsCurrentlyBanned = true; // Update final status
-									console.log(
-										`User ${req.userId} has been banned due to reaching ${BAN_THRESHOLD} moderation warnings.`
-									);
 								}
 							}
 						} catch (dbError) {
@@ -1241,9 +1210,6 @@ app.get(
 							data: challengesToCreate,
 							skipDuplicates: true, // Ignore P2002 errors silently
 						});
-						console.log(
-							`Attempted to create ${challengesToCreate.length} challenges (duplicates skipped).`
-						);
 					}
 
 					await tx.userProgress.update({

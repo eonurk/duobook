@@ -84,7 +84,6 @@ const authenticatedFetch = async (endpoint, options = {}) => {
 const publicGetFetch = async (endpoint) => {
 	// Add debug log to see the full URL being requested
 	const fullUrl = `${API_BASE_URL}${endpoint}`;
-	console.log(`Making public API request to: ${fullUrl}`);
 
 	try {
 		const response = await fetch(fullUrl, {
@@ -93,9 +92,6 @@ const publicGetFetch = async (endpoint) => {
 				"Content-Type": "application/json", // Expect JSON response
 			},
 		});
-
-		// Add debug log for the response status
-		console.log(`API response status for ${endpoint}: ${response.status}`);
 
 		if (!response.ok) {
 			let errorData;
@@ -129,12 +125,9 @@ export const getStories = () => authenticatedFetch("/stories");
 // UPDATED: Function to get a single story by its ID (publicly accessible)
 // The endpoint is /api/stories/:shareId - this is a public endpoint that doesn't need authentication
 export const getStoryById = (storyId) => {
-	console.log(`Fetching story with ID: ${storyId}`);
-
 	// Use publicGetFetch instead of direct fetch to ensure correct URL and error handling
 	return publicGetFetch(`/stories/${storyId}`)
 		.then((story) => {
-			console.log(`Successfully fetched story with ID ${storyId}`);
 			return story;
 		})
 		.catch((error) => {
