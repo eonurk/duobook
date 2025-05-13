@@ -1369,16 +1369,25 @@ app.post(
 						select: { level: true, points: true }, // Select needed fields for level up check
 					});
 
-					// Level Up Check (moved inside transaction)
+					// Level Up Check (moved inside transaction) - Standardized Logic
 					const currentLevel = updatedProg.level;
 					const currentPoints = updatedProg.points;
-					const pointsNeededForNextLevel = 100 * currentLevel;
-					if (currentPoints >= pointsNeededForNextLevel) {
-						const newLevel = currentLevel + 1; // Simple level up logic
-						console.log(`User ${userId} leveled up to ${newLevel}!`);
+					// Standardized pointsForLevel function (same as in PUT /api/progress)
+					const pointsForLevel = (lvl: number) => (((lvl - 1) * lvl) / 2) * 100;
+
+					let newCalculatedLevel = currentLevel;
+					// Check if user's current points meet threshold for next levels
+					while (currentPoints >= pointsForLevel(newCalculatedLevel + 1)) {
+						newCalculatedLevel++;
+					}
+
+					if (newCalculatedLevel > currentLevel) {
+						console.log(
+							`User ${userId} leveled up from ${currentLevel} to ${newCalculatedLevel} (Challenge Completion)!`
+						);
 						await tx.userProgress.update({
 							where: { userId: userId },
-							data: { level: newLevel },
+							data: { level: newCalculatedLevel },
 						});
 					}
 				}

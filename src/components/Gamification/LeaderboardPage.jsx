@@ -95,6 +95,17 @@ function LeaderboardPage() {
 		setError,
 	]);
 
+	const formatUserEmailForDisplay = (email) => {
+		if (!email || !email.includes("@")) {
+			return email; // Return as is if not a valid email format or null/undefined
+		}
+		const localPart = email.split("@")[0];
+		if (localPart.length <= 2) {
+			return localPart; // Return just the local part if it's too short to abbreviate
+		}
+		return `${localPart[0]}...${localPart[localPart.length - 1]}`;
+	};
+
 	const renderRankChange = (change) => {
 		if (change === "up")
 			return <ChevronUp className="w-4 h-4 text-green-500" />;
@@ -132,111 +143,145 @@ function LeaderboardPage() {
 
 		return (
 			<div className="space-y-3">
-				{data.map((entry, index) => (
-					<Card
-						key={entry.rank || index}
-						className={`flex items-center p-3 transition-all duration-300 ${
-							currentUserData?.rank === entry.rank &&
-							currentUserData?.name === entry.name
-								? "bg-primary/10 border-primary shadow-md"
-								: "bg-card hover:bg-muted/50"
-						}`}
-					>
-						<div className="flex items-center w-1/6 min-w-[60px]">
-							<span
-								className={`text-lg font-bold w-8 text-center ${
-									entry.rank === 1
-										? "text-amber-500"
-										: entry.rank === 2
-										? "text-slate-400"
-										: entry.rank === 3
-										? "text-orange-400"
-										: "text-muted-foreground"
-								}`}
-							>
-								{entry.rank}
-							</span>
-							{entry.rank === 1 && (
-								<Trophy className="w-5 h-5 ml-1 text-amber-500" />
-							)}
-						</div>
-						<Avatar className="h-9 w-9 mr-3">
-							<AvatarImage
-								src={
-									entry.avatarUrl ||
-									`https://avatar.vercel.sh/${entry.name}.png`
-								}
-								alt={entry.name}
-							/>
-							<AvatarFallback>
-								{entry.name ? (
-									entry.name.substring(0, 2).toUpperCase()
-								) : (
-									<UserCircle2 />
-								)}
-							</AvatarFallback>
-						</Avatar>
-						<div className="flex-grow">
-							<p
-								className={`font-semibold ${
-									currentUserData?.rank === entry.rank &&
-									currentUserData?.name === entry.name
-										? "text-primary"
-										: "text-card-foreground"
-								}`}
-							>
-								{entry.name}{" "}
-								{currentUserData?.rank === entry.rank &&
-									currentUserData?.name === entry.name &&
-									"(You)"}
-							</p>
-						</div>
-						<div className="flex items-center w-1/4 justify-end min-w-[80px]">
-							<span className="text-sm font-medium text-primary mr-1">
-								{entry.score?.toLocaleString()} XP
-							</span>
-							{renderRankChange(entry.change)}
-						</div>
-					</Card>
-				))}
+				{data.map((entry, index) => {
+					const displayName = entry.name
+						? formatUserEmailForDisplay(entry.name)
+						: "";
+					const originalName = entry.name; // for comparisons and avatar generation
+
+					const isCurrentEntryUser =
+						currentUserData?.rank === entry.rank &&
+						currentUserData?.name === originalName;
+
+					const highlightClass = isCurrentEntryUser
+						? "bg-primary/10 border-primary shadow-md"
+						: "bg-card hover:bg-muted/50";
+
+					let rankColorClass = "text-muted-foreground";
+					if (entry.rank === 1) rankColorClass = "text-amber-500";
+					else if (entry.rank === 2) rankColorClass = "text-slate-400";
+					else if (entry.rank === 3) rankColorClass = "text-orange-400";
+
+					return (
+						<Card
+							key={entry.rank || index}
+							className={`flex items-center p-3 sm:p-4 justify-between transition-all duration-300 ${highlightClass}`}
+						>
+							<div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+								{" "}
+								{/* Left part - flex-1 and min-w-0 for proper shrinking/growing */}
+								{/* Rank Display */}
+								<div className="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12">
+									<span className={`text-lg font-bold ${rankColorClass}`}>
+										{entry.rank}
+									</span>
+									{entry.rank === 1 && (
+										<Trophy className="w-4 h-4 sm:w-5 sm:h-5 ml-1 text-amber-500" />
+									)}
+								</div>
+								{/* Avatar */}
+								<Avatar className="h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0">
+									<AvatarImage
+										src={
+											entry.avatarUrl ||
+											`https://avatar.vercel.sh/${originalName}.png`
+										}
+										alt={displayName}
+									/>
+									<AvatarFallback>
+										{originalName ? (
+											originalName.substring(0, 2).toUpperCase()
+										) : (
+											<UserCircle2 />
+										)}
+									</AvatarFallback>
+								</Avatar>
+								{/* Name */}
+								<div className="flex-grow min-w-0">
+									<p
+										className={`font-semibold text-sm sm:text-base truncate ${
+											isCurrentEntryUser
+												? "text-primary"
+												: "text-card-foreground"
+										}`}
+										title={originalName}
+									>
+										{displayName}
+										{isCurrentEntryUser && (
+											<span className="ml-1.5 text-xs font-normal text-primary/90">
+												(You)
+											</span>
+										)}
+									</p>
+								</div>
+							</div>
+
+							{/* Right Part: Score and Rank Change */}
+							<div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 ml-2 sm:ml-3">
+								<span className="text-xs sm:text-sm font-medium text-primary whitespace-nowrap">
+									{entry.score?.toLocaleString()} XP
+								</span>
+								{renderRankChange(entry.change)}
+							</div>
+						</Card>
+					);
+				})}
 				{currentUserData && !isCurrentUserInTop && (
 					<>
 						<div className="text-center my-4 text-muted-foreground">...</div>
 						<Card
 							key="currentUser"
-							className="flex items-center p-3 bg-primary/10 border-primary shadow-md"
+							className="flex items-center p-3 sm:p-4 justify-between transition-all duration-300 bg-primary/10 border-primary shadow-md"
 						>
-							<div className="flex items-center w-1/6 min-w-[60px]">
-								<span className="text-lg font-bold w-8 text-center text-muted-foreground">
-									{currentUserData.rank}
-								</span>
+							<div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+								{/* Rank Display */}
+								<div className="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12">
+									<span className="text-lg font-bold text-muted-foreground">
+										{currentUserData.rank}
+									</span>
+								</div>
+
+								{/* Avatar */}
+								<Avatar className="h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0">
+									<AvatarImage
+										src={
+											currentUserData.avatarUrl ||
+											`https://avatar.vercel.sh/${currentUserData.name}.png`
+										}
+										alt={formatUserEmailForDisplay(currentUserData.name)}
+									/>
+									<AvatarFallback>
+										{currentUserData.name ? (
+											currentUserData.name.substring(0, 2).toUpperCase()
+										) : (
+											<UserCircle2 />
+										)}
+									</AvatarFallback>
+								</Avatar>
+
+								{/* Name */}
+								<div className="flex-grow min-w-0">
+									<p
+										className="font-semibold text-sm sm:text-base text-primary truncate"
+										title={currentUserData.name}
+									>
+										{currentUserData.name
+											? formatUserEmailForDisplay(currentUserData.name)
+											: ""}
+										<span className="ml-1.5 text-xs font-normal text-primary/90">
+											(You)
+										</span>
+									</p>
+								</div>
 							</div>
-							<Avatar className="h-9 w-9 mr-3">
-								<AvatarImage
-									src={
-										currentUserData.avatarUrl ||
-										`https://avatar.vercel.sh/${currentUserData.name}.png`
-									}
-									alt={currentUserData.name}
-								/>
-								<AvatarFallback>
-									{currentUserData.name ? (
-										currentUserData.name.substring(0, 2).toUpperCase()
-									) : (
-										<UserCircle2 />
-									)}
-								</AvatarFallback>
-							</Avatar>
-							<div className="flex-grow">
-								<p className="font-semibold text-primary">
-									{currentUserData.name} (You)
-								</p>
-							</div>
-							<div className="flex items-center w-1/4 justify-end min-w-[80px]">
-								<span className="text-sm font-medium text-primary mr-1">
+							{/* Right Part: Score and Rank Change (current user might not have 'change') */}
+							<div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 ml-2 sm:ml-3">
+								<span className="text-xs sm:text-sm font-medium text-primary whitespace-nowrap">
 									{currentUserData.score?.toLocaleString()} XP
 								</span>
-								{/* Rank change for current user might need different logic if not in top list */}
+								{/* Optional: Render rank change if available for current user, e.g., currentUserData.change */}
+								{currentUserData.change &&
+									renderRankChange(currentUserData.change)}
 							</div>
 						</Card>
 					</>
