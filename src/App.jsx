@@ -615,7 +615,7 @@ function MainAppView({ generateStory }) {
 
 				{/* Call to Action Section */}
 				{!isGenerating && (
-					<div className="mt-16 pt-12 text-center bg-gradient-to-r from-purple-600 to-indigo-700 text-white py-16 px-6">
+					<div className="mt-16 pt-12 text-center bg-gradient-to-r from-purple-600 to-indigo-700 text-white py-16 px-6 rounded-lg">
 						<Rocket className="w-16 h-16 mx-auto mb-6 text-amber-300" />
 						<h2 className="text-3xl md:text-4xl font-bold mb-4">
 							Ready to Craft Your Language Adventure?
@@ -641,10 +641,28 @@ function MainAppView({ generateStory }) {
 
 				{/* Testimonials Section */}
 				{!isGenerating && (
-					<div className="mt-16 pt-12 pb-12 bg-slate-100">
-						<h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
-							Loved by Language Learners
-						</h2>
+					<div className="mt-16 pt-12 pb-12 bg-slate-100 rounded-lg">
+						<div className="flex flex-col items-center mb-6 md:mb-12">
+							<h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-center text-gray-800 px-2 leading-tight">
+								<span className="block mb-2">
+									What Learners Say About DuoBook
+								</span>
+								<span
+									className="text-5xl"
+									role="img"
+									aria-label="Globe and Heart"
+								>
+									{" "}
+									<span className="animate-pulse inline-block align-middle text-4xl">
+										❤️
+									</span>
+								</span>
+							</h2>
+							<p className="mt-3 text-base md:text-lg text-gray-500 max-w-xl px-4 text-center">
+								Join thousands of language lovers who are transforming their
+								learning journey.
+							</p>
+						</div>
 						<div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
 							{[
 								{
