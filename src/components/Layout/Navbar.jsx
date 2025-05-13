@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext"; // Use alias
 import { Button } from "@/components/ui/button"; // Import shadcn Button
 import Login from "@/components/Auth/Login";
 import Signup from "@/components/Auth/Signup";
-import { Flame, Star, Sparkles, Menu, X, BookOpen } from "lucide-react"; // Added BookOpen icon
+import { Flame, Star, Sparkles, Menu, X, BookOpen, Trophy } from "lucide-react"; // Added BookOpen icon and Trophy icon
 import {
 	Dialog,
 	DialogContent,
@@ -246,6 +246,21 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 								>
 									<Link to="/practice">Practice</Link>
 								</Button>
+								{/* <Button
+									variant="link"
+									size="sm"
+									asChild
+									className={`px-0 ${
+										location.pathname === "/leaderboard"
+											? "text-primary font-semibold"
+											: "text-foreground/70 hover:text-foreground"
+									}`}
+								>
+									<Link to="/leaderboard">
+										Leaderboard
+										<Trophy className="h-4 w-4 " />
+									</Link>
+								</Button> */}
 								<Button
 									variant="outline"
 									size="sm"
@@ -446,6 +461,21 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 									>
 										<Link to="/practice">Practice</Link>
 									</Button>
+									{/* <Button
+										variant="ghost"
+										asChild
+										className={`w-full justify-start ${
+											location.pathname === "/leaderboard"
+												? "text-primary font-semibold bg-accent"
+												: ""
+										}`}
+										onClick={closeMobileMenu}
+									>
+										<Link to="/leaderboard">
+											Leaderboard
+											<Trophy className="h-4 w-4 mr-2 inline-block" />
+										</Link>
+									</Button> */}
 									<Button
 										variant="ghost"
 										asChild

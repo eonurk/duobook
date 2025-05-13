@@ -28,6 +28,7 @@ import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import P
 import ContactUs from "@/pages/ContactUs"; // Import Contact Us page
 import ExploreStoriesPage from "@/pages/ExploreStoriesPage"; // ADDED: Import ExploreStoriesPage
 import PricingPage from "@/pages/PricingPage"; // Import Pricing Page
+import LeaderboardPage from "@/components/Gamification/LeaderboardPage"; // ADDED: Import LeaderboardPage
 import {
 	ArrowDown,
 	Sparkles,
@@ -1173,6 +1174,14 @@ function App() {
 					}
 				/>
 				<Route path="/explore-stories" element={<ExploreStoriesPage />} />
+				<Route
+					path="/leaderboard"
+					element={
+						<ProtectedRoute>
+							<LeaderboardPage />
+						</ProtectedRoute>
+					}
+				/>
 				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
 			<SiteFooter />

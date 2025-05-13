@@ -1780,6 +1780,163 @@ app.get(
 	})
 );
 
+// --- START LEADERBOARD ENDPOINT ---
+app.get(
+	"/api/leaderboard/:period",
+	authenticateTokenMiddleware, // Apply authentication middleware
+	asyncHandler(async (req: Request, res: Response) => {
+		const { period } = req.params; // 'weekly', 'monthly', 'allTime'
+		const currentAuthenticatedUserId = req.userId; // From authenticateTokenMiddleware - this is the ID of the user making the request
+
+		// The frontend sends the current user's ID also in the query to explicitly request their rank.
+		// We can use currentAuthenticatedUserId for fetching the current user's rank details.
+		// const requestedUserIdForRank = req.query.userId as string | undefined;
+
+		console.log(
+			`Fetching leaderboard for period: ${period}, current auth user: ${currentAuthenticatedUserId}`
+		);
+
+		let topUsersData: any[] = [];
+		let currentUserRankData: any | null = null;
+
+		const validPeriods = ["weekly", "monthly", "allTime"];
+		if (!validPeriods.includes(period)) {
+			return res.status(400).json({ error: "Invalid period specified." });
+		}
+
+		const topN = 10; // Number of top users to fetch
+
+		// TODO: Implement date range filtering for 'weekly' and 'monthly' if you adapt your schema
+		// to track XP gained in specific periods (e.g., via an ExperienceGainLog table).
+		// For now, all periods will rank based on total UserProgress.points.
+		/*
+		let dateFilter = {};
+		if (period === "weekly") {
+			const today = new Date();
+			const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1))); // Adjust to your week start (e.g. Monday)
+			startOfWeek.setHours(0, 0, 0, 0);
+			// dateFilter = { createdAt: { gte: startOfWeek } }; // If filtering logs
+		} else if (period === "monthly") {
+			const today = new Date();
+			const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+			startOfMonth.setHours(0, 0, 0, 0);
+			// dateFilter = { createdAt: { gte: startOfMonth } }; // If filtering logs
+		}
+		*/
+
+		// Fetch top N users based on total points
+		topUsersData = await prisma.userProgress.findMany({
+			orderBy: {
+				points: "desc",
+			},
+			take: topN,
+			select: {
+				userId: true,
+				points: true,
+			},
+		});
+
+		// Enhance topUsersData with email from Firebase Auth
+		const enhancedTopUsers = await Promise.all(
+			topUsersData.map(async (up) => {
+				try {
+					const firebaseUser = await admin.auth().getUser(up.userId);
+					return {
+						...up,
+						name: firebaseUser.email || up.userId, // Use email, fallback to userId
+						avatarUrl: firebaseUser.photoURL || null, // Use photoURL if available
+					};
+				} catch (error) {
+					console.warn(
+						`Could not fetch Firebase user for ${up.userId}:`,
+						error
+					);
+					return { ...up, name: up.userId, avatarUrl: null }; // Fallback
+				}
+			})
+		);
+
+		// Format topUsers to match frontend expectations
+		const formattedTopUsers = enhancedTopUsers.map((up, index) => ({
+			rank: index + 1,
+			name: up.name,
+			score: up.points,
+			avatarUrl: up.avatarUrl,
+			change: "same", // Placeholder: Implement rank change logic later
+			userId: up.userId, // Keep userId for potential highlighting on frontend
+			isCurrentUser: false, // Initialize isCurrentUser
+		}));
+
+		// Fetch rank for the current authenticated user if they are logged in
+		if (currentAuthenticatedUserId) {
+			const currentUserIsTopUserEntry = formattedTopUsers.find(
+				(u) => u.userId === currentAuthenticatedUserId
+			);
+
+			if (currentUserIsTopUserEntry) {
+				// If current user is in top N, use that data and mark them
+				currentUserRankData = {
+					...currentUserIsTopUserEntry,
+					isCurrentUser: true,
+				};
+				const topUserIndex = formattedTopUsers.findIndex(
+					(u) => u.userId === currentAuthenticatedUserId
+				);
+				if (topUserIndex !== -1) {
+					formattedTopUsers[topUserIndex].isCurrentUser = true;
+				}
+			} else {
+				// If current user is not in top N, fetch their specific rank
+				const currentUserProgress = await prisma.userProgress.findUnique({
+					where: { userId: currentAuthenticatedUserId },
+					select: { points: true, userId: true },
+				});
+
+				if (currentUserProgress) {
+					let firebaseCurrentUserName = currentUserProgress.userId; // Fallback
+					let firebaseCurrentUserAvatar = null;
+					try {
+						const fbCurrentUser = await admin
+							.auth()
+							.getUser(currentUserProgress.userId);
+						firebaseCurrentUserName =
+							fbCurrentUser.email || currentUserProgress.userId;
+						firebaseCurrentUserAvatar = fbCurrentUser.photoURL || null;
+					} catch (error) {
+						console.warn(
+							`Could not fetch Firebase user for current user ${currentUserProgress.userId}:`,
+							error
+						);
+					}
+
+					// Count users with more points than the current user
+					const usersAhead = await prisma.userProgress.count({
+						where: {
+							points: { gt: currentUserProgress.points }, // Corrected variable name
+							// Add period-specific filters here if points are not lifetime totals and you implement that logic
+						},
+					});
+					currentUserRankData = {
+						rank: usersAhead + 1,
+						name: firebaseCurrentUserName,
+						score: currentUserProgress.points,
+						isCurrentUser: true,
+						avatarUrl: firebaseCurrentUserAvatar,
+						change: "same", // Placeholder
+						userId: currentUserProgress.userId,
+					};
+				}
+			}
+		}
+
+		res.status(200).json({
+			topUsers: formattedTopUsers,
+			currentUserRank: currentUserRankData,
+		});
+	})
+);
+// --- END LEADERBOARD ENDPOINT ---
+
 // --- ERROR HANDLING ---
 // Add a basic error handler to catch errors passed via next()
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

@@ -212,6 +212,26 @@ export const getGamificationData = async () => {
 	}
 };
 
+// Leaderboard
+export const getLeaderboardData = async (period, userId) => {
+	// Example: period = 'weekly', 'monthly', 'allTime'
+	// userId is optional, to fetch specific rank for the current user if not in top N
+	// Construct the endpoint, e.g., /leaderboard/weekly?userId=someUserId
+	let endpoint = `/leaderboard/${period}`;
+	if (userId) {
+		endpoint += `?userId=${userId}`;
+	}
+
+	try {
+		// Replace with actual authenticatedFetch call when backend is ready
+		const data = await authenticatedFetch(endpoint);
+		return data;
+	} catch (error) {
+		console.error(`Error fetching leaderboard data for ${period}:`, error);
+		throw error;
+	}
+};
+
 // Function to get the latest stories from all users
 export const getLatestStories = async (
 	idToken, // Can be null or undefined for public requests
