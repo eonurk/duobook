@@ -395,8 +395,8 @@ function BookView({
 			: 0;
 
 	// Remove the color palette generation and just use a single highlight color
-	const activeHighlightColor = "rgba(255, 243, 205, 0.8)"; // Light yellow highlight
-	const hoverHighlightColor = "rgba(255, 243, 205, 1)"; // Slightly stronger on hover
+	const activeHighlightColor = "rgba(38, 166, 154, 0.3)"; // Soft teal highlight
+	const hoverHighlightColor = "rgba(38, 166, 154, 0.5)"; // Stronger teal on hover
 
 	// --- Toggle Source Logic ---
 	const handleToggleSource = () => {
@@ -703,7 +703,7 @@ function BookView({
 			{/* Progress Bar - Show always */}
 			<div className="progress-container">
 				<div
-					className="progress-bar-fill"
+					className="progress-bar-fill bg-amber-500"
 					style={{ width: `${progressPercent}%` }}
 				></div>
 				<span className="progress-text">

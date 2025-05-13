@@ -23,8 +23,8 @@ const images = [
 	// 	options: { quality: 80 },
 	// },
 	{
-		input: "../pics/logo.png",
-		output: "src/assets/logo.webp",
+		input: "../pics/duobook-explain.png",
+		output: "src/assets/duobook-explain.webp",
 		options: { quality: 100 },
 	},
 ];

@@ -166,10 +166,10 @@
 	padding: 1rem;
 	max-width: 1150px;
 	margin: 2rem auto;
-	background-color: #eee8d5; /* Book cover color */
+	background-color: #fffaf0; /* Book cover color */
 	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 	border-radius: 10px;
-	border: 1px solid #d3c0a5;
+	border: 1px solid #eee8d5;
 	position: relative;
 }
 
@@ -180,29 +180,31 @@
 	left: 50%;
 	top: 1rem;
 	bottom: 1rem;
-	width: 6px;
+	width: 24px; /* Wider for a more noticeable but soft gutter */
 	background-image: linear-gradient(
 		to right,
-		rgba(0, 0, 0, 0.05),
-		rgba(0, 0, 0, 0.15),
-		rgba(0, 0, 0, 0.05)
-	);
+		rgba(0, 0, 0, 0) 0%,
+		rgba(0, 0, 0, 0.01) 20%,
+		rgba(0, 0, 0, 0.05) 50%,
+		rgba(0, 0, 0, 0.01) 80%,
+		rgba(0, 0, 0, 0) 100%
+	); /* Softer, more spread out shadow */
 	transform: translateX(-50%);
-	border-radius: 3px;
+	border-radius: 0; /* Shadow doesn't need its own radius */
 }
 
 .page {
 	flex: 1;
-	padding: 2rem 2.5rem;
-	border: none;
-	background-color: #fffaf0; /* Page color */
+	padding: 1.8rem 2.2rem; /* Adjusted padding */
+	border: 1px solid #e0d5c1; /* Page edge, complements new background */
+	background-color: #fffdf8; /* Warmer page color like the example */
 	height: 68vh;
 	overflow-y: auto;
 	text-align: left;
-	margin: 0 0.75rem; /* Visual gap between pages */
-	border-radius: 6px;
-	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-	/* Subtle texture */
+	margin: 0 0.6rem; /* Adjusted margin for visual gap */
+	border-radius: 8px; /* Softer corners */
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); /* Very subtle page shadow */
+	/* Subtle texture - can be enabled if desired */
 	/* background-image: url('...'); */
 }
 
@@ -210,7 +212,7 @@
 .page h3 {
 	margin-top: 0;
 	margin-bottom: 1.5rem;
-	color: #b58900;
+	color: #8b4513;
 	border-bottom: 2px solid #eee8d5;
 	padding-bottom: 0.8rem;
 	font-size: 1.4rem;
