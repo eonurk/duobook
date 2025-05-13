@@ -18,6 +18,7 @@ import { fileURLToPath } from "url";
 import rateLimit from "express-rate-limit";
 import { SubscriptionTier } from "@prisma/client"; // Import the enum
 import nodemailer from "nodemailer"; // Add nodemailer import
+import PDFDocument from "pdfkit"; // <-- Import PDFKit
 
 // Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -1393,6 +1394,387 @@ app.post(
 				`Error updating challenge progress for type ${challengeType} for user ${userId}:`,
 				error
 			);
+			next(error);
+		}
+	})
+);
+
+// --- PDF DOWNLOAD ENDPOINT ---
+app.get(
+	"/api/stories/:shareId/download/pdf", // <-- Changed endpoint to /pdf
+	authenticateTokenMiddleware, // Require authentication
+	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+		const { shareId } = req.params;
+		const userId = req.userId;
+
+		if (!userId) {
+			return res.status(401).json({ error: "User not authenticated" });
+		}
+
+		const userProgress = await prisma.userProgress.findUnique({
+			where: { userId },
+			select: { subscriptionTier: true },
+		});
+
+		if (userProgress?.subscriptionTier !== SubscriptionTier.PRO) {
+			return res.status(403).json({
+				error: "PDF downloads are only available for PRO subscribers.",
+			});
+		}
+
+		const story = await prisma.story.findUnique({
+			where: { shareId },
+		});
+
+		if (!story || !story.story) {
+			return res
+				.status(404)
+				.json({ error: "Story not found or content missing." });
+		}
+
+		try {
+			const storyData = JSON.parse(story.story);
+
+			let targetSentences: string[] = [];
+			let sourceSentences: string[] = [];
+			let vocabulary: { word: string; translation: string }[] = [];
+
+			// Check for paginated format first
+			if (
+				storyData.pages &&
+				Array.isArray(storyData.pages) &&
+				storyData.pages.length > 0
+			) {
+				console.log("Handling paginated story format for PDF.");
+				storyData.pages.forEach((page: any) => {
+					if (page.sentencePairs && Array.isArray(page.sentencePairs)) {
+						targetSentences.push(
+							...page.sentencePairs.map((p: any) => p.target)
+						);
+						sourceSentences.push(
+							...page.sentencePairs.map((p: any) => p.source)
+						);
+					}
+					if (page.vocabulary && Array.isArray(page.vocabulary)) {
+						vocabulary.push(...page.vocabulary);
+					}
+				});
+			}
+			// Else, check for the original flat format
+			else if (
+				storyData.sentencePairs &&
+				Array.isArray(storyData.sentencePairs)
+			) {
+				console.log("Handling flat story format for PDF.");
+				targetSentences = storyData.sentencePairs.map((p: any) => p.target);
+				sourceSentences = storyData.sentencePairs.map((p: any) => p.source);
+				vocabulary = storyData.vocabulary || [];
+			}
+			// Else, the format is invalid
+			else {
+				throw new Error(
+					"Invalid story content format: Missing 'sentencePairs' or 'pages' array."
+				);
+			}
+
+			if (targetSentences.length === 0) {
+				throw new Error("No sentences found in story data.");
+			}
+
+			const bookTitle = story.description || "Generated Story";
+			const authorName = "DuoBook AI";
+			const targetLangCode = story.targetLanguage || "en";
+			const sourceLangCode = story.sourceLanguage || "en";
+			const storyLength = story.length || "N/A"; // Get story length
+			const storyDifficulty = story.difficulty || "N/A"; // Get story difficulty
+
+			// Vocabulary is already collected from the branches above
+
+			// Create a new PDF document
+			const doc = new PDFDocument({
+				margin: 50,
+				layout: "portrait",
+				size: "A4",
+			});
+			doc.font("Helvetica"); // Set default font to Helvetica
+
+			// --- Define Color Scheme ---
+			const ACCENT_COLOR = "#F59E0B"; // Amber/Yellow
+			const PRIMARY_TEXT_COLOR = "#000000"; // Black
+			const SECONDARY_TEXT_COLOR = "#6B7280"; // Medium Gray
+			const FOOTER_TEXT_COLOR = "#4B5563"; // Darker Gray
+
+			const pageMargin = 50;
+			const availableWidth = doc.page.width - pageMargin * 2;
+			const columnGap = 20;
+			const columnWidth = (availableWidth - columnGap) / 2;
+
+			// --- Footer Function (adjusted for potential total page count) ---
+			const addFooter = (currentPage: number, totalPages: number | string) => {
+				const footerY = doc.page.height - pageMargin / 2;
+				doc.font("Helvetica").fontSize(8).fillColor(FOOTER_TEXT_COLOR); // Use footer color
+				doc.text(
+					`DuoBook™ | ${bookTitle} | Page ${currentPage} of ${totalPages}`,
+					pageMargin, // x
+					footerY, // y
+					{ align: "center", width: availableWidth }
+				);
+				doc.font("Helvetica").fillColor(PRIMARY_TEXT_COLOR); // Reset font and color explicitly
+			};
+
+			let currentPageNumber = 1;
+
+			// Set headers for PDF download
+			const fileName = `story-${shareId}.pdf`;
+			res.setHeader("Content-Type", "application/pdf");
+			res.setHeader(
+				"Content-Disposition",
+				`attachment; filename="${fileName}"`
+			);
+
+			doc.pipe(res);
+
+			// --- Page 1: Cover Page ---
+			const coverMargin = pageMargin + 10; // Margin for border
+			const coverWidth = doc.page.width - coverMargin * 2;
+			const coverHeight = doc.page.height - coverMargin * 2;
+
+			// Decorative Border
+			doc
+				.lineWidth(1)
+				.rect(coverMargin, coverMargin, coverWidth, coverHeight)
+				.stroke(ACCENT_COLOR);
+
+			// Move inside the border for content
+			doc.y = coverMargin + 30; // Start content lower
+			doc.x = coverMargin; // Align to border margin
+			const contentWidth = coverWidth; // Use width inside border
+
+			// Title
+			doc
+				.font("Helvetica-Bold")
+				.fontSize(28)
+				.fillColor(ACCENT_COLOR)
+				.text(bookTitle, { align: "center", width: contentWidth });
+			doc.moveDown(2.5); // Increased spacing
+
+			// Author
+			doc
+				.font("Helvetica")
+				.fontSize(18)
+				.fillColor(SECONDARY_TEXT_COLOR)
+				.text(`By ${authorName}`, { align: "center", width: contentWidth });
+			doc.moveDown(1.5); // Increased spacing
+
+			// Languages
+			doc
+				.font("Helvetica")
+				.fontSize(14)
+				.fillColor(SECONDARY_TEXT_COLOR)
+				.text(`Languages: ${targetLangCode} / ${sourceLangCode}`, {
+					align: "center",
+					width: contentWidth,
+				});
+			doc.moveDown(1); // Increased spacing
+
+			// Length
+			doc
+				.font("Helvetica")
+				.fontSize(14)
+				.fillColor(SECONDARY_TEXT_COLOR)
+				.text(`Length: ${storyLength}`, {
+					align: "center",
+					width: contentWidth,
+				});
+			doc.moveDown(1); // Increased spacing
+
+			// Difficulty
+			doc
+				.font("Helvetica")
+				.fontSize(14)
+				.fillColor(SECONDARY_TEXT_COLOR)
+				.text(`Difficulty: ${storyDifficulty}`, {
+					align: "center",
+					width: contentWidth,
+				});
+			doc.moveDown(1.5); // Increased spacing
+
+			// Generation Date
+			const generationDate = new Date().toLocaleDateString();
+			doc
+				.font("Helvetica-Oblique")
+				.fontSize(10)
+				.fillColor(SECONDARY_TEXT_COLOR)
+				.text(`Generated on: ${generationDate}`, {
+					align: "center",
+					width: contentWidth,
+				});
+
+			// Simple Logo/Footer Element for Cover
+			const coverFooterY = doc.page.height - coverMargin - 30; // Position near bottom border
+			doc
+				.font("Helvetica")
+				.fontSize(9)
+				.fillColor(ACCENT_COLOR)
+				.text("[ DuoBook ]", coverMargin, coverFooterY, {
+					align: "center",
+					width: contentWidth,
+				});
+
+			// Reset font and color for subsequent pages
+			doc.font("Helvetica").fillColor(PRIMARY_TEXT_COLOR);
+
+			// --- Page 2 onwards: Side-by-Side Columns ---
+			// REMOVED: doc.addPage(); // Let content flow naturally from cover page
+			// REMOVED: currentPageNumber++; // Page number increments only when content overflows
+
+			// Add space after cover page content if needed before starting story
+			doc.moveDown(3); // Add some vertical space
+			let initialY = doc.y; // Store Y position after cover page content + moveDown
+
+			doc
+				.font("Helvetica-Bold")
+				.fontSize(16)
+				.fillColor(ACCENT_COLOR)
+				.text("Story and Translation", { align: "center" }); // Accent header
+			doc.moveDown(2);
+			doc.fillColor(PRIMARY_TEXT_COLOR); // Reset color for content
+
+			const sentencePairs = targetSentences.map((target, index) => ({
+				target: target,
+				source: sourceSentences[index] || "", // Ensure source exists
+			}));
+
+			let currentY = doc.y; // Start Y position for the first pair
+
+			sentencePairs.forEach((pair, index) => {
+				// --- Page Break Check ---
+				// Estimate height (very rough - assumes ~1 line per 50 chars + base line)
+				const targetEstLines = Math.ceil(pair.target.length / 50) + 1;
+				const sourceEstLines = Math.ceil(pair.source.length / 50) + 1;
+				const estHeight = Math.max(targetEstLines, sourceEstLines) * 15; // Rough height estimate (12pt font)
+				const bottomMarginPosition = doc.page.height - doc.page.margins.bottom;
+
+				if (currentY + estHeight > bottomMarginPosition) {
+					doc.addPage();
+					currentPageNumber++;
+					currentY = doc.page.margins.top; // Reset Y to top margin
+					// Optionally redraw column headers/titles here if needed
+					doc
+						.font("Helvetica-Bold")
+						.fontSize(16)
+						.fillColor(ACCENT_COLOR)
+						.text("Story and Translation (Continued)", { align: "center" }); // Accent header
+					doc.moveDown(2);
+					currentY = doc.y;
+					doc.fillColor(PRIMARY_TEXT_COLOR); // Reset color
+				}
+
+				const startY = currentY;
+				let targetEndY = startY;
+				let sourceEndY = startY;
+
+				// Draw target sentence (left column)
+				doc.font("Helvetica").fontSize(12).fillColor(PRIMARY_TEXT_COLOR);
+				doc.text(pair.target, pageMargin, startY, { width: columnWidth });
+				targetEndY = doc.y; // Get Y position AFTER text is drawn
+
+				// Draw source sentence (right column) - Start at the same Y
+				doc
+					.font("Helvetica-Oblique") // Use Oblique font variant for source
+					.fontSize(10) // Keep original size for source
+					.fillColor(SECONDARY_TEXT_COLOR);
+				// .fontStyle("italic"); // This property doesn't exist
+				doc.text(pair.source, pageMargin + columnWidth + columnGap, startY, {
+					width: columnWidth,
+				});
+				doc.font("Helvetica"); // Reset font to non-italic
+				sourceEndY = doc.y; // Get Y position AFTER text is drawn
+
+				// Update Y for the next pair, adding a gap
+				currentY = Math.max(targetEndY, sourceEndY) + 15; // Use max Y + gap
+				doc.y = currentY; // Explicitly set doc.y for the next iteration's check
+			});
+
+			// Add footer to the last page of sentences
+			addFooter(currentPageNumber, "?"); // Still don't know total pages
+
+			// --- Vocabulary Section ---
+			if (vocabulary.length > 0) {
+				// Heuristic page break check for vocabulary - NOW using heightOfString
+				doc.font("Helvetica-Bold").fontSize(18).fillColor(ACCENT_COLOR); // Set font for title height calculation
+				const titleHeight = doc.heightOfString("Key Vocabulary", {
+					width: availableWidth,
+				});
+				doc.font("Helvetica").fontSize(11); // Set font for item height calculation
+				const approxItemHeight = doc.heightOfString("W: T", {
+					paragraphGap: 4,
+				}); // Approx height of one item
+				const neededHeight =
+					titleHeight +
+					1.5 * 12 /* moveDown */ +
+					vocabulary.length * approxItemHeight +
+					20; /* buffer */ // More refined height estimation
+				const bottomMarginPosition = doc.page.height - doc.page.margins.bottom;
+
+				if (doc.y + neededHeight > bottomMarginPosition) {
+					doc.addPage();
+					currentPageNumber++;
+					currentY = doc.page.margins.top; // Reset Y to top margin
+					doc
+						.font("Helvetica-Bold")
+						.fontSize(18)
+						.fillColor(ACCENT_COLOR)
+						.text("Key Vocabulary", { align: "center" }); // Accent title
+					doc.moveDown(1.5);
+					currentY = doc.y;
+				}
+
+				vocabulary.forEach((item: { word: string; translation: string }) => {
+					// Check for page break before adding each vocab item if needed (more robust)
+					doc.font("Helvetica").fontSize(11); // Ensure correct font is set
+					const itemHeight = doc.heightOfString(
+						`• ${item.word}: ${item.translation}`,
+						{ paragraphGap: 4, width: availableWidth }
+					);
+					if (
+						currentY + itemHeight >
+						doc.page.height - doc.page.margins.bottom
+					) {
+						doc.addPage();
+						currentPageNumber++;
+						currentY = doc.page.margins.top;
+						doc
+							.font("Helvetica-Bold")
+							.fontSize(18)
+							.fillColor(ACCENT_COLOR)
+							.text("Key Vocabulary (Continued)", { align: "center" }); // Accent title
+						doc.moveDown(1.5);
+						doc.font("Helvetica").fontSize(11); // Reset to standard Helvetica
+					}
+					// Draw vocab item: Word (Primary), Translation (Secondary)
+					doc.font("Helvetica").fontSize(11).fillColor(PRIMARY_TEXT_COLOR);
+					doc.text(`• ${item.word}: `, pageMargin, currentY, {
+						continued: true,
+						paragraphGap: 4,
+						width: availableWidth,
+					});
+					doc
+						.fillColor(SECONDARY_TEXT_COLOR)
+						.text(item.translation, { continued: false }); // Draw translation in secondary color
+					doc.font("Helvetica"); // Ensure font is reset after potential style changes
+					currentY = doc.y; // Update Y after drawing
+				});
+			}
+
+			// --- Finalize and add footer to the last page ---
+			const pageCount = doc.bufferedPageRange().count;
+			addFooter(currentPageNumber, pageCount); // Add final footer to the current (last) page
+
+			// Finalize the PDF
+			doc.end();
+		} catch (error) {
+			console.error("Error generating PDF:", error);
 			next(error);
 		}
 	})

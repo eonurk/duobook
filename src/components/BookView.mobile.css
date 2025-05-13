@@ -458,11 +458,9 @@
 /* Create button styling */
 .create-button {
 	font-weight: bold !important;
-	padding: 12px 0 !important;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 	background-color: #66a060;
 	color: white;
-	padding: 15px 20px !important;
+	padding: 15px 16px !important;
 }
 
 .mobile-buttons .button-tertiary {

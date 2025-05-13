@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 // Import API function for challenge progress
 import { postChallengeProgress } from "@/lib/api";
-// import toast from "react-hot-toast"; // Removed unused import
+import toast from "react-hot-toast"; // Add back the import for react-hot-toast
 
 // Add CSS for mobile responsiveness
 import "./BookView.mobile.css"; // This will be created next
@@ -111,7 +111,8 @@ function BookView({
 	onGoBack,
 	isExample = false,
 }) {
-	const { currentUser } = useAuth(); // Only currentUser is used directly in this component for now
+	// Get currentUser AND userProgress from AuthContext
+	const { currentUser, userProgress } = useAuth();
 
 	// --- Pagination State ---
 	const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -153,6 +154,9 @@ function BookView({
 	const [showAllSource, setShowAllSource] = useState(false); // State for toggling source visibility
 	// Add state for vocabulary expansion
 	const [isVocabExpanded, setIsVocabExpanded] = useState(false);
+
+	// --- Download State ---
+	const [isDownloading, setIsDownloading] = useState(false);
 
 	// --- TTS State ---
 	const [voices, setVoices] = useState([]);
@@ -588,6 +592,69 @@ function BookView({
 			?.scrollIntoView({ behavior: "smooth" });
 	};
 
+	// --- Download PDF Logic ---
+	const handleDownloadPdf = async () => {
+		if (!currentUser || !storyContent?.shareId || isDownloading) {
+			console.error("Download prerequisites not met:", {
+				currentUser,
+				storyContent,
+				isDownloading,
+			});
+			toast.error("Could not start download. Missing user info or story ID.");
+			return;
+		}
+
+		setIsDownloading(true);
+		const loadingToastId = toast.loading("Preparing download...");
+
+		try {
+			const token = await currentUser.getIdToken();
+			const shareId = storyContent.shareId;
+			const url = `/api/stories/${shareId}/download/pdf`;
+
+			const response = await fetch(url, {
+				method: "GET",
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			if (!response.ok) {
+				let errorMsg = "Download failed due to a server error.";
+				try {
+					const errorData = await response.json();
+					errorMsg = errorData.error || errorMsg;
+				} catch {
+					// Ignore JSON parse error if response wasn't JSON
+				}
+				console.error("Download failed:", response.status, errorMsg);
+				toast.error(`Download failed: ${errorMsg}`, { id: loadingToastId });
+				setIsDownloading(false);
+				return;
+			}
+
+			const blob = await response.blob();
+			const objectUrl = URL.createObjectURL(blob);
+
+			const link = document.createElement("a");
+			link.href = objectUrl;
+			link.download = `story-${shareId}.pdf`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(objectUrl);
+
+			toast.success("Download started!", { id: loadingToastId });
+		} catch (error) {
+			console.error("Error during download process:", error);
+			toast.error("An unexpected error occurred during download.", {
+				id: loadingToastId,
+			});
+		} finally {
+			setIsDownloading(false);
+		}
+	};
+
 	// Flag to determine if we're in mobile view
 	const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
@@ -628,7 +695,8 @@ function BookView({
 	// --- Rendering ---
 	return (
 		<div
-			id={isExample ? "story-examples-section": ""} className={`${isExample ? "example-book-container" : ""} ${
+			id={isExample ? "story-examples-section" : ""}
+			className={`${isExample ? "example-book-container" : ""} ${
 				isFinished ? "story-finished-container" : ""
 			} ${isMobileView ? "mobile-view" : ""}`}
 		>
@@ -1249,6 +1317,18 @@ function BookView({
 				>
 					Create Your First Story
 				</button>
+				{/* Conditionally render Download PDF button for PRO users using userProgress */}
+				{currentUser &&
+					userProgress?.subscriptionTier === "PRO" &&
+					storyContent?.shareId && (
+						<button
+							onClick={handleDownloadPdf}
+							className="button button-primary bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2.5 py-4 rounded-md shadow-md whitespace-nowrap"
+							disabled={isDownloading}
+						>
+							{isDownloading ? "Downloading..." : "Download PDF"}
+						</button>
+					)}
 			</div>
 		</div>
 	);

@@ -171,7 +171,12 @@ function StoryViewPage() {
 					// Assuming getStoryById can take the shareId (string CUID)
 					const fetchedStory = await getStoryById(shareId);
 					if (fetchedStory && fetchedStory.story) {
-						setStoryContent(JSON.parse(fetchedStory.story));
+						// Parse the story JSON
+						const parsedContent = JSON.parse(fetchedStory.story);
+						// Add the shareId to the parsed content object
+						parsedContent.shareId = shareId;
+						setStoryContent(parsedContent);
+
 						setParamsForBookView({
 							target: fetchedStory.targetLanguage,
 							source: fetchedStory.sourceLanguage,
