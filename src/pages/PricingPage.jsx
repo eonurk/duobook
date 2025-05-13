@@ -32,9 +32,7 @@ const PricingPage = () => {
 	const FeatureItem = ({ text, included }) => (
 		<li
 			className={`flex items-center space-x-2 ${
-				included
-					? "text-gray-800 dark:text-gray-200"
-					: "text-gray-500 dark:text-gray-400 line-through"
+				included ? "text-gray-800" : "text-gray-500 line-through"
 			}`}
 		>
 			{included ? (
