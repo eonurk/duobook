@@ -8,8 +8,8 @@ const PricingPage = () => {
 			{ text: "Basic vocabulary highlighting", included: true },
 			{ text: "3 story generations per day", included: true },
 			{ text: "Standard TTS voices", included: true },
-			{ text: "Priority Support", included: false },
 			{ text: "PDF Downloads", included: false },
+			{ text: "Priority Support", included: false },
 			{ text: "Advanced Story Analytics", included: false },
 		],
 		pro: [
@@ -19,8 +19,8 @@ const PricingPage = () => {
 				text: "10 story generations per day",
 				included: true,
 			},
-			{ text: "Priority Support", included: true },
 			{ text: "PDF Downloads", included: true },
+			{ text: "Priority Support", included: true },
 			{ text: "Advanced Story Analytics", included: true },
 			{
 				text: "Exclusive content & early access to new features",

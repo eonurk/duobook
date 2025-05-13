@@ -28,7 +28,22 @@ import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import P
 import ContactUs from "@/pages/ContactUs"; // Import Contact Us page
 import ExploreStoriesPage from "@/pages/ExploreStoriesPage"; // ADDED: Import ExploreStoriesPage
 import PricingPage from "@/pages/PricingPage"; // Import Pricing Page
-import { ArrowDown, Sparkles, CheckCircle2, Loader2, X } from "lucide-react"; // Import ArrowDown icon and new icons
+import {
+	ArrowDown,
+	Sparkles,
+	CheckCircle2,
+	Loader2,
+	X,
+	BookHeart,
+	TrendingUp,
+	Award,
+	Puzzle,
+	HelpCircle,
+	Check,
+	Quote,
+	Star as StarIcon,
+	Rocket,
+} from "lucide-react"; // Import ArrowDown icon and new icons
 import {
 	// getStories, // Commented out: Will be used in MyStoriesPage
 	// deleteStory, // Commented out: Will be used in MyStoriesPage
@@ -46,6 +61,13 @@ import {
 import toast, { Toaster } from "react-hot-toast"; // Keep Toaster if used
 import StoryCard from "@/components/StoryCard"; // ADDED: Import StoryCard
 import { Button } from "@/components/ui/button"; // Import Button component
+import {
+	Card,
+	CardHeader,
+	CardTitle,
+	CardContent,
+	CardFooter,
+} from "@/components/ui/card"; // Import Card component
 
 // Static Example Story Data
 const exampleStoryData = {
@@ -385,7 +407,12 @@ function MainAppView({ generateStory }) {
 			<main className="flex-1 container mx-auto px-4 py-8">
 				{!isGenerating && (
 					<>
-						<h1 className="text-2xl font-semibold text-center mb-2">DuoBook</h1>
+						<h1
+							className="text-2xl font-semibold text-center mb-2"
+							id="input-form-section"
+						>
+							DuoBook
+						</h1>
 						<p className="text-center text-muted-foreground mb-4">
 							Generate bilingual stories to learn any language
 						</p>
@@ -524,6 +551,165 @@ function MainAppView({ generateStory }) {
 					</div>
 				)}
 
+				{/* Key Features Section */}
+				{!isGenerating && (
+					<div className="mt-16 pt-12 border-t">
+						<h2 className="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-gray-200">
+							Unlock Your Language Potential
+						</h2>
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto mb-12">
+							{[
+								{
+									icon: <BookHeart className="w-10 h-10 text-rose-500 mb-3" />,
+									title: "Bilingual Stories",
+									description:
+										"Read engaging stories with parallel text in your target and source languages.",
+								},
+								{
+									icon: (
+										<TrendingUp className="w-10 h-10 text-green-500 mb-3" />
+									),
+									title: "Track Your Progress",
+									description:
+										"Monitor your learning journey with streaks, levels, and experience points.",
+								},
+								{
+									icon: <Award className="w-10 h-10 text-amber-500 mb-3" />,
+									title: "Earn Achievements",
+									description:
+										"Stay motivated by unlocking achievements as you learn and explore.",
+								},
+								{
+									icon: <Puzzle className="w-10 h-10 text-sky-500 mb-3" />,
+									title: "Practice & Reinforce",
+									description:
+										"Solidify your knowledge with vocabulary practice and upcoming interactive exercises.",
+								},
+							].map((feature, index) => (
+								<div
+									key={index}
+									className="flex flex-col items-center text-center p-6 bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+								>
+									{feature.icon}
+									<h3 className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-300">
+										{feature.title}
+									</h3>
+									<p className="text-sm text-gray-500 dark:text-gray-400">
+										{feature.description}
+									</p>
+								</div>
+							))}
+						</div>
+					</div>
+				)}
+
+				{/* Example Quiz Section */}
+				{!isGenerating && (
+					<div className="mt-12 pt-12 border-t bg-slate-50 dark:bg-slate-800/50 py-12">
+						<h2 className="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-gray-200">
+							Test Your Understanding
+						</h2>
+						<div className="max-w-2xl mx-auto px-4">
+							<ExampleQuiz />
+						</div>
+					</div>
+				)}
+
+				{/* Call to Action Section */}
+				{!isGenerating && (
+					<div className="mt-16 pt-12 text-center bg-gradient-to-r from-purple-600 to-indigo-700 text-white py-16 px-6">
+						<Rocket className="w-16 h-16 mx-auto mb-6 text-amber-300" />
+						<h2 className="text-3xl md:text-4xl font-bold mb-4">
+							Ready to Craft Your Language Adventure?
+						</h2>
+						<p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-indigo-100">
+							Stop just memorizing words. Start understanding in context.
+							Generate your first personalized bilingual story now and
+							experience a new way to learn.
+						</p>
+						<Button
+							onClick={() => {
+								const inputForm = document.getElementById("input-form-section"); // Assuming InputForm has an id
+								if (inputForm) {
+									inputForm.scrollIntoView({ behavior: "smooth" });
+								}
+							}}
+							className="bg-amber-400 hover:bg-amber-500 text-purple-800 font-bold text-lg py-6 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105"
+						>
+							Create Your First Story
+						</Button>
+					</div>
+				)}
+
+				{/* Testimonials Section */}
+				{!isGenerating && (
+					<div className="mt-16 pt-12 pb-12 bg-slate-100 dark:bg-slate-800/30">
+						<h2 className="text-3xl font-bold text-center mb-12 text-gray-800 dark:text-gray-200">
+							Loved by Language Learners
+						</h2>
+						<div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+							{[
+								{
+									quote:
+										"The parallel text feature is genius. I have to work but I can't get out of the stories!",
+									name: "Cagla L.",
+									role: "Dutch Learner",
+									stars: 5,
+								},
+								{
+									quote:
+										"I struggled with vocabulary retention until I found DuoBook. Creating my own stories made all the difference.",
+									name: "Sarah K.",
+									role: "French Learner",
+									stars: 5,
+								},
+								{
+									quote:
+										"DuoBook makes grammar click for me. Seeing both languages side by side is a game changer!",
+									name: "Mike B.",
+									role: "German Learner",
+									stars: 5,
+								},
+							].map((testimonial, index) => (
+								<Card
+									key={index}
+									className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col"
+								>
+									<CardContent className="pt-6 flex-grow">
+										<Quote className="w-8 h-8 text-amber-500 mb-3" />
+										<p className="text-gray-600 italic mb-4">
+											"{testimonial.quote}"
+										</p>
+									</CardContent>
+									<CardFooter className="mt-auto border-t dark:border-slate-700 pt-4">
+										<div>
+											<p className="font-semibold text-gray-700 dark:text-gray-200">
+												{testimonial.name}
+											</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">
+												{testimonial.role}
+											</p>
+										</div>
+										<div className="ml-auto flex items-center">
+											{[...Array(5)].map((_, i) => (
+												<StarIcon
+													key={i}
+													className={`w-4 h-4 ${
+														i < testimonial.stars
+															? "text-amber-400"
+															: "text-gray-300 dark:text-gray-600"
+													}`}
+													fill={i < testimonial.stars ? "currentColor" : "none"}
+												/>
+											))}
+										</div>
+									</CardFooter>
+								</Card>
+							))}
+						</div>
+					</div>
+				)}
+
 				{/* ADDED: Latest Community Stories Section */}
 				{!isGenerating &&
 					(latestCommunityStories.length > 0 ||
@@ -574,6 +760,230 @@ function MainAppView({ generateStory }) {
 		</>
 	);
 }
+
+// --- Example Quiz Component ---
+const exampleQuizQuestions = [
+	{
+		question: `What does "manera natural" mean in English?`,
+		options: ["Naturally", "Manually", "Artificially", "Spiritually"],
+		correctAnswer: "Naturally",
+		hint: `Find "manera natural" in the example story's vocabulary list.`,
+	},
+	{
+		question:
+			"According to the example, how does DuoBook help you learn languages?",
+		options: [
+			"Naturally",
+			"By memorizing lists",
+			"Through grammar drills only",
+			"With video lessons",
+		],
+		correctAnswer: "Naturally",
+		hint: `Check the first sentence: "DuoBook te ayuda a aprender idiomas de manera natural."`,
+	},
+	{
+		question:
+			"What does 'Each story has parallel text in two languages.' translate to in Spanish in the example?",
+		options: [
+			"Cada historia tiene texto paralelo en dos idiomas.",
+			"Algunas historias tienen texto en dos idiomas.",
+			"Cada historia es muy larga y en dos idiomas.",
+			"El texto es difícil en todos los idiomas.",
+		],
+		correctAnswer: "Cada historia tiene texto paralelo en dos idiomas.",
+		hint: `Look for the translation of the second English sentence.`,
+	},
+	{
+		question: "What can you do with underlined words in the example story?",
+		options: [
+			"See translations on hover",
+			"Hear pronunciation",
+			"Skip them",
+			"Edit them",
+		],
+		correctAnswer: "See translations on hover",
+		hint: `Sentence 5 says: "Las palabras subrayadas muestran traducciones al pasar el cursor."`,
+	},
+];
+
+function ExampleQuiz() {
+	const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+	const [selectedAnswer, setSelectedAnswer] = useState(null);
+	const [showFeedback, setShowFeedback] = useState(false);
+	const [score, setScore] = useState(0);
+	const [quizFinished, setQuizFinished] = useState(false);
+
+	const currentQuestion = exampleQuizQuestions[currentQuestionIndex];
+
+	const handleAnswerSelect = (option) => {
+		if (showFeedback) return; // Don't allow changing answer after feedback
+		setSelectedAnswer(option);
+	};
+
+	const handleSubmitAnswer = () => {
+		if (!selectedAnswer) return;
+		setShowFeedback(true);
+		if (selectedAnswer === currentQuestion.correctAnswer) {
+			setScore((prevScore) => prevScore + 1);
+		}
+	};
+
+	const handleNextQuestion = () => {
+		setSelectedAnswer(null);
+		setShowFeedback(false);
+		if (currentQuestionIndex < exampleQuizQuestions.length - 1) {
+			setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+		} else {
+			setQuizFinished(true);
+		}
+	};
+
+	const handleRestartQuiz = () => {
+		setCurrentQuestionIndex(0);
+		setSelectedAnswer(null);
+		setShowFeedback(false);
+		setScore(0);
+		setQuizFinished(false);
+	};
+
+	if (quizFinished) {
+		return (
+			<Card className="shadow-xl">
+				<CardHeader>
+					<CardTitle className="text-2xl text-center text-purple-700 dark:text-purple-400">
+						Quiz Complete!
+					</CardTitle>
+				</CardHeader>
+				<CardContent className="text-center">
+					<p className="text-lg mb-4 text-gray-700 dark:text-gray-300">
+						You scored {score} out of {exampleQuizQuestions.length}!
+					</p>
+					<Award
+						className={`w-16 h-16 mx-auto mb-4 ${
+							score === exampleQuizQuestions.length
+								? "text-amber-500"
+								: "text-slate-400"
+						}`}
+					/>
+					<Button
+						onClick={handleRestartQuiz}
+						className="bg-purple-600 hover:bg-purple-700 text-white"
+					>
+						Restart Quiz
+					</Button>
+				</CardContent>
+			</Card>
+		);
+	}
+
+	if (!currentQuestion) {
+		return <p>Loading quiz...</p>; // Should not happen if questions are defined
+	}
+
+	return (
+		<Card className="shadow-xl bg-white dark:bg-slate-800">
+			<CardHeader>
+				<CardTitle className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+					Question {currentQuestionIndex + 1} of {exampleQuizQuestions.length}
+				</CardTitle>
+				<p className="text-md mt-2 text-gray-700 dark:text-gray-300">
+					{currentQuestion.question}
+				</p>
+			</CardHeader>
+			<CardContent className="space-y-3">
+				{currentQuestion.options.map((option, index) => {
+					const isCorrect = option === currentQuestion.correctAnswer;
+					const isSelected = option === selectedAnswer;
+					let buttonClass =
+						"justify-start w-full text-left py-3 px-4 rounded-lg transition-colors duration-200 text-gray-700 dark:text-gray-300 ";
+					if (showFeedback) {
+						if (isCorrect) {
+							buttonClass +=
+								"bg-green-100 dark:bg-green-700/30 border-green-500 dark:border-green-600 ring-2 ring-green-500 dark:ring-green-600";
+						} else if (isSelected && !isCorrect) {
+							buttonClass +=
+								"bg-red-100 dark:bg-red-700/30 border-red-500 dark:border-red-600 ring-2 ring-red-500 dark:ring-red-600";
+						} else {
+							buttonClass +=
+								"bg-slate-50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600";
+						}
+					} else {
+						if (isSelected) {
+							buttonClass +=
+								"bg-purple-100 dark:bg-purple-700/30 border-purple-500 dark:border-purple-600 ring-2 ring-purple-500 dark:ring-purple-600";
+						} else {
+							buttonClass +=
+								"bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600";
+						}
+					}
+
+					return (
+						<Button
+							key={index}
+							variant="outline"
+							className={buttonClass}
+							onClick={() => handleAnswerSelect(option)}
+							disabled={showFeedback}
+						>
+							<span className="mr-3">
+								{showFeedback &&
+									(isCorrect ? (
+										<Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+									) : isSelected ? (
+										<X className="w-5 h-5 text-red-600 dark:text-red-400" />
+									) : (
+										<HelpCircle className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+									))}
+							</span>
+							{option}
+						</Button>
+					);
+				})}
+			</CardContent>
+			<CardFooter className="flex flex-col items-center space-y-3">
+				{showFeedback && (
+					<div
+						className={`p-3 rounded-md w-full text-center text-sm ${
+							selectedAnswer === currentQuestion.correctAnswer
+								? "bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300"
+								: "bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-300"
+						}`}
+					>
+						{selectedAnswer === currentQuestion.correctAnswer
+							? "Correct!"
+							: "Not quite."}
+						{!(selectedAnswer === currentQuestion.correctAnswer) &&
+							currentQuestion.hint && (
+								<p className="text-xs mt-1 text-gray-500 dark:text-gray-400">
+									Hint: {currentQuestion.hint}
+								</p>
+							)}
+					</div>
+				)}
+				{!showFeedback ? (
+					<Button
+						onClick={handleSubmitAnswer}
+						disabled={!selectedAnswer}
+						className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+					>
+						Submit Answer
+					</Button>
+				) : (
+					<Button
+						onClick={handleNextQuestion}
+						className="w-full bg-slate-600 hover:bg-slate-700 text-white"
+					>
+						{currentQuestionIndex < exampleQuizQuestions.length - 1
+							? "Next Question"
+							: "Finish Quiz"}
+					</Button>
+				)}
+			</CardFooter>
+		</Card>
+	);
+}
+
+// --- END Example Quiz Component ---
 
 function App() {
 	const { loading, currentUser } = useAuth();
