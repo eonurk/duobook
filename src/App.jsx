@@ -363,7 +363,7 @@ function MainAppView({ generateStory }) {
 					className={`mb-6 rounded-lg ${
 						formError.type === "rateLimit" // Changed from formError.isRateLimit
 							? "bg-amber-50 border border-amber-100"
-							: "bg-red-50 text-red-800 dark:bg-gray-800 dark:text-red-400"
+							: "bg-red-50 text-red-800"
 					}`}
 					role="alert"
 				>
@@ -554,7 +554,7 @@ function MainAppView({ generateStory }) {
 				{/* Key Features Section */}
 				{!isGenerating && (
 					<div className="mt-16 pt-12 border-t">
-						<h2 className="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-gray-200">
+						<h2 className="text-3xl font-bold text-center mb-10 text-gray-800">
 							Unlock Your Language Potential
 						</h2>
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto mb-12">
@@ -588,15 +588,13 @@ function MainAppView({ generateStory }) {
 							].map((feature, index) => (
 								<div
 									key={index}
-									className="flex flex-col items-center text-center p-6 bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+									className="flex flex-col items-center text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
 								>
 									{feature.icon}
-									<h3 className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-300">
+									<h3 className="text-xl font-semibold mb-2 text-gray-700">
 										{feature.title}
 									</h3>
-									<p className="text-sm text-gray-500 dark:text-gray-400">
-										{feature.description}
-									</p>
+									<p className="text-sm text-gray-500">{feature.description}</p>
 								</div>
 							))}
 						</div>
@@ -605,8 +603,8 @@ function MainAppView({ generateStory }) {
 
 				{/* Example Quiz Section */}
 				{!isGenerating && (
-					<div className="mt-12 pt-12 border-t bg-slate-50 dark:bg-slate-800/50 py-12">
-						<h2 className="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-gray-200">
+					<div className="mt-12 pt-12 border-t bg-slate-50 py-12">
+						<h2 className="text-3xl font-bold text-center mb-10 text-gray-800">
 							Test Your Understanding
 						</h2>
 						<div className="max-w-2xl mx-auto px-4">
@@ -643,8 +641,8 @@ function MainAppView({ generateStory }) {
 
 				{/* Testimonials Section */}
 				{!isGenerating && (
-					<div className="mt-16 pt-12 pb-12 bg-slate-100 dark:bg-slate-800/30">
-						<h2 className="text-3xl font-bold text-center mb-12 text-gray-800 dark:text-gray-200">
+					<div className="mt-16 pt-12 pb-12 bg-slate-100">
+						<h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
 							Loved by Language Learners
 						</h2>
 						<div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
@@ -681,12 +679,12 @@ function MainAppView({ generateStory }) {
 											"{testimonial.quote}"
 										</p>
 									</CardContent>
-									<CardFooter className="mt-auto border-t dark:border-slate-700 pt-4">
+									<CardFooter className="mt-auto border-t pt-4">
 										<div>
-											<p className="font-semibold text-gray-700 dark:text-gray-200">
+											<p className="font-semibold text-gray-700">
 												{testimonial.name}
 											</p>
-											<p className="text-sm text-gray-500 dark:text-gray-400">
+											<p className="text-sm text-gray-500">
 												{testimonial.role}
 											</p>
 										</div>
@@ -697,7 +695,7 @@ function MainAppView({ generateStory }) {
 													className={`w-4 h-4 ${
 														i < testimonial.stars
 															? "text-amber-400"
-															: "text-gray-300 dark:text-gray-600"
+															: "text-gray-300"
 													}`}
 													fill={i < testimonial.stars ? "currentColor" : "none"}
 												/>
@@ -850,12 +848,12 @@ function ExampleQuiz() {
 		return (
 			<Card className="shadow-xl">
 				<CardHeader>
-					<CardTitle className="text-2xl text-center text-purple-700 dark:text-purple-400">
+					<CardTitle className="text-2xl text-center text-purple-700">
 						Quiz Complete!
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="text-center">
-					<p className="text-lg mb-4 text-gray-700 dark:text-gray-300">
+					<p className="text-lg mb-4 text-gray-700">
 						You scored {score} out of {exampleQuizQuestions.length}!
 					</p>
 					<Award
@@ -881,39 +879,35 @@ function ExampleQuiz() {
 	}
 
 	return (
-		<Card className="shadow-xl bg-white dark:bg-slate-800">
+		<Card className="shadow-xl bg-white">
 			<CardHeader>
-				<CardTitle className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+				<CardTitle className="text-xl font-semibold text-gray-800">
 					Question {currentQuestionIndex + 1} of {exampleQuizQuestions.length}
 				</CardTitle>
-				<p className="text-md mt-2 text-gray-700 dark:text-gray-300">
-					{currentQuestion.question}
-				</p>
+				<p className="text-md mt-2 text-gray-700">{currentQuestion.question}</p>
 			</CardHeader>
 			<CardContent className="space-y-3">
 				{currentQuestion.options.map((option, index) => {
 					const isCorrect = option === currentQuestion.correctAnswer;
 					const isSelected = option === selectedAnswer;
 					let buttonClass =
-						"justify-start w-full text-left py-3 px-4 rounded-lg transition-colors duration-200 text-gray-700 dark:text-gray-300 ";
+						"justify-start w-full text-left py-3 px-4 rounded-lg transition-colors duration-200 text-gray-700 ";
 					if (showFeedback) {
 						if (isCorrect) {
 							buttonClass +=
-								"bg-green-100 dark:bg-green-700/30 border-green-500 dark:border-green-600 ring-2 ring-green-500 dark:ring-green-600";
+								"bg-green-100 border-green-500 ring-2 ring-green-500";
 						} else if (isSelected && !isCorrect) {
-							buttonClass +=
-								"bg-red-100 dark:bg-red-700/30 border-red-500 dark:border-red-600 ring-2 ring-red-500 dark:ring-red-600";
+							buttonClass += "bg-red-100 border-red-500 ring-2 ring-red-500";
 						} else {
-							buttonClass +=
-								"bg-slate-50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600";
+							buttonClass += "bg-slate-50 border-slate-300";
 						}
 					} else {
 						if (isSelected) {
 							buttonClass +=
-								"bg-purple-100 dark:bg-purple-700/30 border-purple-500 dark:border-purple-600 ring-2 ring-purple-500 dark:ring-purple-600";
+								"bg-purple-100 border-purple-500 ring-2 ring-purple-500";
 						} else {
 							buttonClass +=
-								"bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600";
+								"bg-slate-50 hover:bg-slate-100 border border-slate-300";
 						}
 					}
 
@@ -928,11 +922,11 @@ function ExampleQuiz() {
 							<span className="mr-3">
 								{showFeedback &&
 									(isCorrect ? (
-										<Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+										<Check className="w-5 h-5 text-green-600" />
 									) : isSelected ? (
-										<X className="w-5 h-5 text-red-600 dark:text-red-400" />
+										<X className="w-5 h-5 text-red-600" />
 									) : (
-										<HelpCircle className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+										<HelpCircle className="w-5 h-5 text-slate-400" />
 									))}
 							</span>
 							{option}
@@ -945,8 +939,8 @@ function ExampleQuiz() {
 					<div
 						className={`p-3 rounded-md w-full text-center text-sm ${
 							selectedAnswer === currentQuestion.correctAnswer
-								? "bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300"
-								: "bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-300"
+								? "bg-green-50 text-green-700"
+								: "bg-red-50 text-red-700"
 						}`}
 					>
 						{selectedAnswer === currentQuestion.correctAnswer
@@ -954,7 +948,7 @@ function ExampleQuiz() {
 							: "Not quite."}
 						{!(selectedAnswer === currentQuestion.correctAnswer) &&
 							currentQuestion.hint && (
-								<p className="text-xs mt-1 text-gray-500 dark:text-gray-400">
+								<p className="text-xs mt-1 text-gray-500">
 									Hint: {currentQuestion.hint}
 								</p>
 							)}
