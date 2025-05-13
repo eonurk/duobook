@@ -388,8 +388,27 @@ function UserProfilePage() {
 								</p>
 							) : storyLimit ? (
 								<div className="flex items-center mt-1">
-									{storyLimit.isPremium ? (
-										<p className="text-sm">Unlimited stories available</p>
+									{storyLimit.subscriptionTier === "PRO" ? (
+										<>
+											<div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+												<div
+													className="bg-purple-600 h-2.5 rounded-full"
+													style={{
+														width: `${
+															(storyLimit.remaining / storyLimit.limit) * 100
+														}%`,
+													}}
+												></div>
+											</div>
+											<p className="text-sm ml-2">
+												{storyLimit.remaining}/{storyLimit.limit} PRO
+												generations remaining today
+											</p>
+										</>
+									) : storyLimit.isPremium ? (
+										<p className="text-sm">
+											Unlimited stories available (Premium)
+										</p>
 									) : (
 										<>
 											<div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">

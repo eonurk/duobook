@@ -180,14 +180,18 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 										<div
 											className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
 											title={
-												storyLimit.isPremium
+												storyLimit.subscriptionTier === "PRO"
+													? `${storyLimit.remaining} of ${storyLimit.limit} PRO story generations remaining today.`
+													: storyLimit.isPremium
 													? "Premium users have unlimited story generations"
 													: `${storyLimit.remaining} of ${storyLimit.limit} story generations remaining today. Premium coming soon!`
 											}
 										>
 											<BookOpen className="h-4 w-4 mr-1 text-blue-400" />
 											<span className="text-sm font-medium">
-												{storyLimit.isPremium
+												{storyLimit.subscriptionTier === "PRO"
+													? `${storyLimit.remaining}/${storyLimit.limit}`
+													: storyLimit.isPremium
 													? "∞"
 													: `${storyLimit.remaining}/${storyLimit.limit}`}
 											</span>
@@ -359,7 +363,9 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 											<div
 												className="flex items-center justify-between text-muted-foreground"
 												title={
-													storyLimit.isPremium
+													storyLimit.subscriptionTier === "PRO"
+														? `${storyLimit.remaining} of ${storyLimit.limit} PRO story generations remaining today.`
+														: storyLimit.isPremium
 														? "Premium users have unlimited story generations"
 														: `${storyLimit.remaining} of ${storyLimit.limit} story generations remaining today. Premium coming soon!`
 												}
@@ -371,8 +377,10 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 													</span>
 												</div>
 												<span className="text-sm font-medium">
-													{storyLimit.isPremium
-														? "Unlimited"
+													{storyLimit.subscriptionTier === "PRO"
+														? `${storyLimit.remaining}/${storyLimit.limit}`
+														: storyLimit.isPremium
+														? "∞"
 														: `${storyLimit.remaining}/${storyLimit.limit}`}
 												</span>
 											</div>

@@ -27,7 +27,8 @@ import TermsOfService from "@/pages/TermsOfService"; // Import TermsOfService
 import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import Practice Page
 import ContactUs from "@/pages/ContactUs"; // Import Contact Us page
 import ExploreStoriesPage from "@/pages/ExploreStoriesPage"; // ADDED: Import ExploreStoriesPage
-import { ArrowDown, Sparkles, CheckCircle2, Loader2 } from "lucide-react"; // Import ArrowDown icon and new icons
+import PricingPage from "@/pages/PricingPage"; // Import Pricing Page
+import { ArrowDown, Sparkles, CheckCircle2, Loader2, X } from "lucide-react"; // Import ArrowDown icon and new icons
 import {
 	// getStories, // Commented out: Will be used in MyStoriesPage
 	// deleteStory, // Commented out: Will be used in MyStoriesPage
@@ -44,6 +45,7 @@ import {
 } from "./lib/api"; // Import API functions
 import toast, { Toaster } from "react-hot-toast"; // Keep Toaster if used
 import StoryCard from "@/components/StoryCard"; // ADDED: Import StoryCard
+import { Button } from "@/components/ui/button"; // Import Button component
 
 // Static Example Story Data
 const exampleStoryData = {
@@ -251,112 +253,6 @@ function StoryViewPage() {
 		</main>
 	);
 }
-// ----------------------------------
-
-// Premium Plans component for rate limit banner
-function PremiumPlansSuggestion({ onClose }) {
-	return (
-		<div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200 p-6 mb-8">
-			<div className="flex justify-between items-start">
-				<h2 className="text-xl font-bold text-amber-800 mb-4">
-					Upgrade to Premium for Unlimited Stories
-				</h2>
-				<button
-					onClick={onClose}
-					className="text-amber-500 hover:text-amber-700"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					>
-						<line x1="18" y1="6" x2="6" y2="18"></line>
-						<line x1="6" y1="6" x2="18" y2="18"></line>
-					</svg>
-				</button>
-			</div>
-
-			<div className="grid md:grid-cols-2 gap-6 mt-4">
-				<div className="bg-white rounded-lg p-5 shadow-sm border border-amber-100">
-					<div className="flex items-center mb-3">
-						<Sparkles className="h-5 w-5 text-amber-500 mr-2" />
-						<h3 className="font-medium text-lg">Premium</h3>
-					</div>
-					<ul className="space-y-2 mb-4">
-						<li className="flex items-start">
-							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-							<span>Unlimited story generations</span>
-						</li>
-						<li className="flex items-start">
-							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-							<span>Priority support</span>
-						</li>
-						<li className="flex items-start">
-							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-							<span>Advanced language exercises</span>
-						</li>
-					</ul>
-					<button
-						onClick={() => (window.location.href = "/profile")}
-						className="w-full py-2 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md hover:from-amber-600 hover:to-orange-600 transition-all"
-					>
-						Upgrade Now
-					</button>
-				</div>
-
-				<div className="bg-white rounded-lg p-5 shadow-sm border border-amber-100">
-					<div className="flex items-center mb-3">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="20"
-							height="20"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							className="text-purple-500 mr-2"
-						>
-							<path d="M12 2l3 7h7l-6 4 3 7-7-4-7 4 3-7-6-4h7z"></path>
-						</svg>
-						<h3 className="font-medium text-lg">Pro</h3>
-					</div>
-					<ul className="space-y-2 mb-4">
-						<li className="flex items-start">
-							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-							<span>All Premium features</span>
-						</li>
-						<li className="flex items-start">
-							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-							<span>Custom vocabulary training</span>
-						</li>
-						<li className="flex items-start">
-							<CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-							<span>Text-to-speech for all stories</span>
-						</li>
-					</ul>
-					<button
-						onClick={() => (window.location.href = "/profile")}
-						className="w-full py-2 px-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-md hover:from-purple-600 hover:to-indigo-600 transition-all"
-					>
-						Get Pro
-					</button>
-				</div>
-			</div>
-
-			<p className="text-sm text-amber-700 mt-4 text-center">
-				Upgrade today and boost your language learning journey!
-			</p>
-		</div>
-	);
-}
 
 // Component for the logged-in main view (story generation)
 function MainAppView({ generateStory }) {
@@ -461,11 +357,17 @@ function MainAppView({ generateStory }) {
 								</div>
 								<div className="p-4 pt-2 text-center">
 									<div className="text-sm text-amber-700">
-										<p className="mb-4">{formError.message}</p>
-										<p className="mt-2 font-bold text-amber-800 flex items-center justify-center gap-2">
-											Premium subscriptions with unlimited story generation are
-											coming soon!{" "}
+										<p className="mb-2 text-base font-semibold text-amber-800">
+											{formError.message}
 										</p>
+										{/* Comment for now, will add back in later */}
+										{/* <Button
+											variant="primary"
+											className="text-white hover:text-amber-800 font-semibold text-base px-6 py-6 bg-amber-400 my-2"
+											onClick={() => navigate("/pricing")} // Use navigate from props or context
+										>
+											Explore DuoBook PRO
+										</Button> */}
 									</div>
 								</div>
 							</div>
@@ -720,15 +622,28 @@ function App() {
 		try {
 			const limitData = await getStoryGenerationLimit();
 
-			if (!limitData.isPremium && limitData.remaining <= 0) {
+			// Check if user has reached their generation limit
+			// Applies to FREE users (isPremium: false) OR PRO users (isPremium: true, but might have a specific limit)
+			if (limitData.remaining <= 0) {
+				let message =
+					"You've reached your daily story generation limit. Please upgrade or try again tomorrow.";
+				if (limitData.isPremium && limitData.subscriptionTier === "PRO") {
+					message = `You've reached your daily story generation limit of ${limitData.limit} for the PRO tier. Please try again tomorrow.`;
+				} else if (limitData.isPremium) {
+					// For other premium tiers that might still be unlimited, this condition won't be met if remaining is positive or not applicable
+					// If a premium tier (not PRO) somehow has remaining <= 0 and a limit, this message would show.
+					// This case should ideally be handled by the backend ensuring 'remaining' is always positive for truly unlimited tiers, or not sending 'limit'.
+					// For now, we assume if isPremium is true and remaining <=0, it's a capped premium tier like PRO.
+					message = `You've reached your daily story generation limit of ${limitData.limit} for your current plan. Please try again tomorrow.`;
+				}
+
 				if (setFormError) {
 					setFormError({
-						type: "rateLimit", // Reusing existing type for UI consistency
-						message:
-							"You've reached your daily story generation limit for the free tier. Please upgrade or try again tomorrow.",
+						type: "rateLimit",
+						message: message,
 					});
 				}
-				return; // Stop execution before calling the generation API
+				return; // Stop execution
 			}
 
 			// Use imported function directly
@@ -910,6 +825,8 @@ function App() {
 						</ProtectedRoute>
 					}
 				/>
+				<Route path="/pricing" element={<PricingPage />} />
+
 				<Route
 					path="/achievements"
 					element={
