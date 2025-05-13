@@ -674,16 +674,16 @@ function MainAppView({ generateStory }) {
 								},
 								{
 									quote:
-										"I struggled with vocabulary retention until I found DuoBook. Creating my own stories made all the difference.",
-									name: "Sarah K.",
-									role: "French Learner",
+										"Arabic is hard but being able to read and listen at the same time is a game changer.",
+									name: "Laura R.",
+									role: "Arabic Learner",
 									stars: 5,
 								},
 								{
 									quote:
-										"DuoBook makes grammar click for me. Seeing both languages side by side is a game changer!",
-									name: "Mike B.",
-									role: "German Learner",
+										"I'm learning Spanish and DuoBook is my favorite way to learn so far. My stories are so engaging :D",
+									name: "Onur K.",
+									role: "Spanish Learner",
 									stars: 5,
 								},
 							].map((testimonial, index) => (
