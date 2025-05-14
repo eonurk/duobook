@@ -142,45 +142,46 @@ function LeaderboardPage() {
 		);
 
 		return (
-			<div className="space-y-3">
+			<div className="space-y-2.5">
 				{data.map((entry, index) => {
 					const displayName = entry.name
 						? formatUserEmailForDisplay(entry.name)
 						: "";
-					const originalName = entry.name; // for comparisons and avatar generation
+					const originalName = entry.name;
 
 					const isCurrentEntryUser =
 						currentUserData?.rank === entry.rank &&
 						currentUserData?.name === originalName;
 
 					const highlightClass = isCurrentEntryUser
-						? "bg-primary/10 border-primary shadow-md"
+						? "bg-primary/10 border-primary shadow-lg scale-[1.01]"
 						: "bg-card hover:bg-muted/50";
 
-					let rankColorClass = "text-muted-foreground";
-					if (entry.rank === 1) rankColorClass = "text-amber-500";
-					else if (entry.rank === 2) rankColorClass = "text-slate-400";
-					else if (entry.rank === 3) rankColorClass = "text-orange-400";
+					let rankColorClass = "text-slate-600 dark:text-slate-400";
+					if (entry.rank === 1) rankColorClass = "text-amber-500 font-bold";
+					else if (entry.rank === 2)
+						rankColorClass = "text-slate-500 font-semibold";
+					else if (entry.rank === 3)
+						rankColorClass = "text-orange-500 font-semibold";
 
 					return (
 						<Card
 							key={entry.rank || index}
-							className={`flex items-center p-3 sm:p-4 justify-between transition-all duration-300 ${highlightClass}`}
+							className={`flex items-center p-3 transition-all duration-300 ease-in-out ${highlightClass} rounded-lg`}
 						>
-							<div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-								{" "}
-								{/* Left part - flex-1 and min-w-0 for proper shrinking/growing */}
-								{/* Rank Display */}
-								<div className="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12">
-									<span className={`text-lg font-bold ${rankColorClass}`}>
-										{entry.rank}
-									</span>
-									{entry.rank === 1 && (
-										<Trophy className="w-4 h-4 sm:w-5 sm:h-5 ml-1 text-amber-500" />
-									)}
-								</div>
-								{/* Avatar */}
-								<Avatar className="h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0">
+							{/* Rank Section */}
+							<div className="flex-shrink-0 w-12 h-12 bg-muted/60 dark:bg-muted/40 rounded-full flex items-center justify-center mr-3">
+								<span className={`text-xl ${rankColorClass}`}>
+									{entry.rank}
+								</span>
+								{entry.rank === 1 && (
+									<Trophy className="w-5 h-5 ml-0.5 text-amber-400 absolute -top-2 -right-2 rotate-12" />
+								)}
+							</div>
+
+							{/* User Info Section (Avatar, Name, Score) */}
+							<div className="flex items-center flex-grow min-w-0 space-x-3">
+								<Avatar className="h-10 w-10 flex-shrink-0 border-2 border-background">
 									<AvatarImage
 										src={
 											entry.avatarUrl ||
@@ -196,10 +197,9 @@ function LeaderboardPage() {
 										)}
 									</AvatarFallback>
 								</Avatar>
-								{/* Name */}
 								<div className="flex-grow min-w-0">
 									<p
-										className={`font-semibold text-sm sm:text-base truncate ${
+										className={`font-semibold text-sm truncate ${
 											isCurrentEntryUser
 												? "text-primary"
 												: "text-card-foreground"
@@ -208,19 +208,19 @@ function LeaderboardPage() {
 									>
 										{displayName}
 										{isCurrentEntryUser && (
-											<span className="ml-1.5 text-xs font-normal text-primary/90">
+											<span className="ml-1.5 text-xs font-normal text-primary/80">
 												(You)
 											</span>
 										)}
 									</p>
+									<p className="text-xs text-muted-foreground">
+										{entry.score?.toLocaleString()} XP
+									</p>
 								</div>
 							</div>
 
-							{/* Right Part: Score and Rank Change */}
-							<div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 ml-2 sm:ml-3">
-								<span className="text-xs sm:text-sm font-medium text-primary whitespace-nowrap">
-									{entry.score?.toLocaleString()} XP
-								</span>
+							{/* Rank Change Section */}
+							<div className="flex-shrink-0 ml-3">
 								{renderRankChange(entry.change)}
 							</div>
 						</Card>
@@ -231,18 +231,18 @@ function LeaderboardPage() {
 						<div className="text-center my-4 text-muted-foreground">...</div>
 						<Card
 							key="currentUser"
-							className="flex items-center p-3 sm:p-4 justify-between transition-all duration-300 bg-primary/10 border-primary shadow-md"
+							className="flex items-center p-3 transition-all duration-300 ease-in-out bg-primary/10 border-primary shadow-lg scale-[1.01] rounded-lg"
 						>
-							<div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-								{/* Rank Display */}
-								<div className="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12">
-									<span className="text-lg font-bold text-muted-foreground">
-										{currentUserData.rank}
-									</span>
-								</div>
+							{/* Rank Section */}
+							<div className="flex-shrink-0 w-12 h-12 bg-muted/60 dark:bg-muted/40 rounded-full flex items-center justify-center mr-3">
+								<span className={`text-xl text-slate-600 dark:text-slate-400`}>
+									{currentUserData.rank}
+								</span>
+							</div>
 
-								{/* Avatar */}
-								<Avatar className="h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0">
+							{/* User Info Section (Avatar, Name, Score) */}
+							<div className="flex items-center flex-grow min-w-0 space-x-3">
+								<Avatar className="h-10 w-10 flex-shrink-0 border-2 border-background">
 									<AvatarImage
 										src={
 											currentUserData.avatarUrl ||
@@ -258,28 +258,26 @@ function LeaderboardPage() {
 										)}
 									</AvatarFallback>
 								</Avatar>
-
-								{/* Name */}
 								<div className="flex-grow min-w-0">
 									<p
-										className="font-semibold text-sm sm:text-base text-primary truncate"
+										className="font-semibold text-sm text-primary truncate"
 										title={currentUserData.name}
 									>
 										{currentUserData.name
 											? formatUserEmailForDisplay(currentUserData.name)
 											: ""}
-										<span className="ml-1.5 text-xs font-normal text-primary/90">
+										<span className="ml-1.5 text-xs font-normal text-primary/80">
 											(You)
 										</span>
 									</p>
+									<p className="text-xs text-muted-foreground">
+										{currentUserData.score?.toLocaleString()} XP
+									</p>
 								</div>
 							</div>
-							{/* Right Part: Score and Rank Change (current user might not have 'change') */}
-							<div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 ml-2 sm:ml-3">
-								<span className="text-xs sm:text-sm font-medium text-primary whitespace-nowrap">
-									{currentUserData.score?.toLocaleString()} XP
-								</span>
-								{/* Optional: Render rank change if available for current user, e.g., currentUserData.change */}
+
+							{/* Rank Change Section */}
+							<div className="flex-shrink-0 ml-3">
 								{currentUserData.change &&
 									renderRankChange(currentUserData.change)}
 							</div>
@@ -292,11 +290,11 @@ function LeaderboardPage() {
 
 	return (
 		<div className="container mx-auto px-4 py-8">
-			<div className="max-w-3xl mx-auto">
+			<div className="max-w-2xl mx-auto">
 				<Card className="shadow-xl">
 					<CardHeader className="text-center">
 						<div className="flex items-center justify-center mb-2">
-							<Trophy className="w-10 h-10 text-amber-500 mr-3" />
+							<Trophy className="w-8 h-8 text-amber-500 mr-3" />
 							<CardTitle className="text-3xl font-bold text-gray-800">
 								Leaderboard
 							</CardTitle>
@@ -309,24 +307,24 @@ function LeaderboardPage() {
 						<Tabs
 							value={activeTab}
 							onValueChange={setActiveTab}
-							className="w-full"
+							className="w-full rounded-md p-1 "
 						>
-							<TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50 rounded-md p-1">
+							<TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50 rounded-md p-1 bg-slate-200">
 								<TabsTrigger
 									value="weekly"
-									className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:hover:bg-muted rounded-sm"
+									className="data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=inactive]:hover:bg-muted rounded-sm"
 								>
 									Weekly
 								</TabsTrigger>
 								<TabsTrigger
 									value="monthly"
-									className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:hover:bg-muted rounded-sm"
+									className="data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=inactive]:hover:bg-muted rounded-sm"
 								>
 									Monthly
 								</TabsTrigger>
 								<TabsTrigger
 									value="allTime"
-									className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:hover:bg-muted rounded-sm"
+									className="data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=inactive]:hover:bg-muted rounded-sm"
 								>
 									All Time
 								</TabsTrigger>
@@ -358,11 +356,3 @@ function LeaderboardPage() {
 }
 
 export default LeaderboardPage;
-
-// Note:
-// - You'll need to create the `getLeaderboardData` function in `src/lib/api.js`.
-//   This function should fetch leaderboard data for a given period (e.g., 'weekly', 'monthly', 'allTime')
-//   and optionally include the current user's rank if a user ID is provided.
-// - The backend will need an endpoint to serve this data, calculating ranks based on XP or other metrics.
-// - Avatar component (`@/components/ui/avatar`) is assumed to exist. If not, you might need to create or install it.
-// - The `change` property in mock data (up, down, same) indicates rank movement, which your backend would need to calculate.
