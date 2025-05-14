@@ -458,9 +458,10 @@
 /* Create button styling */
 .create-button {
 	font-weight: bold !important;
-	background-color: #66a060;
-	color: white;
-	padding: 15px 16px !important;
+	background-color: #66a060 !important;
+	color: white !important;
+	border: none !important;
+	padding: 15px 15px !important;
 }
 
 .mobile-buttons .button-tertiary {
@@ -473,8 +474,8 @@
 .mobile-view .congrats-message {
 	margin: 16px 0; /* Reduced margin */
 	padding: 12px; /* Reduced padding */
-	background-color: #66a060;
-	color: white;
+	background-color: #e8f5e9;
+	color: #66a060;
 	text-align: center;
 	font-weight: 500;
 	font-size: 14px; /* Reduced font size */

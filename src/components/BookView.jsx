@@ -1260,8 +1260,17 @@ function BookView({
 
 			{/* Congratulatory Message - Show always when finished (applies to page finish if paginated AND it's the last page) */}
 			{isFinished && (!isPaginated || currentPageIndex === totalPages - 1) && (
-				<div className="congrats-message">
+				<div className="congrats-message grid grid-cols-1 gap-4">
 					🎉 Well done! You finished the story! 🎉
+					{/* Practice Vocabulary button - show when story is finished and not an example */}
+					{!isExample && storyContent?.shareId && (
+						<a
+							href={`/practice?storyId=${storyContent.shareId}`}
+							className="max-w-xs mx-auto button button-primary bg-gradient-to-r from-green-500 to-teal-600 text-white text-xs px-2.5 py-4 rounded-md shadow-md whitespace-nowrap "
+						>
+							Practice Vocabulary
+						</a>
+					)}
 				</div>
 			)}
 
@@ -1313,7 +1322,7 @@ function BookView({
 				</button>
 				<button
 					onClick={handleGoBack}
-					className="button button-secondary create-button"
+					className="button button-secondary  button-tertiary create-button"
 				>
 					Create Your First Story
 				</button>

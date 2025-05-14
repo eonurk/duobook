@@ -571,10 +571,10 @@
 
 /* Add Tertiary Button Style */
 .button-tertiary {
-	background-color: #fdf6e3; /* Light background */
 	color: #657b83; /* Muted text */
 	border: 1px solid #d3c0a5;
 	box-shadow: none; /* Less prominent */
+	font-size: 0.9rem;
 }
 .button-tertiary:hover {
 	background-color: #eee8d5;

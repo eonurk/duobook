@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getStories } from "@/lib/api";
+import { getStories, getStoryById } from "@/lib/api";
+import { useSearchParams } from "react-router-dom";
 import {
 	Loader2,
 	ArrowRight,
@@ -121,6 +122,9 @@ const playSound = (soundUrl, isMuted) => {
 
 function VocabularyPracticePage() {
 	const { currentUser, userProgress, updateProgressData } = useAuth();
+	const [searchParams] = useSearchParams();
+	const storyId = searchParams.get("storyId");
+	const [storyTitle, setStoryTitle] = useState("");
 	const [vocabularyList, setVocabularyList] = useState([]); // Original fetched list (with language)
 	const [shuffledList, setShuffledList] = useState([]); // Shuffled list for the active quiz
 	const [isLoading, setIsLoading] = useState(true);
@@ -173,67 +177,110 @@ function VocabularyPracticePage() {
 			setTtsReady(false);
 			setCanStartQuiz(false);
 
-			getStories()
-				.then((storiesFromApi) => {
-					const allVocab = storiesFromApi.reduce((acc, story) => {
+			// If storyId is provided, fetch just that story
+			if (storyId) {
+				getStoryById(storyId)
+					.then((storyFromApi) => {
 						try {
-							const storyData = JSON.parse(story.story);
-							if (storyData?.vocabulary && story.targetLanguage) {
+							const storyData = JSON.parse(storyFromApi.story);
+							setStoryTitle(storyFromApi.description || "Story");
+
+							if (storyData?.vocabulary && storyFromApi.targetLanguage) {
 								const validVocab = storyData.vocabulary
 									.filter((v) => v && v.word && v.translation)
 									.map((v) => ({
 										...v,
-										targetLanguage: story.targetLanguage,
-										sourceLanguage: story.sourceLanguage,
+										targetLanguage: storyFromApi.targetLanguage,
+										sourceLanguage: storyFromApi.sourceLanguage,
 									}));
-								acc.push(...validVocab);
+
+								setVocabularyList(validVocab);
+
+								// For a single story, we only have one language
+								setAvailableLanguages([storyFromApi.targetLanguage].sort());
+								setSelectedLanguage(storyFromApi.targetLanguage);
+
+								// Check if quiz can start
+								checkIfCanStart(validVocab, storyFromApi.targetLanguage);
+							} else {
+								setError("No vocabulary found in this story.");
 							}
 						} catch (e) {
-							console.error(`Failed to parse story ${story.id}:`, e);
+							console.error(`Failed to parse story ${storyId}:`, e);
+							setError("Failed to load vocabulary for this story.");
 						}
-						return acc;
-					}, []);
-
-					// Deduplicate vocabulary list (keeping language tag)
-					const uniqueVocabMap = new Map();
-					allVocab.forEach((item) => {
-						if (
-							item &&
-							item.word &&
-							item.translation &&
-							!uniqueVocabMap.has(`${item.word}-${item.targetLanguage}`)
-						) {
-							uniqueVocabMap.set(`${item.word}-${item.targetLanguage}`, item);
-						}
+					})
+					.catch((err) => {
+						console.error("Error fetching specific story for practice:", err);
+						setError(err.message || "Failed to load story vocabulary.");
+					})
+					.finally(() => {
+						setIsLoading(false);
 					});
-					const uniqueVocab = Array.from(uniqueVocabMap.values());
-					setVocabularyList(uniqueVocab);
+			} else {
+				// Original behavior - fetch all stories
+				getStories()
+					.then((storiesFromApi) => {
+						const allVocab = storiesFromApi.reduce((acc, story) => {
+							try {
+								const storyData = JSON.parse(story.story);
+								if (storyData?.vocabulary && story.targetLanguage) {
+									const validVocab = storyData.vocabulary
+										.filter((v) => v && v.word && v.translation)
+										.map((v) => ({
+											...v,
+											targetLanguage: story.targetLanguage,
+											sourceLanguage: story.sourceLanguage,
+										}));
+									acc.push(...validVocab);
+								}
+							} catch (e) {
+								console.error(`Failed to parse story ${story.id}:`, e);
+							}
+							return acc;
+						}, []);
 
-					// Extract available languages
-					const languages = [
-						...new Set(
-							uniqueVocab.map((v) => v.targetLanguage).filter(Boolean)
-						),
-					];
-					setAvailableLanguages(languages.sort());
+						// Deduplicate vocabulary list (keeping language tag)
+						const uniqueVocabMap = new Map();
+						allVocab.forEach((item) => {
+							if (
+								item &&
+								item.word &&
+								item.translation &&
+								!uniqueVocabMap.has(`${item.word}-${item.targetLanguage}`)
+							) {
+								uniqueVocabMap.set(`${item.word}-${item.targetLanguage}`, item);
+							}
+						});
+						const uniqueVocab = Array.from(uniqueVocabMap.values());
+						setVocabularyList(uniqueVocab);
 
-					// Check if quiz can start with default "All"
-					checkIfCanStart(uniqueVocab, "All");
-				})
-				.catch((err) => {
-					console.error("Error fetching stories for practice:", err);
-					setError(err.message || "Failed to load vocabulary.");
-				})
-				.finally(() => {
-					setIsLoading(false);
-				});
+						// Extract available languages
+						const languages = [
+							...new Set(
+								uniqueVocab.map((v) => v.targetLanguage).filter(Boolean)
+							),
+						];
+						setAvailableLanguages(languages.sort());
+
+						// Check if quiz can start with default "All"
+						checkIfCanStart(uniqueVocab, "All");
+					})
+					.catch((err) => {
+						console.error("Error fetching stories for practice:", err);
+						setError(err.message || "Failed to load vocabulary.");
+					})
+					.finally(() => {
+						setIsLoading(false);
+					});
+			}
 		} else {
 			setIsLoading(false);
 			setVocabularyList([]);
 			setShuffledList([]);
 			setIsQuizActive(false);
 		}
-	}, [currentUser]);
+	}, [currentUser, storyId]);
 
 	// --- TTS Effects (Adapted from BookView) ---
 	const populateVoiceList = React.useCallback(() => {
@@ -643,11 +690,28 @@ function VocabularyPracticePage() {
 				</Button>
 			</div>
 
+			{/* Show story title when a specific story is selected */}
+			{storyId && storyTitle && (
+				<div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-100 text-center">
+					<h2 className="text-sm font-semibold text-blue-800">
+						Practicing vocabulary from: "{storyTitle}"
+					</h2>
+				</div>
+			)}
+
+			{/* Error message */}
+			{error && (
+				<div className="bg-red-50 text-red-700 p-4 rounded-md mb-6">
+					<AlertTriangle className="inline-block mr-2 h-5 w-5" />
+					{error}
+				</div>
+			)}
+
 			{/* Setup Screen (Not Loading, Quiz Not Active) */}
 			{!isLoading && !isQuizActive && !quizCompleted && (
 				<div className="max-w-lg mx-auto p-4 sm:p-6 bg-gradient-to-br from-background to-muted/30 border rounded-xl shadow-lg flex flex-col items-center space-y-5 sm:space-y-6">
 					<h2 className="text-lg sm:text-xl font-semibold text-center text-primary">
-						Configure Your Practice
+						Test your vocabulary knowledge
 					</h2>
 					{/* Language Selector */}
 					<div className="w-full flex flex-col items-stretch sm:items-center sm:justify-center gap-2 sm:gap-4">
@@ -831,9 +895,15 @@ function VocabularyPracticePage() {
 			{isQuizActive && !quizCompleted && shuffledList.length > 0 && (
 				<div className="animate-fade-in">
 					{/* Progress Bar */}
-					<div className="w-full bg-muted rounded-full h-2.5 mb-6 overflow-hidden max-w-lg mx-auto">
+					<div className="w-full h-2 bg-gray-200 rounded-full mb-6 overflow-hidden">
 						<div
-							className="bg-gradient-to-r from-primary to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out"
+							className={`h-full rounded-full transition-all duration-500 ease-in-out ${
+								progressPercent >= 100
+									? "bg-green-500"
+									: progressPercent > 50
+									? "bg-amber-500"
+									: "bg-blue-500"
+							}`}
 							style={{ width: `${progressPercent}%` }}
 						></div>
 					</div>

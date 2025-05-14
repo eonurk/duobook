@@ -552,7 +552,7 @@ function MainAppView({ generateStory }) {
 									inputForm.scrollIntoView({ behavior: "smooth" });
 								}
 							}}
-							className="bg-amber-400 hover:bg-amber-500 text-purple-800 font-bold text-lg py-6 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105"
+							className="button-tetriary bg-amber-400 hover:bg-amber-500 text-purple-800 font-bold text-lg py-6 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105"
 						>
 							Create Your First Story
 						</Button>
