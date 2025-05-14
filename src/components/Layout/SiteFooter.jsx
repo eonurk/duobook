@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Instagram } from "lucide-react";
 
 export function SiteFooter() {
 	return (
@@ -9,6 +10,14 @@ export function SiteFooter() {
 					© {new Date().getFullYear()} DuoBook. All rights reserved.
 				</p>
 				<nav className="flex gap-4 items-center">
+					<a
+						href="https://www.instagram.com/duobook.co"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-xs hover:underline underline-offset-4 text-muted-foreground flex items-center"
+					>
+						<Instagram className="h-4 w-4 mr-1" />
+					</a>
 					<Link
 						to="/contact"
 						className="text-xs hover:underline underline-offset-4 text-muted-foreground"
