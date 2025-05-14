@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { getStories, getStoryById } from "@/lib/api";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
 	Loader2,
 	ArrowRight,
@@ -14,6 +14,7 @@ import {
 	Flame,
 	Target,
 	Star,
+	ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -845,6 +846,18 @@ function VocabularyPracticePage() {
 							>
 								<RotateCcw className="mr-2 h-4 w-4" /> Practice Again
 							</Button>
+							{storyId && (
+								<Button
+									asChild
+									variant="outline"
+									size="default"
+									className="sm:size-lg"
+								>
+									<Link to={`/story/${storyId}`}>
+										<ArrowLeft className="mr-2 h-4 w-4" /> Back to Story
+									</Link>
+								</Button>
+							)}
 							{incorrectAnswers.length > 0 && (
 								<Button
 									onClick={() => setShowReview((prev) => !prev)}

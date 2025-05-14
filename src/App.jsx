@@ -411,11 +411,11 @@ function MainAppView({ generateStory }) {
 						<img
 							src="logo.png"
 							alt="DuoBook Logo"
-							className="w-64 h-64 mx-auto object-contain"
+							className="w-52 h-52 mx-auto object-contain"
 							style={{
 								objectPosition: "center",
-								marginBottom: "-2.5rem",
-								marginTop: "-3rem",
+								marginBottom: "-1.5rem",
+								marginTop: "-2rem",
 							}}
 						/>
 						<p className="text-center text-muted-foreground mb-4">
@@ -552,7 +552,7 @@ function MainAppView({ generateStory }) {
 									inputForm.scrollIntoView({ behavior: "smooth" });
 								}
 							}}
-							className="button-tetriary bg-amber-400 hover:bg-amber-500 text-purple-800 font-bold text-lg py-6 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105"
+							className="button-tertiary bg-amber-400 hover:bg-amber-500 text-purple-800 font-bold text-lg py-6 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105"
 						>
 							Create Your First Story
 						</Button>

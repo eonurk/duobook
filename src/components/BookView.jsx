@@ -1322,7 +1322,7 @@ function BookView({
 				</button>
 				<button
 					onClick={handleGoBack}
-					className="button button-secondary  button-tertiary create-button"
+					className="button button-secondary create-button"
 				>
 					Create Your First Story
 				</button>
