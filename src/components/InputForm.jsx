@@ -692,14 +692,14 @@ function InputForm({
 						</div>
 						{/* Toggle for Advanced Settings */}
 						{currentUser && (
-							<div className="pt-2 text-center">
+							<div className="text-center">
 								<Button
 									type="button"
 									variant="ghost"
 									className="text-sm text-slate-500 hover:text-slate-800"
 									onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
 								>
-									<Settings2 className="h-4 w-4 mr-1.5" />
+									<Settings2 className="h-4 w-4 mr-1" />
 									{showAdvancedSettings ? "Hide" : "Show"} Advanced Options
 								</Button>
 							</div>
