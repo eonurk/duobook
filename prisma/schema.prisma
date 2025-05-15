@@ -34,6 +34,7 @@ model Story {
   difficulty     String?
   length         String?
   shareId        String   @unique @default(cuid())
+  isPublic       Boolean  @default(true)
 
   @@index([userId])
 }

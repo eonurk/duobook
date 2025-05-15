@@ -325,10 +325,13 @@ app.get(
 		const skip = (page - 1) * limit;
 
 		try {
-			const whereClause: Prisma.StoryWhereInput = {};
+			const conditions: Prisma.StoryWhereInput[] = [{ isPublic: true }];
+
 			if (excludeCurrentUser && userId) {
-				whereClause.userId = { not: userId };
+				conditions.push({ userId: { not: userId } });
 			}
+
+			const whereClause: Prisma.StoryWhereInput = { AND: conditions };
 
 			const storiesFromDb = await prisma.story.findMany({
 				where: whereClause,
@@ -483,7 +486,16 @@ app.post(
 			return next(err);
 		}
 
-		const { description, source, target, difficulty, length } = req.body;
+		const {
+			description,
+			source,
+			target,
+			difficulty,
+			length,
+			isPublic,
+			genre,
+			grammarFocus,
+		} = req.body;
 
 		// Basic validation
 		if (!description || !source || !target || !difficulty || !length) {
@@ -497,34 +509,69 @@ app.post(
 		let prompt;
 		const isProStoryRequest = length === "very_long_pro";
 
-		if (isProStoryRequest) {
-			// Pro user requesting a long, paginated story
-			// TODO: Potentially check user's tier here already if we want to prevent even calling OpenAI for non-PRO for this length
-			const numPages = 10; // Updated to 10 pages
-			prompt = `Analyze the user's description: \"${description}\".
-			
-If the description contains profanity, hate speech, incitement to violence, or other severely harmful content, then do not generate the story. Instead, return a JSON object with a single key "moderation_error", and its value being a string explaining the violation. For example: { "moderation_error": "The story description contains prohibited content (e.g., profanity or hate speech). Please revise." }
-If the description is acceptable, proceed to generate a story as requested below. 
-			
-Create an interesting story based on this description. 
-The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}.
-The story should have approximately ${numPages} pages.
-Return the story as a JSON object with a single key "pages".
-"pages" should be an array of page objects. Each page object must have two keys:
-1.  "sentencePairs": An array of objects, where each object has a "source" sentence (in ${source}) and a "target" sentence (translated to ${target}). Each "sentencePairs" array should contain between 10 and 12 sentence pairs.
-2.  "vocabulary": An array of objects, where each object has a "word" (in ${source}) and its "translation" (in ${target}), relevant to that page\'s content.
-Use simple language appropriate for the difficulty level. Ensure the JSON is valid.
-Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /* ...10 to 12 pairs total */], "vocabulary": [{ "word": "...", "translation": "..." }] }.`;
-		} else {
-			// Standard story request
-			prompt = `Analyze the user's description: \"${description}\".
+		// Common part of the prompt
+		let basePrompt = `Analyze the user's description: "${description}".
 			
 If the description contains profanity, hate speech, incitement to violence, or other severely harmful content, then do not generate the story. Instead, return a JSON object with a single key "moderation_error", and its value being a string explaining the violation. For example: { "moderation_error": "The story description contains prohibited content (e.g., profanity or hate speech). Please revise." }
 If the description is acceptable, proceed to generate a story as requested below. 
 
 Create an interesting story based on this description. 
 The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}. 
-The story should be ${length} in length. 
+`;
+
+		// Add genre if provided
+		if (genre && genre !== "") {
+			basePrompt += `The story should be in the ${genre} genre.\n`;
+		}
+
+		// Add grammar focus if provided
+		if (
+			grammarFocus &&
+			Array.isArray(grammarFocus) &&
+			grammarFocus.length > 0 &&
+			grammarFocus[0] !== ""
+		) {
+			const focus = grammarFocus[0]; // Since we expect only one selection for now
+			let grammarInstruction = "";
+			switch (focus) {
+				case "past-tenses":
+					grammarInstruction =
+						"The story should emphasize the use of past tenses.\n";
+					break;
+				case "future-tenses":
+					grammarInstruction =
+						"The story should emphasize the use of future tenses.\n";
+					break;
+				case "conditionals":
+					grammarInstruction =
+						"The story should include several examples of conditional sentences (e.g., if/then clauses).\n";
+					break;
+				default:
+					// Optional: log if an unexpected value is received
+					console.warn(`Unexpected grammarFocus value: ${focus}`);
+					break;
+			}
+			if (grammarInstruction) {
+				basePrompt += grammarInstruction;
+			}
+		}
+
+		if (isProStoryRequest) {
+			const numPages = 10; // Updated to 10 pages
+			prompt =
+				basePrompt +
+				`The story should have approximately ${numPages} pages.
+Return the story as a JSON object with a single key "pages".
+"pages" should be an array of page objects. Each page object must have two keys:
+1.  "sentencePairs": An array of objects, where each object has a "source" sentence (in ${source}) and a "target" sentence (translated to ${target}). Each "sentencePairs" array should contain between 10 and 12 sentence pairs.
+2.  "vocabulary": An array of objects, where each object has a "word" (in ${source}) and its "translation" (in ${target}), relevant to that page's content.
+Use simple language appropriate for the difficulty level. Ensure the JSON is valid.
+Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /* ...10 to 12 pairs total */], "vocabulary": [{ "word": "...", "translation": "..." }] }.`;
+		} else {
+			// Standard story request
+			prompt =
+				basePrompt +
+				`The story should be ${length} in length. 
 Return the story as a JSON object with two keys: "sentencePairs" (an array of objects, each with "source" and "target" sentences) and "vocabulary" (an array of objects, each with "word" in ${source} and "translation" in ${target}). Use simple language appropriate for the difficulty level. Ensure the JSON is valid. Example SentencePair format: { "source": "Sentence in source language.", "target": "Sentence translated to target language." }. 
 Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }.
 `;
@@ -731,6 +778,7 @@ app.post(
 			targetLanguage,
 			difficulty,
 			length, // This 'length' param is crucial for the PRO check
+			isPublic, // Only isPublic is saved from req.body for story creation
 		} = req.body;
 
 		// Only the story JSON string is strictly required now
@@ -794,6 +842,8 @@ app.post(
 					targetLanguage: targetLanguage,
 					difficulty: difficulty,
 					length: length,
+					isPublic: isPublic, // Save the isPublic flag
+					// Genre and grammarFocus are intentionally not saved here
 				},
 			});
 

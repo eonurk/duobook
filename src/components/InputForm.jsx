@@ -2,7 +2,15 @@ import React, { useState, useEffect, useMemo } from "react"; // Added useMemo
 import { useAuth } from "@/context/AuthContext"; // Import useAuth
 import Login from "@/components/Auth/Login"; // Import Login
 import Signup from "@/components/Auth/Signup"; // Import Signup
-import { BookText, Heart, Lightbulb, Shuffle } from "lucide-react"; // Replace existing icons with cuter alternatives & ADDED Lightbulb, Shuffle
+import {
+	BookText,
+	Heart,
+	Lightbulb,
+	Shuffle,
+	Eye,
+	EyeOff,
+	Settings2,
+} from "lucide-react"; // Replace existing icons with cuter alternatives & ADDED Lightbulb, Shuffle, Eye, EyeOff, Settings2
 import {
 	Dialog,
 	DialogContent,
@@ -20,7 +28,17 @@ import {
 } from "@/components/ui/card"; // Import Card components
 import duobookImg from "../assets/duobook.jpg";
 import { getTotalStoriesCount, getTotalUsersCount } from "@/lib/api"; // Import stats API functions
-import toast, {Toaster} from "react-hot-toast"; // Added for moderation feedback
+import toast, { Toaster } from "react-hot-toast"; // Added for moderation feedback
+import { Switch } from "@/components/ui/switch"; // Import Switch
+import { Label } from "@/components/ui/label"; // Import Label
+import { Button } from "@/components/ui/button"; // Import Button for the new toggle
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select"; // Import Select components
 
 // Common languages for selection
 const languages = [
@@ -173,7 +191,33 @@ const storyExamples = [
 	"A tour guide in a city of magical creatures disguised as humans.",
 ];
 
-function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails }) { // Added apiErrorDetails prop
+const genres = [
+	{ value: "fantasy", label: "Fantasy" },
+	{ value: "sci-fi", label: "Sci-Fi" },
+	{ value: "mystery", label: "Mystery" },
+	{ value: "romance", label: "Romance" },
+	{ value: "adventure", label: "Adventure" },
+	{ value: "historical", label: "Historical Fiction" },
+	{ value: "slice-of-life", label: "Slice of Life" },
+	{ value: "comedy", label: "Comedy" },
+	{ value: "horror", label: "Horror" },
+	{ value: "thriller", label: "Thriller" },
+	{ value: "childrens", label: "Children's Story" },
+];
+
+const grammarFocusOptions = [
+	{ value: "past-tenses", label: "Emphasize Past Tenses" },
+	{ value: "future-tenses", label: "Emphasize Future Tenses" },
+	{ value: "conditionals", label: "Include Conditional Sentences" },
+];
+
+function InputForm({
+	onSubmit,
+	isLoading,
+	userSubscriptionTier,
+	apiErrorDetails,
+}) {
+	// Added apiErrorDetails prop
 	const { currentUser } = useAuth(); // Get current user
 	const [description, setDescription] = useState("");
 	const [sourceLang, setSourceLang] = useState("English"); // Default source: English
@@ -181,9 +225,13 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails 
 	// Use numeric state for sliders, map back to string for submission
 	const [difficultyIndex, setDifficultyIndex] = useState(0); // 0: Beginner, 1: Intermediate, 2: Advanced
 	const [lengthIndex, setLengthIndex] = useState(0); // 0: Short, 1: Medium, 2: Long
+	const [isPublic, setIsPublic] = useState(true); // New state for story privacy, default to true (public)
+	const [showAdvancedSettings, setShowAdvancedSettings] = useState(false); // State for advanced settings visibility
 	const [showAuthDialog, setShowAuthDialog] = useState(false); // State for dialog
 	const [activeTab, setActiveTab] = useState("login"); // Added activeTab state
 	const [isMobile, setIsMobile] = useState(false); // State for mobile detection
+	const [selectedGenre, setSelectedGenre] = useState(""); // State for selected genre
+	const [selectedGrammarFocus, setSelectedGrammarFocus] = useState([]); // State for selected grammar focus (can be multiple)
 
 	// Stats State
 	const [totalStories, setTotalStories] = useState(null);
@@ -271,17 +319,31 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails 
 
 	// Effect for displaying API error toasts (e.g., moderation feedback)
 	useEffect(() => {
-		if (apiErrorDetails && (apiErrorDetails.message || apiErrorDetails.warningMessage)) {
+		if (
+			apiErrorDetails &&
+			(apiErrorDetails.message || apiErrorDetails.warningMessage)
+		) {
 			if (apiErrorDetails.userBanned) {
-				toast.error(apiErrorDetails.message || "Your account has been banned due to content policy violations.", {
-					duration: 10000,
-				});
+				toast.error(
+					apiErrorDetails.message ||
+						"Your account has been banned due to content policy violations.",
+					{
+						duration: 10000,
+					}
+				);
 			} else if (apiErrorDetails.warningMessage) {
-				toast(apiErrorDetails.warningMessage + (apiErrorDetails.moderationWarnings ? ` (Total warnings: ${apiErrorDetails.moderationWarnings})` : ''), {
-					duration: 8000,
-					// icon: '⚠️', // Example: You can add an icon for warnings
-				});
-			} else if (apiErrorDetails.message) { // Generic error
+				toast(
+					apiErrorDetails.warningMessage +
+						(apiErrorDetails.moderationWarnings
+							? ` (Total warnings: ${apiErrorDetails.moderationWarnings})`
+							: ""),
+					{
+						duration: 8000,
+						// icon: '⚠️', // Example: You can add an icon for warnings
+					}
+				);
+			} else if (apiErrorDetails.message) {
+				// Generic error
 				toast.error(apiErrorDetails.message, {
 					duration: 8000,
 				});
@@ -291,18 +353,25 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails 
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
-		if (!currentUser && !isMobile) {
-			// Only show auth dialog on desktop if not logged in
+		if (!currentUser) {
 			setShowAuthDialog(true);
 			return;
 		}
-		// Use the current lengthMap for submission
+		if (!description.trim()) {
+			toast.error("Please enter a story description.");
+			return;
+		}
+		const difficulty = difficultyMap[difficultyIndex];
+		const storyLength = lengthMap[lengthIndex];
 		onSubmit(
 			description,
 			sourceLang,
 			targetLang,
-			difficultyMap[difficultyIndex],
-			lengthMap[lengthIndex] // This will now use the dynamic lengthMap
+			difficulty,
+			storyLength,
+			isPublic,
+			selectedGenre, // Pass selected genre
+			selectedGrammarFocus // Pass selected grammar focus
 		);
 	};
 
@@ -580,26 +649,35 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails 
 										let textAlignmentClass = "";
 
 										if (numLabels === 1) {
-											style = { left: '50%', transform: 'translateX(-50%)' };
+											style = { left: "50%", transform: "translateX(-50%)" };
 											textAlignmentClass = "text-center";
 										} else {
 											const positionPercent = (index / (numLabels - 1)) * 100;
 											if (index === 0) {
-												style = { left: '0%', transform: 'translateX(0%)' };
+												style = { left: "0%", transform: "translateX(0%)" };
 												textAlignmentClass = "text-left";
 											} else if (index === numLabels - 1) {
-												style = { left: '100%', transform: 'translateX(-100%)' };
+												style = {
+													left: "100%",
+													transform: "translateX(-100%)",
+												};
 												textAlignmentClass = "text-right";
 											} else {
-												style = { left: `${positionPercent}%`, transform: 'translateX(-50%)' };
+												style = {
+													left: `${positionPercent}%`,
+													transform: "translateX(-50%)",
+												};
 												textAlignmentClass = "text-center";
 											}
 										}
 
 										return (
-											<span key={label} className={`absolute ${textAlignmentClass}`} style={style}>
+											<span
+												key={label}
+												className={`absolute ${textAlignmentClass}`}
+												style={style}
+											>
 												{label === "very_long_pro" ? (
-													
 													<span className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2.5 py-1 rounded-md shadow-md whitespace-nowrap">
 														XL
 													</span>
@@ -612,6 +690,137 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails 
 								</div>
 							</div>
 						</div>
+						{/* Toggle for Advanced Settings */}
+						{currentUser && (
+							<div className="pt-2 text-center">
+								<Button
+									type="button"
+									variant="ghost"
+									className="text-sm text-slate-500 hover:text-slate-800"
+									onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+								>
+									<Settings2 className="h-4 w-4 mr-1.5" />
+									{showAdvancedSettings ? "Hide" : "Show"} Advanced Options
+								</Button>
+							</div>
+						)}
+
+						{/* Advanced Settings Section (conditionally rendered) */}
+						{currentUser && showAdvancedSettings && (
+							<div className="pt-4 mt-4 border-t border-gray-200 space-y-4">
+								{/* Genre Selection */}
+								<div>
+									<Label
+										htmlFor="genre-select"
+										className="block text-sm font-medium mb-1 text-gray-700 text-center"
+									>
+										Story Genre
+									</Label>
+									<Select
+										value={selectedGenre}
+										onValueChange={setSelectedGenre}
+									>
+										<SelectTrigger
+											id="genre-select"
+											className="w-full text-slate-500"
+										>
+											<SelectValue placeholder="Select a genre (optional)" />
+										</SelectTrigger>
+										<SelectContent className="text-slate-500 bg-slate-50 *:text-slate-500">
+											{genres.map((genre) => (
+												<SelectItem key={genre.value} value={genre.value}>
+													{genre.label}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+
+								{/* Grammar Focus Selection */}
+								<div>
+									<Label
+										htmlFor="grammar-focus-select"
+										className="block text-sm font-medium mb-1 text-gray-700 text-center"
+									>
+										Grammar Focus
+									</Label>
+									{/* For multi-select, a component like react-select or custom checkboxes would be better */}
+									{/* Using a simple select for now, can be changed to multi-select later */}
+									<Select
+										value={
+											selectedGrammarFocus.length > 0
+												? selectedGrammarFocus[0]
+												: ""
+										}
+										onValueChange={(value) =>
+											setSelectedGrammarFocus(value ? [value] : [])
+										}
+									>
+										<SelectTrigger
+											id="grammar-focus-select"
+											className="w-full text-slate-500"
+										>
+											<SelectValue placeholder="Select grammar focus (optional)" />
+										</SelectTrigger>
+										<SelectContent className="text-slate-500 bg-slate-50 *:text-slate-500">
+											{grammarFocusOptions.map((option) => (
+												<SelectItem key={option.value} value={option.value}>
+													{option.label}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+									{/* Example of how multi-select could be hinted for future: */}
+									{/* <p className="text-xs text-gray-500 text-center mt-1">Hold Ctrl/Cmd to select multiple.</p> */}
+								</div>
+
+								{/* Story Privacy Toggle */}
+								<div className="mb-4 mt-6 flex flex-col items-center">
+									<Label
+										htmlFor="story-privacy"
+										className="block text-sm font-medium mb-1 text-gray-700 text-center"
+									>
+										Story Privacy
+									</Label>
+									<div className="flex items-center gap-3 rounded-lg px-3 py-2 justify-center">
+										<Switch
+											id="story-privacy"
+											checked={isPublic}
+											onCheckedChange={setIsPublic}
+											aria-label={
+												isPublic
+													? "Story will be public"
+													: "Story will be private"
+											}
+											className="scale-90"
+										/>
+										<span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+											{isPublic ? (
+												<>
+													<Eye className="h-4 w-4 " />
+													<span className="font-semibold text-slate-700">
+														Public
+													</span>
+													<span className="hidden sm:inline text-gray-500 ml-1">
+														(help others learn)
+													</span>
+												</>
+											) : (
+												<>
+													<EyeOff className="h-4 w-4 text-gray-400" />
+													<span className="font-semibold text-gray-600">
+														Private
+													</span>
+													<span className="hidden sm:inline text-gray-400 ml-1">
+														(only you can see)
+													</span>
+												</>
+											)}
+										</span>
+									</div>
+								</div>
+							</div>
+						)}
 					</div>
 				</fieldset>
 
@@ -644,7 +853,8 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails 
 
 				<button
 					type="submit"
-						disabled={ // Updated disabled logic
+					disabled={
+						// Updated disabled logic
 						isLoading ||
 						!description.trim() ||
 						sourceLang === targetLang ||
@@ -695,7 +905,6 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails 
 						</span>
 					) : (
 						<>
-						
 							<span className="flex items-center justify-center">
 								{(!description.trim() || !currentUser) && (
 									<span className="relative w-5 h-5 mr-2 inline-flex">
@@ -764,24 +973,25 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails 
 
 				{/* Subtle call-to-action to view a sample DuoBook */}
 				{!currentUser && (
-						<div className="flex justify-center mt-1.5">
-							<button
-								type="button"
-								onClick={() => {
-									document.getElementById('story-examples-section')?.scrollIntoView({ behavior: 'smooth' });
-								}}
-								className="group flex items-center gap-2 text-xs text-slate-500 hover:text-orange-600 transition-colors py-1.5 px-3 rounded-full hover:bg-amber-50"
-								aria-label="See a DuoBook example"
-							>
-								
-								<span>
-									<span className="mx-1 text-slate-500">or</span>
-									<span className="underline font-semibold decoration-dotted group-hover:decoration-solid transition-all text-slate-600">
-										see an example
-									</span>
+					<div className="flex justify-center mt-1.5">
+						<button
+							type="button"
+							onClick={() => {
+								document
+									.getElementById("story-examples-section")
+									?.scrollIntoView({ behavior: "smooth" });
+							}}
+							className="group flex items-center gap-2 text-xs text-slate-500 hover:text-orange-600 transition-colors py-1.5 px-3 rounded-full hover:bg-amber-50"
+							aria-label="See a DuoBook example"
+						>
+							<span>
+								<span className="mx-1 text-slate-500">or</span>
+								<span className="underline font-semibold decoration-dotted group-hover:decoration-solid transition-all text-slate-600">
+									see an example
 								</span>
-							</button>
-						</div>
+							</span>
+						</button>
+					</div>
 				)}
 
 				{isMobile && !isLoading && !description.trim() && currentUser && (
@@ -790,16 +1000,11 @@ function InputForm({ onSubmit, isLoading, userSubscriptionTier, apiErrorDetails 
 					</p>
 				)}
 
-				
-
-				
 				{!isLoading && description.trim() && sourceLang === targetLang && (
 					<p className="text-center text-sm text-red-600 mt-3 px-2">
 						Your language and the language to learn must be different.
 					</p>
 				)}
-
-
 			</form>
 
 			{/* Login/Signup Dialog */}

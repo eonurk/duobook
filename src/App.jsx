@@ -318,7 +318,10 @@ function MainAppView({ generateStory }) {
 		sourceLang,
 		targetLang,
 		difficulty,
-		storyLength
+		storyLength,
+		isPublic,
+		selectedGenre,
+		selectedGrammarFocus
 	) => {
 		setIsGenerating(true);
 		setFormError(null);
@@ -328,21 +331,23 @@ function MainAppView({ generateStory }) {
 			target: targetLang,
 			difficulty,
 			length: storyLength,
+			isPublic,
+			genre: selectedGenre,
+			grammarFocus: selectedGrammarFocus,
 		});
 		try {
-			// Call the generateStory function passed from App
 			await generateStory(
 				description,
 				sourceLang,
 				targetLang,
 				difficulty,
 				storyLength,
-				setFormError // Pass setFormError to allow App to update it directly
+				setFormError,
+				isPublic,
+				selectedGenre,
+				selectedGrammarFocus
 			);
-			// If generateStory succeeds without error, we might still want to stop the spinner
-			// depending on navigation timing. However, the finally block handles this.
 		} catch (error) {
-			// This catches errors *re-thrown* from App.jsx's generateStory
 			console.error(
 				"Error during generation or saving (caught in MainAppView):",
 				error
@@ -350,9 +355,7 @@ function MainAppView({ generateStory }) {
 			setFormError(
 				error.message || "Failed to generate story. Please try again."
 			);
-			// No need to set isGenerating false here, finally block handles it.
 		} finally {
-			// This block will ALWAYS execute after try or catch
 			setIsGenerating(false);
 		}
 	};
@@ -943,7 +946,10 @@ function App() {
 		targetLang,
 		difficulty,
 		storyLength,
-		setFormError // Accept the setter function
+		setFormError, // Accept the setter function
+		isPublic,
+		selectedGenre,
+		selectedGrammarFocus
 	) => {
 		// No need to call useAuth here, currentUser is available from App scope
 		if (!currentUser) {
@@ -959,6 +965,10 @@ function App() {
 			target: targetLang,
 			difficulty,
 			length: storyLength,
+			// These are not directly part of `params` for `generateStoryViaBackend` yet
+			// but will be used for `createStory` and potentially later for backend generation params
+			genre: selectedGenre,
+			grammarFocus: selectedGrammarFocus,
 		};
 
 		try {
@@ -988,8 +998,19 @@ function App() {
 				return; // Stop execution
 			}
 
-			// Use imported function directly
-			const generatedStoryContent = await generateStoryViaBackend(params);
+			// Pass through genre and grammarFocus to generateStoryViaBackend if the backend supports them
+			// For now, we'll assume generateStoryViaBackend takes the original `params` object which might not yet include these.
+			// If your backend IS updated to use these for generation, modify the params passed to generateStoryViaBackend.
+			const generatedStoryContent = await generateStoryViaBackend({
+				description: params.description,
+				source: params.source,
+				target: params.target,
+				difficulty: params.difficulty,
+				length: params.length,
+				// If backend supports these in generation, uncomment and pass:
+				genre: selectedGenre,
+				grammarFocus: selectedGrammarFocus,
+			});
 
 			// Validation logic (unchanged)
 			const isProStory = params.length === "very_long_pro";
@@ -1017,7 +1038,6 @@ function App() {
 			}
 
 			console.log("Saving generated story to database...");
-			// Use imported function directly
 			const savedStory = await createStory({
 				story: JSON.stringify(generatedStoryContent),
 				description: description,
@@ -1025,6 +1045,9 @@ function App() {
 				targetLanguage: targetLang,
 				difficulty: difficulty,
 				length: storyLength,
+				isPublic: isPublic,
+				genre: selectedGenre, // Pass the genre
+				grammarFocus: selectedGrammarFocus, // Pass the grammar focus (array)
 			});
 
 			// Refresh navbar limit
