@@ -6,8 +6,12 @@ import {
 	CalendarDays,
 	ArrowRight,
 	Share2,
+	Copy,
+	MessageCircle,
+	Instagram,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
 
 const formatTimeAgo = (dateString) => {
 	const date = new Date(dateString);
@@ -37,6 +41,7 @@ const formatTimeAgo = (dateString) => {
 };
 
 const StoryCard = ({ story }) => {
+	const [showShareOptions, setShowShareOptions] = React.useState(false);
 	const storyTitle = story.description || "A User-Generated Story";
 	const difficultyText = story.difficulty
 		? story.difficulty.charAt(0).toUpperCase() + story.difficulty.slice(1)
@@ -45,15 +50,45 @@ const StoryCard = ({ story }) => {
 		? formatTimeAgo(story.createdAt)
 		: "Some time ago";
 
-	const handleShare = () => {
+	const handleShare = async (event) => {
+		event.stopPropagation();
+		if (!story?.shareId) {
+			toast.error("Share ID not available for this story.");
+			return;
+		}
 		const storyUrl = `${window.location.origin}/story/${story.shareId}`;
+		const currentStoryTitle = story.description || "Check out this story!";
+
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: currentStoryTitle,
+					text: `Read "${currentStoryTitle}" on DuoBook!`,
+					url: storyUrl,
+				});
+				toast.success("Story shared!");
+				setShowShareOptions(false);
+			} catch (err) {
+				console.error("Error using Web Share API: ", err);
+				if (err.name !== "AbortError") {
+					toast.error("Could not share story.");
+				}
+			}
+		} else {
+			setShowShareOptions((prev) => !prev);
+		}
+	};
+
+	const handleCopyLink = (event, storyUrlToCopy, titleOfStory) => {
+		event.stopPropagation();
 		try {
-			navigator.clipboard.writeText(storyUrl);
-			toast.success("Story link copied to clipboard!");
+			navigator.clipboard.writeText(storyUrlToCopy);
+			toast.success(`Link for "${titleOfStory}" copied to clipboard!`);
 		} catch (err) {
 			console.error("Failed to copy story link: ", err);
 			toast.error("Could not copy link.");
 		}
+		setShowShareOptions(false);
 	};
 
 	return (
@@ -62,7 +97,7 @@ const StoryCard = ({ story }) => {
 				<h3
 					className="text-lg font-semibold mb-2 text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2"
 					title={storyTitle}
-					style={{ minHeight: "2.5em" }} // Ensure space for two lines to avoid layout shifts
+					style={{ minHeight: "2.5em" }}
 				>
 					{storyTitle}
 				</h3>
@@ -88,19 +123,71 @@ const StoryCard = ({ story }) => {
 
 			<div className="flex items-center justify-between mt-auto">
 				<Link
-					to={`/story/${story.shareId}`} // Updated to use story shareId in the URL
-					// Remove state passing as story will be fetched based on ID
+					to={`/story/${story.shareId}`}
 					className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors group"
 				>
 					Read Story <ArrowRight className="w-4 h-4 ml-2" />
 				</Link>
-				<button
-					onClick={handleShare}
-					className="inline-flex items-center justify-center p-2 border border-transparent text-sm font-medium rounded-md text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-					title="Share Story"
-				>
-					<Share2 className="w-5 h-5" />
-				</button>
+				<div className="relative">
+					<button
+						onClick={handleShare}
+						className="inline-flex items-center justify-center p-2 border border-transparent text-sm font-medium rounded-md text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+						title="Share Story"
+					>
+						<Share2 className="w-5 h-5" />
+					</button>
+					{showShareOptions && (
+						<div className="absolute right-0 bottom-full mb-2 w-48 bg-white border rounded-md shadow-lg z-20 p-2 space-y-1">
+							<Button
+								variant="ghost"
+								className="w-full flex items-center justify-start text-sm p-2 hover:bg-slate-100"
+								onClick={(e) =>
+									handleCopyLink(
+										e,
+										`${window.location.origin}/story/${story.shareId}`,
+										storyTitle
+									)
+								}
+							>
+								<Copy className="h-4 w-4 mr-2" /> Copy Link
+							</Button>
+							<a
+								href={`whatsapp://send?text=${encodeURIComponent(
+									`Read "${storyTitle}" on DuoBook! ${window.location.origin}/story/${story.shareId}`
+								)}`}
+								data-action="share/whatsapp/share"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="w-full flex items-center justify-start text-sm p-2 hover:bg-slate-100 rounded-md"
+								onClick={(e) => {
+									e.stopPropagation();
+									setShowShareOptions(false);
+								}}
+							>
+								<MessageCircle className="h-4 w-4 mr-2" /> WhatsApp
+							</a>
+							<Button
+								variant="ghost"
+								className="w-full flex items-center justify-start text-sm p-2 hover:bg-slate-100"
+								onClick={(e) => {
+									e.stopPropagation();
+									handleCopyLink(
+										e,
+										`${window.location.origin}/story/${story.shareId}`,
+										storyTitle
+									);
+									toast(
+										"Link copied. Paste it in your Instagram story sticker!",
+										{ icon: "📸" }
+									);
+									setShowShareOptions(false);
+								}}
+							>
+								<Instagram className="h-4 w-4 mr-2" /> Instagram Story
+							</Button>
+						</div>
+					)}
+				</div>
 			</div>
 		</div>
 	);
