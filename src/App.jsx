@@ -526,8 +526,8 @@ function MainAppView({ generateStory }) {
 
 				{/* Example Quiz Section */}
 				{!isGenerating && (
-					<div className="mt-12 pt-12 border-t bg-slate-50 py-12">
-						<h2 className="text-3xl font-bold text-center mb-10 text-gray-800">
+					<div className="mt-12 pt-12 bg-slate-100 py-12 rounded-lg">
+						<h2 className="text-2xl sm:text-3xl font-bold text-center mb-10 text-gray-800">
 							Test Your Understanding
 						</h2>
 						<div className="max-w-2xl mx-auto px-4">
@@ -538,15 +538,15 @@ function MainAppView({ generateStory }) {
 
 				{/* Call to Action Section */}
 				{!isGenerating && (
-					<div className="mt-16 pt-12 text-center bg-gradient-to-r from-purple-600 to-indigo-700 text-white py-16 px-6 rounded-lg">
-						<Rocket className="w-16 h-16 mx-auto mb-6 text-amber-300" />
-						<h2 className="text-3xl md:text-4xl font-bold mb-4">
+					<div className="mt-16 pt-12 text-center bg-gradient-to-r from-amber-200 to-amber-500 text-white py-16 px-6 rounded-lg">
+						<Rocket className="w-16 h-16 mx-auto mb-6 " />
+						<h2 className="text-2xl md:text-4xl font-bold mb-4 text-amber-800">
 							Ready to Craft Your Language Adventure?
 						</h2>
-						<p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-indigo-100">
+						<p className="text-md md:text-xl max-w-2xl mx-auto mb-8">
 							Stop just memorizing words. Start understanding in context.
-							Generate your first personalized bilingual story now and
-							experience a new way to learn.
+							<br />
+							Generate your first personalized bilingual story now!
 						</p>
 						<Button
 							onClick={() => {
@@ -555,10 +555,16 @@ function MainAppView({ generateStory }) {
 									inputForm.scrollIntoView({ behavior: "smooth" });
 								}
 							}}
-							className="button-tertiary bg-amber-400 hover:bg-amber-500 text-purple-800 font-bold text-lg py-6 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105"
+							className=" bg-amber-800 hover:bg-amber-500 text-lg py-6 px-8 rounded-lg transition-transform transform hover:scale-105"
 						>
 							Create Your First Story
 						</Button>
+						<div className="mt-8 flex flex-col items-center text-amber-900">
+							3 free stories&nbsp;each day
+							<p className="text-xs  mt-1 opacity-70">
+								No card required. Just start reading.
+							</p>
+						</div>
 					</div>
 				)}
 
@@ -703,45 +709,63 @@ function MainAppView({ generateStory }) {
 // --- Example Quiz Component ---
 const exampleQuizQuestions = [
 	{
-		question: `What does "manera natural" mean in English?`,
-		options: ["Naturally", "Manually", "Artificially", "Spiritually"],
-		correctAnswer: "Naturally",
-		hint: `Find "manera natural" in the example story's vocabulary list.`,
+		question:
+			"What is the primary way DuoBook helps you learn languages, according to the example?",
+		options: [
+			"Through natural learning with stories",
+			"By watching long video lectures",
+			"With complex grammar exercises",
+			"By translating word lists",
+		],
+		correctAnswer: "Through natural learning with stories",
+		hint: 'The first sentence is: "DuoBook te ayuda a aprender idiomas de manera natural."',
 	},
 	{
 		question:
-			"According to the example, how does DuoBook help you learn languages?",
+			"What specific feature does every DuoBook story include, as stated in the example?",
 		options: [
-			"Naturally",
-			"By memorizing lists",
-			"Through grammar drills only",
-			"With video lessons",
+			"Parallel text in two languages",
+			"Character voices for dialogues",
+			"Downloadable PDF versions",
+			"Built-in video chat",
 		],
-		correctAnswer: "Naturally",
-		hint: `Check the first sentence: "DuoBook te ayuda a aprender idiomas de manera natural."`,
+		correctAnswer: "Parallel text in two languages",
+		hint: 'The second sentence mentions: "Cada historia tiene texto paralelo en dos idiomas."',
 	},
 	{
 		question:
-			"What does 'Each story has parallel text in two languages.' translate to in Spanish in the example?",
+			"How do you move forward in a DuoBook story, based on the example description?",
 		options: [
-			"Cada historia tiene texto paralelo en dos idiomas.",
-			"Algunas historias tienen texto en dos idiomas.",
-			"Cada historia es muy larga y en dos idiomas.",
-			"El texto es difícil en todos los idiomas.",
+			"By tapping on a sentence",
+			"By typing the translation",
+			"By answering a quiz question",
+			"By clicking a 'Next Page' button",
 		],
-		correctAnswer: "Cada historia tiene texto paralelo en dos idiomas.",
-		hint: `Look for the translation of the second English sentence.`,
+		correctAnswer: "By tapping on a sentence",
+		hint: 'Sentence 3 says: "Toca una frase para avanzar en la historia."',
 	},
 	{
-		question: "What can you do with underlined words in the example story?",
+		question: "What action reveals blurred translations in the example story?",
 		options: [
-			"See translations on hover",
-			"Hear pronunciation",
-			"Skip them",
-			"Edit them",
+			"Tapping on them",
+			"Hovering over them",
+			"Shaking your device",
+			"Speaking the word aloud",
 		],
-		correctAnswer: "See translations on hover",
-		hint: `Sentence 5 says: "Las palabras subrayadas muestran traducciones al pasar el cursor."`,
+		correctAnswer: "Tapping on them",
+		hint: 'Check sentence 4: "Toca las traducciones borrosas para revelarlas."',
+	},
+	{
+		question:
+			"According to the example, what can you do with the audio button?",
+		options: [
+			"Hear the pronunciation of sentences",
+			"Record your own voice",
+			"Change the background music",
+			"Translate text to speech",
+		],
+		correctAnswer: "Hear the pronunciation of sentences",
+		hint: 'Sentence 6 mentions: "Puedes escuchar la pronunciación con el botón de audio."',
 	},
 ];
 
@@ -789,7 +813,7 @@ function ExampleQuiz() {
 		return (
 			<Card className="shadow-xl">
 				<CardHeader>
-					<CardTitle className="text-2xl text-center text-purple-700">
+					<CardTitle className="text-xl sm:text-2xl text-center text-purple-700">
 						Quiz Complete!
 					</CardTitle>
 				</CardHeader>
@@ -806,7 +830,7 @@ function ExampleQuiz() {
 					/>
 					<Button
 						onClick={handleRestartQuiz}
-						className="bg-purple-600 hover:bg-purple-700 text-white"
+						className="bg-purple-600 hover:bg-purple-700 text-white py-6"
 					>
 						Restart Quiz
 					</Button>
@@ -822,17 +846,17 @@ function ExampleQuiz() {
 	return (
 		<Card className="shadow-xl bg-white">
 			<CardHeader>
-				<CardTitle className="text-xl font-semibold text-gray-800">
+				<CardTitle className="text-lg sm:text-xl font-semibold text-gray-800">
 					Question {currentQuestionIndex + 1} of {exampleQuizQuestions.length}
 				</CardTitle>
 				<p className="text-md mt-2 text-gray-700">{currentQuestion.question}</p>
 			</CardHeader>
-			<CardContent className="space-y-3">
+			<CardContent className="space-y-2">
 				{currentQuestion.options.map((option, index) => {
 					const isCorrect = option === currentQuestion.correctAnswer;
 					const isSelected = option === selectedAnswer;
 					let buttonClass =
-						"justify-start w-full text-left py-3 px-4 rounded-lg transition-colors duration-200 text-gray-700 ";
+						"justify-start w-full text-left py-2 px-0 sm:py-3 sm:px-2 rounded-lg transition-colors duration-200 text-gray-700 text-xs sm:text-sm ";
 					if (showFeedback) {
 						if (isCorrect) {
 							buttonClass +=
@@ -860,7 +884,7 @@ function ExampleQuiz() {
 							onClick={() => handleAnswerSelect(option)}
 							disabled={showFeedback}
 						>
-							<span className="mr-3">
+							<span className="ml-1">
 								{showFeedback &&
 									(isCorrect ? (
 										<Check className="w-5 h-5 text-green-600" />
@@ -899,7 +923,7 @@ function ExampleQuiz() {
 					<Button
 						onClick={handleSubmitAnswer}
 						disabled={!selectedAnswer}
-						className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+						className=" bg-slate-500 hover:bg-slate-700 text-sm py-4 px-8 transition-transform transform hover:scale-105 text-white"
 					>
 						Submit Answer
 					</Button>

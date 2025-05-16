@@ -453,7 +453,11 @@ function InputForm({
 					color: #b45309;
 				}
 			`}</style>
-			<form onSubmit={handleSubmit} className="input-form">
+			<form
+				onSubmit={handleSubmit}
+				className="input-form"
+				id="input-form-section"
+			>
 				<p
 					style={{
 						textAlign: "center",
