@@ -998,10 +998,14 @@ app.put(
 			(err as any).status = 401;
 			return next(err);
 		}
-		const { pointsToAdd, level } = req.body; // Accept pointsToAdd or a specific level
+		const { pointsToAdd, level, vocabularySrsData } = req.body; // Accept pointsToAdd, level, or FSRS data
 
 		// Declare updateData outside the try block
-		let updateData: { points?: { increment: number }; level?: number } = {};
+		let updateData: {
+			points?: { increment: number };
+			level?: number;
+			vocabularySrsData?: any; // Prisma will handle JSON conversion
+		} = {};
 
 		try {
 			// Populate updateData inside the try block
@@ -1011,10 +1015,13 @@ app.put(
 			if (typeof level === "number") {
 				updateData.level = level;
 			}
+			if (vocabularySrsData !== undefined) {
+				updateData.vocabularySrsData = vocabularySrsData;
+			}
 
 			if (Object.keys(updateData).length === 0) {
 				const err = new Error(
-					"No update data provided (pointsToAdd or level)."
+					"No update data provided (pointsToAdd, level, or vocabularySrsData)."
 				);
 				(err as any).status = 400;
 				return next(err);

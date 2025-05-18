@@ -29,6 +29,7 @@ import ContactUs from "@/pages/ContactUs"; // Import Contact Us page
 import ExploreStoriesPage from "@/pages/ExploreStoriesPage"; // ADDED: Import ExploreStoriesPage
 import PricingPage from "@/pages/PricingPage"; // Import Pricing Page
 import LeaderboardPage from "@/components/Gamification/LeaderboardPage"; // ADDED: Import LeaderboardPage
+import FsrsEffectivenessCharts from "@/components/Gamification/FsrsEffectivenessCharts"; // ADDED: Import FSRS Charts
 import {
 	ArrowDown,
 	Sparkles,
@@ -523,6 +524,9 @@ function MainAppView({ generateStory }) {
 						</div>
 					</div>
 				)}
+
+				{/* FSRS Effectiveness Charts Section */}
+				{!isGenerating && <FsrsEffectivenessCharts />}
 
 				{/* Example Quiz Section */}
 				{!isGenerating && (

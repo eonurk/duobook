@@ -24,6 +24,7 @@ import { trackPractice } from "@/lib/analytics"; // Import analytics tracking
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"; // Import RadioGroup
 import { Label } from "@/components/ui/label"; // Import Label
 import { Input } from "@/components/ui/input"; // Import Input
+import { fsrs, createEmptyCard, Rating, State } from "ts-fsrs"; // FSRS imports
 
 // Quiz Constants
 const QUIZ_LENGTH = 10; // Max words per quiz session
@@ -35,6 +36,9 @@ const MIN_WORDS_FOR_QUIZ = 4; // Define minimum words needed
 const CORRECT_SOUND_URL = "/sounds/correct.mp3";
 const INCORRECT_SOUND_URL = "/sounds/incorrect.mp3";
 const COMPLETE_SOUND_URL = "/sounds/complete.mp3";
+
+// Initialize FSRS
+const f = fsrs();
 
 // --- TTS Helper Code (Adapted from BookView) ---
 const langNameToCode = {
@@ -354,12 +358,36 @@ function VocabularyPracticePage() {
 		let uniqueQuizVocab = Array.from(uniqueWordMap.values());
 
 		if (uniqueQuizVocab.length >= MIN_WORDS_FOR_QUIZ) {
-			let finalQuizList = shuffleArray([...uniqueQuizVocab]);
+			const now = new Date();
+			const srsCards = userProgress?.vocabularySrsData || {};
+
+			const vocabWithSrsData = uniqueQuizVocab.map((item) => {
+				const wordId = `${item.word}-${item.targetLanguage}`; // Unique ID for word-language pair
+				let card = srsCards[wordId];
+
+				if (card) {
+					// Ensure dates are Date objects
+					card.due = new Date(card.due);
+					if (card.last_review) {
+						card.last_review = new Date(card.last_review);
+					}
+				} else {
+					card = createEmptyCard(now);
+				}
+				return { ...item, srsCard: card, wordId };
+			});
+
+			// Sort by due date (earliest first)
+			vocabWithSrsData.sort(
+				(a, b) => a.srsCard.due.getTime() - b.srsCard.due.getTime()
+			);
+
+			let finalQuizList = vocabWithSrsData;
 			if (finalQuizList.length > QUIZ_LENGTH) {
 				finalQuizList = finalQuizList.slice(0, QUIZ_LENGTH);
 			}
 
-			setShuffledList(finalQuizList);
+			setShuffledList(finalQuizList); // Name is now a bit misleading, it's sorted by FSRS due date
 
 			// Reset quiz-specific state before starting
 			setScore(0);
@@ -457,44 +485,74 @@ function VocabularyPracticePage() {
 		setIsAnswered(true);
 		setAnimateTrigger(Date.now());
 
-		const correctItem = shuffledList[currentQuestionIndex];
-		const correctAnswer = correctItem.translation;
+		const currentQuizItem = shuffledList[currentQuestionIndex];
+		const correctAnswer = currentQuizItem.translation;
 		let awardedPoints = 0;
+		const now = new Date();
+		let rating;
 
 		if (option === correctAnswer) {
 			setFeedback(`Correct! +${POINTS_PER_CORRECT} XP 🎉`);
 			setScore((prevScore) => prevScore + 1);
 			awardedPoints = POINTS_PER_CORRECT;
 			confetti({
-				/* confetti options */
+				particleCount: 100,
+				spread: 70,
+				origin: { y: 0.6 },
 			});
-			playSound(CORRECT_SOUND_URL, isMuted); // Play correct sound (respect mute)
-			setCorrectStreak((prev) => prev + 1); // Increment streak
+			playSound(CORRECT_SOUND_URL, isMuted);
+			setCorrectStreak((prev) => prev + 1);
+			rating = Rating.Good; // FSRS: User recalled the word correctly
 		} else {
-			setFeedback(`Incorrect. Correct: ${correctAnswer}`); // Simplified feedback
+			setFeedback(`Incorrect. Correct: ${correctAnswer}`);
 			setIncorrectAnswers((prev) => {
-				if (!prev.some((item) => item.word === correctItem.word)) {
-					return [...prev, correctItem];
+				if (!prev.some((item) => item.word === currentQuizItem.word)) {
+					return [...prev, currentQuizItem];
 				}
 				return prev;
 			});
-			playSound(INCORRECT_SOUND_URL, isMuted); // Play incorrect sound (respect mute)
-			setCorrectStreak(0); // Reset streak
-			setApplyShake(true); // Trigger shake animation for incorrect typing
+			playSound(INCORRECT_SOUND_URL, isMuted);
+			setCorrectStreak(0);
+			setApplyShake(true);
+			rating = Rating.Again; // FSRS: User failed to recall the word
 		}
 
-		// Update progress via context API
-		if (awardedPoints > 0 && userProgress && updateProgressData) {
+		// FSRS card update
+		const oldCard = currentQuizItem.srsCard;
+		const scheduling_cards = f.repeat(oldCard, now);
+		const newCard = scheduling_cards[rating].card;
+
+		// Persist the updated FSRS card data
+		const updatedSrsData = {
+			...(userProgress?.vocabularySrsData || {}),
+			[currentQuizItem.wordId]: newCard,
+		};
+
+		// Update progress (points and FSRS data)
+		if (userProgress && updateProgressData) {
 			try {
-				// Use await, but don't block UI for too long
-				updateProgressData({ pointsToAdd: awardedPoints }); // Assuming context handles accumulation
-				console.log(`Awarded ${awardedPoints} points.`);
-				// Reset shake after a short delay if it was applied
-				if (applyShake) setTimeout(() => setApplyShake(false), 500);
+				await updateProgressData({
+					pointsToAdd: awardedPoints > 0 ? awardedPoints : 0, // ensure pointsToAdd is not undefined
+					vocabularySrsData: updatedSrsData,
+				});
+				console.log(
+					`Awarded ${awardedPoints} points. FSRS data updated for ${currentQuizItem.wordId}`
+				);
+				// Update local state for the specific card in shuffledList if needed for immediate UI consistency
+				// This is important if the user navigates back or if the list isn't re-derived fully
+				const updatedShuffledList = [...shuffledList];
+				updatedShuffledList[currentQuestionIndex] = {
+					...currentQuizItem,
+					srsCard: newCard,
+				};
+				setShuffledList(updatedShuffledList);
 			} catch (error) {
-				console.error("Failed to save points update:", error);
-				// Handle error (e.g., show toast) but don't block quiz flow
+				console.error("Failed to save progress or FSRS data:", error);
 			}
+		}
+		// Reset shake after a short delay if it was applied, and only if it was an incorrect answer
+		if (rating === Rating.Again && applyShake) {
+			setTimeout(() => setApplyShake(false), 500);
 		}
 	};
 
@@ -505,9 +563,11 @@ function VocabularyPracticePage() {
 		setIsAnswered(true);
 		setAnimateTrigger(Date.now());
 
-		const correctItem = shuffledList[currentQuestionIndex];
-		const correctAnswer = correctItem.translation;
+		const currentQuizItem = shuffledList[currentQuestionIndex];
+		const correctAnswer = currentQuizItem.translation;
 		let awardedPoints = 0;
+		const now = new Date();
+		let rating;
 
 		// Case-insensitive and trim whitespace comparison
 		if (typedAnswer.trim().toLowerCase() === correctAnswer.toLowerCase()) {
@@ -515,33 +575,62 @@ function VocabularyPracticePage() {
 			setScore((prevScore) => prevScore + 1);
 			awardedPoints = POINTS_PER_CORRECT;
 			confetti({
-				/* confetti options */
+				particleCount: 100,
+				spread: 70,
+				origin: { y: 0.6 },
 			});
-			playSound(CORRECT_SOUND_URL, isMuted); // Play correct sound (respect mute)
-			setCorrectStreak((prev) => prev + 1); // Increment streak
+			playSound(CORRECT_SOUND_URL, isMuted);
+			setCorrectStreak((prev) => prev + 1);
+			rating = Rating.Good;
 		} else {
 			setFeedback(`Incorrect. Correct: ${correctAnswer}`);
 			setIncorrectAnswers((prev) => {
-				if (!prev.some((item) => item.word === correctItem.word)) {
-					return [...prev, correctItem];
+				if (!prev.some((item) => item.word === currentQuizItem.word)) {
+					return [...prev, currentQuizItem];
 				}
 				return prev;
 			});
-			playSound(INCORRECT_SOUND_URL, isMuted); // Play incorrect sound (respect mute)
-			setCorrectStreak(0); // Reset streak
-			setApplyShake(true); // Trigger shake animation for incorrect typing
+			playSound(INCORRECT_SOUND_URL, isMuted);
+			setCorrectStreak(0);
+			setApplyShake(true);
+			rating = Rating.Again;
 		}
 
-		// Update progress via context API
-		if (awardedPoints > 0 && userProgress && updateProgressData) {
+		// FSRS card update
+		const oldCard = currentQuizItem.srsCard;
+		const scheduling_cards = f.repeat(oldCard, now);
+		const newCard = scheduling_cards[rating].card;
+
+		// Persist the updated FSRS card data
+		const updatedSrsData = {
+			...(userProgress?.vocabularySrsData || {}),
+			[currentQuizItem.wordId]: newCard,
+		};
+
+		// Update progress (points and FSRS data)
+		if (userProgress && updateProgressData) {
 			try {
-				updateProgressData({ pointsToAdd: awardedPoints });
-				console.log(`Awarded ${awardedPoints} points.`);
-				// Reset shake after a short delay if it was applied
-				if (applyShake) setTimeout(() => setApplyShake(false), 500);
+				await updateProgressData({
+					pointsToAdd: awardedPoints > 0 ? awardedPoints : 0,
+					vocabularySrsData: updatedSrsData,
+				});
+				console.log(
+					`Awarded ${awardedPoints} points. FSRS data updated for ${currentQuizItem.wordId}`
+				);
+				// Update local state for the specific card in shuffledList
+				const updatedShuffledList = [...shuffledList];
+				updatedShuffledList[currentQuestionIndex] = {
+					...currentQuizItem,
+					srsCard: newCard,
+				};
+				setShuffledList(updatedShuffledList);
 			} catch (error) {
-				console.error("Failed to save points update:", error);
+				console.error("Failed to save progress or FSRS data:", error);
 			}
+		}
+		// Reset shake after a short delay if it was applied, and only if it was an incorrect answer
+		if (rating === Rating.Again && applyShake) {
+			setTimeout(() => setApplyShake(false), 500);
 		}
 	};
 
