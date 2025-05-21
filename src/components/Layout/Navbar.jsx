@@ -286,6 +286,7 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 										setActiveTab("login");
 										setShowAuthDialog(true);
 									}}
+									className="px-5 py-2 rounded-md text-sm border border-amber-500 text-amber-600 hover:bg-amber-100 transition-colors"
 								>
 									Login
 								</Button>
@@ -296,6 +297,7 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 										setActiveTab("signup");
 										setShowAuthDialog(true);
 									}}
+									className="px-5 py-2 rounded-md text-sm bg-amber-500 text-white hover:bg-amber-600 transition-colors"
 								>
 									Sign Up
 								</Button>
@@ -520,8 +522,8 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 			</header>
 
 			<Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-				<DialogContent className="sm:max-w-[425px] p-0">
-					<Card className="border-none shadow-none bg-amber-50">
+				<DialogContent className="sm:max-w-[425px] p-0 border-none">
+					<Card className="border-none shadow-none bg-white">
 						<CardHeader className="text-center pb-2">
 							<CardTitle>Sign in to DuoBook</CardTitle>
 							<CardDescription>

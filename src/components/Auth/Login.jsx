@@ -162,7 +162,7 @@ function Login({ onSuccess }) {
 						<Input
 							id="email"
 							type="email"
-							placeholder="m@example.com"
+							placeholder="your@example.com"
 							autoCapitalize="none"
 							autoComplete="email"
 							autoCorrect="off"
@@ -170,7 +170,7 @@ function Login({ onSuccess }) {
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
 							required
-							className="h-9"
+							className="h-9 text-sm"
 						/>
 					</div>
 					<div className="grid gap-1">
@@ -182,7 +182,7 @@ function Login({ onSuccess }) {
 								type="button"
 								onClick={handlePasswordReset}
 								disabled={isResetting || isLoading}
-								className="text-xs text-blue-600 hover:underline disabled:text-gray-400 disabled:no-underline"
+								className="text-xs text-amber-600 hover:text-amber-500 disabled:text-gray-400 disabled:no-underline"
 							>
 								{isResetting ? "Sending..." : "Forgot Password?"}
 							</button>
@@ -215,7 +215,7 @@ function Login({ onSuccess }) {
 					</div>
 					<Button
 						type="submit"
-						className="w-full py-2 bg-amber-400 hover:bg-amber-500 text-amber-950"
+						className="w-full h-9 sm:h-10 py-2 px-4 border border-transparent rounded shadow-sm text-sm sm:text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50"
 						disabled={isLoading || isResetting || isGoogleLoading}
 					>
 						{isLoading ? "Logging in..." : "Login"}
@@ -236,7 +236,7 @@ function Login({ onSuccess }) {
 			<Button
 				type="button"
 				variant="outline"
-				className="w-full py-2 border-gray-300 bg-white hover:bg-gray-50"
+				className="w-full h-9 sm:h-10 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 flex items-center justify-center"
 				onClick={handleGoogleLogin}
 				disabled={isLoading || isResetting || isGoogleLoading}
 			>
