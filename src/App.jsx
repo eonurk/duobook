@@ -27,6 +27,7 @@ import TermsOfService from "@/pages/TermsOfService"; // Import TermsOfService
 import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import Practice Page
 import ContactUs from "@/pages/ContactUs"; // Import Contact Us page
 import ExploreStoriesPage from "@/pages/ExploreStoriesPage"; // ADDED: Import ExploreStoriesPage
+import NewsPage from "@/pages/NewsPage"; // Import NewsPage
 import PricingPage from "@/pages/PricingPage"; // Import Pricing Page
 import LeaderboardPage from "@/components/Gamification/LeaderboardPage"; // ADDED: Import LeaderboardPage
 import FsrsEffectivenessCharts from "@/components/Gamification/FsrsEffectivenessCharts"; // ADDED: Import FSRS Charts
@@ -283,6 +284,7 @@ function MainAppView({ generateStory }) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [formError, setFormError] = useState(null);
 	const [formParams, setFormParams] = useState(null);
+	const [showPdfBanner, setShowPdfBanner] = useState(true); // Added state for PDF banner
 	const { idToken, userProgress } = useAuth(); // Get idToken and userProgress
 
 	// Determine user subscription tier
@@ -410,6 +412,22 @@ function MainAppView({ generateStory }) {
 				</div>
 			)}
 			<main className="flex-1 container mx-auto px-4 py-8">
+				{showPdfBanner && (
+					<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 text-sm rounded-md shadow-md mb-4 flex justify-between items-center">
+						<div>
+							<span className="font-bold">New Feature!</span> You can now
+							download your stories as PDF (Kindle friendly). Look for the
+							download icon on the story page.
+						</div>
+						<button
+							onClick={() => setShowPdfBanner(false)}
+							className="text-green-500 hover:text-green-700"
+							aria-label="Dismiss banner"
+						>
+							<X size={18} />
+						</button>
+					</div>
+				)}
 				{!isGenerating && (
 					<>
 						<img
@@ -769,7 +787,7 @@ const exampleQuizQuestions = [
 			"Translate text to speech",
 		],
 		correctAnswer: "Hear the pronunciation of sentences",
-		hint: 'Sentence 6 mentions: "Puedes escuchar la pronunciación con el botón de audio."',
+		hint: 'Sentence 6 mencions: "Puedes escuchar la pronunciación con el botón de audio."',
 	},
 ];
 
@@ -1174,18 +1192,23 @@ function App() {
 
 	return (
 		<div className="app-container flex flex-col min-h-screen bg-background text-foreground">
-			<Toaster />
+			<Toaster position="top-center" reverseOrder={false} />
+			<AchievementNotifier />
 			<Navbar ref={navbarRef} />
-			<CookieConsent />
+
 			<Routes>
 				<Route
 					path="/"
 					element={<MainAppView generateStory={generateStory} />}
 				/>
 				<Route path="/story/:shareId" element={<StoryViewPage />} />
-				<Route path="/privacy-policy" element={<PrivacyPolicy />} />
-				<Route path="/terms-of-service" element={<TermsOfService />} />
+				<Route path="/privacy" element={<PrivacyPolicy />} />
+				<Route path="/terms" element={<TermsOfService />} />
 				<Route path="/contact" element={<ContactUs />} />
+				<Route path="/explore-stories" element={<ExploreStoriesPage />} />
+				<Route path="/news" element={<NewsPage />} />
+				<Route path="/pricing" element={<PricingPage />} />
+				{/* Protected Routes */}
 				<Route
 					path="/profile"
 					element={
@@ -1218,8 +1241,6 @@ function App() {
 						</ProtectedRoute>
 					}
 				/>
-				<Route path="/pricing" element={<PricingPage />} />
-
 				<Route
 					path="/achievements"
 					element={
@@ -1228,7 +1249,6 @@ function App() {
 						</ProtectedRoute>
 					}
 				/>
-				<Route path="/explore-stories" element={<ExploreStoriesPage />} />
 				<Route
 					path="/leaderboard"
 					element={
@@ -1240,7 +1260,6 @@ function App() {
 				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
 			<SiteFooter />
-			<AchievementNotifier />
 		</div>
 	);
 }

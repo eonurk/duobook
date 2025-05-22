@@ -296,7 +296,7 @@ function BookView({
 	isExample = false,
 }) {
 	// Get currentUser AND userProgress from AuthContext
-	const { currentUser, userProgress } = useAuth();
+	const { currentUser } = useAuth();
 
 	// --- Pagination State ---
 	const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -1504,6 +1504,19 @@ function BookView({
 				<button onClick={handleToggleSource} className="button button-tertiary">
 					{showAllSource ? "Hide" : "Show"} All Translations
 				</button>
+
+				{currentUser &&
+					// userProgress?.subscriptionTier === "PRO" &&
+					storyContent?.shareId && (
+						<button
+							onClick={handleDownloadPdf}
+							className="button-tertiary button bg-slate-200 hover:bg-amber-800"
+							disabled={isDownloading}
+						>
+							{isDownloading ? "Downloading..." : "Download PDF"}
+						</button>
+					)}
+
 				<button
 					onClick={handleGoBack}
 					className="button-tertiary button button-secondary create-button bg-amber-500 hover:bg-amber-800"
@@ -1511,17 +1524,6 @@ function BookView({
 					Create Your First Story
 				</button>
 				{/* Conditionally render Download PDF button for PRO users using userProgress */}
-				{currentUser &&
-					userProgress?.subscriptionTier === "PRO" &&
-					storyContent?.shareId && (
-						<button
-							onClick={handleDownloadPdf}
-							className="button button-primary bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2.5 py-4 rounded-md shadow-md whitespace-nowrap"
-							disabled={isDownloading}
-						>
-							{isDownloading ? "Downloading..." : "Download PDF"}
-						</button>
-					)}
 			</div>
 		</div>
 	);

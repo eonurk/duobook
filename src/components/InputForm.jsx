@@ -499,21 +499,7 @@ function InputForm({
 	return (
 		<>
 			{/* Site Stats and Badge Section */}
-			<div className="text-center">
-				<a
-					href="https://news.ycombinator.com/item?id=43886381"
-					target="_blank"
-					rel="noopener noreferrer"
-					className="inline-block"
-					// Classes for a more badge-like appearance: smaller, rounded, specific colors
-				>
-					<img
-						src="https://hackerbadge.vercel.app/api?id=43886381"
-						alt="Hacker News Logo"
-						className="aspect-auto w-48 mb-4"
-					/>
-				</a>
-			</div>
+
 			<style>{`
 				.custom-select {
 					background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23777' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
@@ -1196,6 +1182,22 @@ function InputForm({
 							</p>
 							<p className="text-sm text-gray-500  mt-1">Languages Supported</p>
 						</div>
+					</div>
+
+					<div className="text-center mt-12">
+						<a
+							href="https://news.ycombinator.com/item?id=43886381"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="inline-block"
+							// Classes for a more badge-like appearance: smaller, rounded, specific colors
+						>
+							<img
+								src="https://hackerbadge.vercel.app/api?id=43886381"
+								alt="Hacker News Logo"
+								className="aspect-auto w-48"
+							/>
+						</a>
 					</div>
 				</div>
 			)}

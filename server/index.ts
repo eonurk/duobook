@@ -1482,11 +1482,11 @@ app.get(
 			select: { subscriptionTier: true },
 		});
 
-		if (userProgress?.subscriptionTier !== SubscriptionTier.PRO) {
-			return res.status(403).json({
-				error: "PDF downloads are only available for PRO subscribers.",
-			});
-		}
+		// if (userProgress?.subscriptionTier !== SubscriptionTier.PRO) {
+		// 	return res.status(403).json({
+		// 		error: "PDF downloads are only available for PRO subscribers.",
+		// 	});
+		// }
 
 		const story = await prisma.story.findUnique({
 			where: { shareId },
