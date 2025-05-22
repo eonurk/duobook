@@ -1562,7 +1562,15 @@ app.get(
 				layout: "portrait",
 				size: "A4",
 			});
-			doc.font("Helvetica"); // Set default font to Helvetica
+			// Register and use NotoSans font
+			const notoSansFontPath = path.join(
+				__dirname,
+				"assets",
+				"fonts",
+				"NotoSans-Regular.ttf"
+			);
+			doc.registerFont("NotoSans", notoSansFontPath);
+			doc.font("NotoSans"); // Set default font to NotoSans
 
 			// --- Define Color Scheme ---
 			const ACCENT_COLOR = "#F59E0B"; // Amber/Yellow
@@ -1578,14 +1586,14 @@ app.get(
 			// --- Footer Function (adjusted for potential total page count) ---
 			const addFooter = (currentPage: number, totalPages: number | string) => {
 				const footerY = doc.page.height - pageMargin / 2;
-				doc.font("Helvetica").fontSize(8).fillColor(FOOTER_TEXT_COLOR); // Use footer color
+				doc.font("NotoSans").fontSize(8).fillColor(FOOTER_TEXT_COLOR); // Use footer color
 				doc.text(
 					`DuoBook™ | ${bookTitle} | Page ${currentPage} of ${totalPages}`,
 					pageMargin, // x
 					footerY, // y
 					{ align: "center", width: availableWidth }
 				);
-				doc.font("Helvetica").fillColor(PRIMARY_TEXT_COLOR); // Reset font and color explicitly
+				doc.font("NotoSans").fillColor(PRIMARY_TEXT_COLOR); // Reset font and color explicitly
 			};
 
 			let currentPageNumber = 1;
@@ -1618,7 +1626,7 @@ app.get(
 
 			// Title
 			doc
-				.font("Helvetica-Bold")
+				.font("NotoSans")
 				.fontSize(28)
 				.fillColor(ACCENT_COLOR)
 				.text(bookTitle, { align: "center", width: contentWidth });
@@ -1626,7 +1634,7 @@ app.get(
 
 			// Author
 			doc
-				.font("Helvetica")
+				.font("NotoSans")
 				.fontSize(18)
 				.fillColor(SECONDARY_TEXT_COLOR)
 				.text(`By ${authorName}`, { align: "center", width: contentWidth });
@@ -1634,7 +1642,7 @@ app.get(
 
 			// Languages
 			doc
-				.font("Helvetica")
+				.font("NotoSans")
 				.fontSize(14)
 				.fillColor(SECONDARY_TEXT_COLOR)
 				.text(`Languages: ${targetLangCode} / ${sourceLangCode}`, {
@@ -1645,7 +1653,7 @@ app.get(
 
 			// Length
 			doc
-				.font("Helvetica")
+				.font("NotoSans")
 				.fontSize(14)
 				.fillColor(SECONDARY_TEXT_COLOR)
 				.text(`Length: ${storyLength}`, {
@@ -1656,7 +1664,7 @@ app.get(
 
 			// Difficulty
 			doc
-				.font("Helvetica")
+				.font("NotoSans")
 				.fontSize(14)
 				.fillColor(SECONDARY_TEXT_COLOR)
 				.text(`Difficulty: ${storyDifficulty}`, {
@@ -1668,7 +1676,7 @@ app.get(
 			// Generation Date
 			const generationDate = new Date().toLocaleDateString();
 			doc
-				.font("Helvetica-Oblique")
+				.font("NotoSans")
 				.fontSize(10)
 				.fillColor(SECONDARY_TEXT_COLOR)
 				.text(`Generated on: ${generationDate}`, {
@@ -1679,7 +1687,7 @@ app.get(
 			// Simple Logo/Footer Element for Cover
 			const coverFooterY = doc.page.height - coverMargin - 30; // Position near bottom border
 			doc
-				.font("Helvetica")
+				.font("NotoSans")
 				.fontSize(9)
 				.fillColor(ACCENT_COLOR)
 				.text("[ DuoBook ]", coverMargin, coverFooterY, {
@@ -1688,18 +1696,14 @@ app.get(
 				});
 
 			// Reset font and color for subsequent pages
-			doc.font("Helvetica").fillColor(PRIMARY_TEXT_COLOR);
+			doc.font("NotoSans").fillColor(PRIMARY_TEXT_COLOR);
 
 			// --- Page 2 onwards: Side-by-Side Columns ---
-			// REMOVED: doc.addPage(); // Let content flow naturally from cover page
-			// REMOVED: currentPageNumber++; // Page number increments only when content overflows
-
-			// Add space after cover page content if needed before starting story
 			doc.moveDown(3); // Add some vertical space
 			let initialY = doc.y; // Store Y position after cover page content + moveDown
 
 			doc
-				.font("Helvetica-Bold")
+				.font("NotoSans")
 				.fontSize(16)
 				.fillColor(ACCENT_COLOR)
 				.text("Story and Translation", { align: "center" }); // Accent header
@@ -1715,7 +1719,6 @@ app.get(
 
 			sentencePairs.forEach((pair, index) => {
 				// --- Page Break Check ---
-				// Estimate height (very rough - assumes ~1 line per 50 chars + base line)
 				const targetEstLines = Math.ceil(pair.target.length / 50) + 1;
 				const sourceEstLines = Math.ceil(pair.source.length / 50) + 1;
 				const estHeight = Math.max(targetEstLines, sourceEstLines) * 15; // Rough height estimate (12pt font)
@@ -1725,9 +1728,8 @@ app.get(
 					doc.addPage();
 					currentPageNumber++;
 					currentY = doc.page.margins.top; // Reset Y to top margin
-					// Optionally redraw column headers/titles here if needed
 					doc
-						.font("Helvetica-Bold")
+						.font("NotoSans")
 						.fontSize(16)
 						.fillColor(ACCENT_COLOR)
 						.text("Story and Translation (Continued)", { align: "center" }); // Accent header
@@ -1741,20 +1743,16 @@ app.get(
 				let sourceEndY = startY;
 
 				// Draw target sentence (left column)
-				doc.font("Helvetica").fontSize(12).fillColor(PRIMARY_TEXT_COLOR);
+				doc.font("NotoSans").fontSize(12).fillColor(PRIMARY_TEXT_COLOR);
 				doc.text(pair.target, pageMargin, startY, { width: columnWidth });
-				targetEndY = doc.y; // Get Y position AFTER text is drawn
+				targetEndY = doc.y;
 
 				// Draw source sentence (right column) - Start at the same Y
-				doc
-					.font("Helvetica-Oblique") // Use Oblique font variant for source
-					.fontSize(10) // Keep original size for source
-					.fillColor(SECONDARY_TEXT_COLOR);
-				// .fontStyle("italic"); // This property doesn't exist
+				doc.font("NotoSans").fontSize(10).fillColor(SECONDARY_TEXT_COLOR);
 				doc.text(pair.source, pageMargin + columnWidth + columnGap, startY, {
 					width: columnWidth,
 				});
-				doc.font("Helvetica"); // Reset font to non-italic
+				doc.font("NotoSans"); // Reset font
 				sourceEndY = doc.y; // Get Y position AFTER text is drawn
 
 				// Update Y for the next pair, adding a gap
@@ -1767,12 +1765,11 @@ app.get(
 
 			// --- Vocabulary Section ---
 			if (vocabulary.length > 0) {
-				// Heuristic page break check for vocabulary - NOW using heightOfString
-				doc.font("Helvetica-Bold").fontSize(18).fillColor(ACCENT_COLOR); // Set font for title height calculation
+				doc.font("NotoSans").fontSize(18).fillColor(ACCENT_COLOR); // Set font for title height calculation
 				const titleHeight = doc.heightOfString("Key Vocabulary", {
 					width: availableWidth,
 				});
-				doc.font("Helvetica").fontSize(11); // Set font for item height calculation
+				doc.font("NotoSans").fontSize(11); // Set font for item height calculation
 				const approxItemHeight = doc.heightOfString("W: T", {
 					paragraphGap: 4,
 				}); // Approx height of one item
@@ -1788,7 +1785,7 @@ app.get(
 					currentPageNumber++;
 					currentY = doc.page.margins.top; // Reset Y to top margin
 					doc
-						.font("Helvetica-Bold")
+						.font("NotoSans")
 						.fontSize(18)
 						.fillColor(ACCENT_COLOR)
 						.text("Key Vocabulary", { align: "center" }); // Accent title
@@ -1797,8 +1794,7 @@ app.get(
 				}
 
 				vocabulary.forEach((item: { word: string; translation: string }) => {
-					// Check for page break before adding each vocab item if needed (more robust)
-					doc.font("Helvetica").fontSize(11); // Ensure correct font is set
+					doc.font("NotoSans").fontSize(11); // Ensure correct font is set
 					const itemHeight = doc.heightOfString(
 						`• ${item.word}: ${item.translation}`,
 						{ paragraphGap: 4, width: availableWidth }
@@ -1811,15 +1807,14 @@ app.get(
 						currentPageNumber++;
 						currentY = doc.page.margins.top;
 						doc
-							.font("Helvetica-Bold")
+							.font("NotoSans")
 							.fontSize(18)
 							.fillColor(ACCENT_COLOR)
 							.text("Key Vocabulary (Continued)", { align: "center" }); // Accent title
 						doc.moveDown(1.5);
-						doc.font("Helvetica").fontSize(11); // Reset to standard Helvetica
+						doc.font("NotoSans").fontSize(11); // Reset to standard NotoSans
 					}
-					// Draw vocab item: Word (Primary), Translation (Secondary)
-					doc.font("Helvetica").fontSize(11).fillColor(PRIMARY_TEXT_COLOR);
+					doc.font("NotoSans").fontSize(11).fillColor(PRIMARY_TEXT_COLOR);
 					doc.text(`• ${item.word}: `, pageMargin, currentY, {
 						continued: true,
 						paragraphGap: 4,
@@ -1828,7 +1823,7 @@ app.get(
 					doc
 						.fillColor(SECONDARY_TEXT_COLOR)
 						.text(item.translation, { continued: false }); // Draw translation in secondary color
-					doc.font("Helvetica"); // Ensure font is reset after potential style changes
+					doc.font("NotoSans"); // Ensure font is reset after potential style changes
 					currentY = doc.y; // Update Y after drawing
 				});
 			}
