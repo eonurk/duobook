@@ -579,6 +579,29 @@ function BookView({
 		setTooltipContent("");
 	};
 
+	// Handle word clicks on mobile (tap to show tooltip)
+	const handleWordClick = async (event, word) => {
+		event.stopPropagation(); // Prevent sentence navigation
+		
+		// If tooltip is already visible for this word, hide it
+		if (tooltipVisible && tooltipContent) {
+			setTooltipVisible(false);
+			setTooltipContent("");
+			return;
+		}
+
+		// Show tooltip (similar to hover behavior)
+		await handleWordHover(event, word);
+		
+		// On mobile, auto-hide tooltip after 3 seconds
+		if (isMobileView) {
+			setTimeout(() => {
+				setTooltipVisible(false);
+				setTooltipContent("");
+			}, 3000);
+		}
+	};
+
 	// Helper to wrap words in hoverable spans with multi-word phrase support
 	const wrapWordsInSpans = (text, sentenceIndex) => {
 		// Allow hover on all revealed sentences (not just active when not finished)
@@ -661,6 +684,7 @@ function BookView({
 							canHover ? (e) => handleWordHover(e, longestMatch) : null
 						}
 						onMouseLeave={canHover ? handleWordLeave : null}
+						onClick={canHover ? (e) => handleWordClick(e, longestMatch) : null}
 					>
 						{phraseText}
 					</span>
@@ -680,6 +704,7 @@ function BookView({
 						className={`word ${canHover ? "word-hoverable" : ""}`}
 						onMouseEnter={canHover ? (e) => handleWordHover(e, word) : null}
 						onMouseLeave={canHover ? handleWordLeave : null}
+						onClick={canHover ? (e) => handleWordClick(e, word) : null}
 					>
 						{word}
 					</span>

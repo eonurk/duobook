@@ -377,6 +377,14 @@
 .mobile-target-sentence .word-hoverable {
 	border-bottom: 1px dotted #999;
 	padding-bottom: 1px;
+	cursor: pointer;
+	/* Add visual feedback for touch */
+	position: relative;
+}
+
+.mobile-target-sentence .word-hoverable:active {
+	background-color: rgba(181, 137, 0, 0.2);
+	border-radius: 2px;
 }
 
 /* Vocabulary list */
