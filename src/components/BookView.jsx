@@ -307,16 +307,12 @@ function BookView({
 
 	// Default implementation for onGoBack if not provided
 	const handleGoBack = useCallback(() => {
-		console.log("Create Story button clicked");
-
 		// Scroll to the top of the page for story creation
 		window.scrollTo({ top: 0, behavior: "smooth" });
 
 		if (typeof onGoBack === "function") {
-			console.log("Using provided onGoBack function");
 			onGoBack();
 		} else {
-			console.log("No onGoBack function provided, navigating to home");
 			// Try going to home page
 			try {
 				window.location.href = "/";
@@ -456,11 +452,13 @@ function BookView({
 				// Standard non-paginated story
 				setTotalPages(0);
 				setCurrentPageIndex(0); // Reset for non-paginated
+
 				setCurrentSentencePairs(storyContent.sentencePairs || []);
 				setCurrentVocabulary(storyContent.vocabulary || []);
 			}
 		} else {
 			// No storyContent, clear everything
+			console.log("⚠️ No story content available");
 			setIsPaginated(false);
 			setTotalPages(0);
 			setCurrentPageIndex(0);
@@ -474,16 +472,42 @@ function BookView({
 	const [tooltipVisible, setTooltipVisible] = useState(false);
 	const [tooltipContent, setTooltipContent] = useState("");
 	const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-
 	// --- Word Hover Logic ---
 	const vocabularyMap = useMemo(() => {
 		const map = new Map();
+
 		// Use currentVocabulary which is page-specific for paginated stories
 		if (currentVocabulary) {
-			currentVocabulary.forEach((item) => {
-				map.set(item.word.toLowerCase(), item.translation);
+			currentVocabulary.forEach((item, index) => {
+				if (item && item.word && item.translation) {
+					const normalizedWord = normalizeWord(item.word);
+					const normalizedTranslation = normalizeWord(item.translation);
+
+					// Map English word to translation (original direction)
+					map.set(normalizedWord, item.translation);
+
+					// Create reverse mapping: translation word/phrase to English word
+					// This allows target language text to find its English vocabulary entry
+					map.set(normalizedTranslation, item.word);
+
+					// Handle multi-word phrases by also mapping individual words from the translation
+					const translationWords = normalizedTranslation.split(/\s+/);
+					if (translationWords.length > 1) {
+						translationWords.forEach((targetWord) => {
+							if (targetWord.trim()) {
+								// Map each target language word to the full English phrase
+								map.set(targetWord.trim(), item.word);
+							}
+						});
+					}
+				} else {
+					console.warn(`Invalid vocabulary item at index ${index}:`, item);
+				}
 			});
+		} else {
+			console.warn("currentVocabulary is null, undefined, or empty");
 		}
+
 		return map;
 	}, [currentVocabulary]); // Depends on currentVocabulary
 
@@ -493,15 +517,35 @@ function BookView({
 	// Enhanced word hover function to track vocabulary interactions
 	const handleWordHover = async (event, word) => {
 		const normalized = normalizeWord(word);
-		const translation = vocabularyMap.get(normalized);
+		const lookupResult = vocabularyMap.get(normalized);
 
-		if (translation) {
+		if (lookupResult) {
+			// Find the vocabulary item to determine which direction we're translating
+			const currentVocabItem = currentVocabulary?.find(
+				(item) =>
+					normalizeWord(item.word) === normalized ||
+					normalizeWord(item.translation) === normalized
+			);
+
+			let tooltipText = lookupResult;
+
+			if (currentVocabItem) {
+				// If the hovered word matches the English word, show the translation
+				if (normalizeWord(currentVocabItem.word) === normalized) {
+					tooltipText = currentVocabItem.translation;
+				}
+				// If the hovered word matches the translation, show the English word
+				else if (normalizeWord(currentVocabItem.translation) === normalized) {
+					tooltipText = currentVocabItem.word;
+				}
+			}
+
 			const rect = event.target.getBoundingClientRect();
 			setTooltipPosition({
 				x: rect.left + rect.width / 2 + window.scrollX,
 				y: rect.top + window.scrollY,
 			});
-			setTooltipContent(translation);
+			setTooltipContent(tooltipText);
 			setTooltipVisible(true);
 
 			// Track unique words learned in *this session* to avoid spamming API
@@ -512,12 +556,11 @@ function BookView({
 
 				// Call API to update LEARN_WORDS challenge progress
 				try {
-					console.log("Attempting to post LEARN_WORDS challenge progress...");
 					const result = await postChallengeProgress({
 						challengeType: "LEARN_WORDS",
 						incrementAmount: 1,
 					});
-					console.log("Challenge progress LEARN_WORDS response:", result);
+
 					// Optionally show notification if result.completedChallenges has items
 					if (result?.completedChallenges?.length > 0) {
 						alert(
@@ -536,35 +579,117 @@ function BookView({
 		setTooltipContent("");
 	};
 
-	// Helper to wrap words in hoverable spans
+	// Helper to wrap words in hoverable spans with multi-word phrase support
 	const wrapWordsInSpans = (text, sentenceIndex) => {
-		// Only allow hover if the sentence is active AND the story isn't finished
-		const isHoverableSentence =
-			sentenceIndex === activeSentenceIndex && !isFinished;
+		// Allow hover on all revealed sentences (not just active when not finished)
+		const isHoverableSentence = sentenceIndex <= activeSentenceIndex;
+
+		// Enhanced debug logging for phrase matching
+		if (sentenceIndex === activeSentenceIndex) {
+			Array.from(vocabularyMap.keys());
+		}
+
 		const words = text.split(/(\s+)/);
-		return words.map((word, i) => {
-			if (word.trim().length === 0) {
-				return (
+		const result = [];
+		let i = 0;
+
+		while (i < words.length) {
+			if (words[i].trim().length === 0) {
+				// Handle whitespace
+				result.push(
 					<React.Fragment key={`space-${sentenceIndex}-${i}`}>
-						{word}
+						{words[i]}
 					</React.Fragment>
 				);
+				i++;
+				continue;
 			}
-			const normalized = normalizeWord(word);
-			const hasTranslation = vocabularyMap.has(normalized);
-			const canHover = isHoverableSentence && hasTranslation;
 
-			return (
-				<span
-					key={`word-${sentenceIndex}-${i}`}
-					className={`word ${canHover ? "word-hoverable" : ""}`}
-					onMouseEnter={canHover ? (e) => handleWordHover(e, word) : null}
-					onMouseLeave={canHover ? handleWordLeave : null}
-				>
-					{word}
-				</span>
-			);
-		});
+			// Try to find the longest matching phrase starting at current position
+			let longestMatch = null;
+			let longestMatchEndIndex = i;
+
+			// Look for phrases of different lengths (up to 5 words)
+			for (
+				let phraseLength = 1;
+				phraseLength <= Math.min(5, Math.ceil((words.length - i) / 2));
+				phraseLength++
+			) {
+				const endIndex = i + phraseLength * 2 - 1; // Account for spaces between words
+				if (endIndex >= words.length) break;
+
+				// Extract the phrase (skip spaces)
+				const phraseWords = [];
+				for (let j = i; j <= endIndex; j += 2) {
+					if (j < words.length && words[j].trim().length > 0) {
+						phraseWords.push(words[j]);
+					}
+				}
+
+				if (phraseWords.length === phraseLength) {
+					const phrase = phraseWords.join(" ");
+					const normalizedPhrase = phrase
+						.toLowerCase()
+						.replace(/[.,!?;:()"']/g, "");
+
+					if (vocabularyMap.has(normalizedPhrase)) {
+						longestMatch = phrase;
+						longestMatchEndIndex = endIndex;
+					}
+				}
+			}
+
+			if (longestMatch) {
+				// Render the matched phrase as a single hoverable span
+				const normalizedPhrase = longestMatch
+					.toLowerCase()
+					.replace(/[.,!?;:()"']/g, "");
+				const canHover =
+					isHoverableSentence && vocabularyMap.has(normalizedPhrase);
+
+				// Reconstruct the original text including spaces
+				let phraseText = "";
+				for (let j = i; j <= longestMatchEndIndex; j++) {
+					phraseText += words[j];
+				}
+
+				result.push(
+					<span
+						key={`phrase-${sentenceIndex}-${i}-${longestMatchEndIndex}`}
+						className={`word ${canHover ? "word-hoverable" : ""}`}
+						onMouseEnter={
+							canHover ? (e) => handleWordHover(e, longestMatch) : null
+						}
+						onMouseLeave={canHover ? handleWordLeave : null}
+					>
+						{phraseText}
+					</span>
+				);
+
+				i = longestMatchEndIndex + 1;
+			} else {
+				// No phrase match, handle as individual word
+				const word = words[i];
+				const normalized = normalizeWord(word);
+				const hasTranslation = vocabularyMap.has(normalized);
+				const canHover = isHoverableSentence && hasTranslation;
+
+				result.push(
+					<span
+						key={`word-${sentenceIndex}-${i}`}
+						className={`word ${canHover ? "word-hoverable" : ""}`}
+						onMouseEnter={canHover ? (e) => handleWordHover(e, word) : null}
+						onMouseLeave={canHover ? handleWordLeave : null}
+					>
+						{word}
+					</span>
+				);
+
+				i++;
+			}
+		}
+
+		return result;
 	};
 
 	// New state for hover highlighting
@@ -677,7 +802,14 @@ function BookView({
 		if (!autoPlayEnabled && synth?.speaking) {
 			synth.cancel();
 		}
-	}, [activeSentenceIndex, autoPlayEnabled, isFinished, currentSentencePairs]); // Removed handleSpeak from deps
+	}, [
+		activeSentenceIndex,
+		autoPlayEnabled,
+		isFinished,
+		currentSentencePairs,
+		handleSpeak,
+		synth,
+	]);
 
 	// --- TTS Controls ---
 	const handleToggleAutoPlay = () => setAutoPlayEnabled((prev) => !prev);

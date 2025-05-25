@@ -1,14 +1,30 @@
 .tooltip {
 	background-color: #333; /* Dark background */
 	color: #fff; /* White text */
-	padding: 6px 12px;
+	padding: 8px 14px;
 	border-radius: 5px;
-	font-size: 0.9rem;
+	font-size: 0.95rem;
 	position: absolute; /* Required for positioning */
 	z-index: 1000; /* Ensure it's above other elements */
 	white-space: nowrap; /* Prevent wrapping */
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 	pointer-events: none; /* Prevent tooltip from interfering with mouse events */
+	max-width: 85vw; /* Prevent tooltip from overflowing on small screens */
+	text-align: center; /* Center text */
+	opacity: 0;
+	transition: opacity 0.2s;
+	animation: tooltip-appear 0.2s forwards;
+}
+
+@keyframes tooltip-appear {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -100%) scale(0.9);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, -110%) scale(1);
+	}
 }
 
 /* Optional: Add a small triangle/arrow */
