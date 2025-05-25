@@ -284,7 +284,7 @@ function MainAppView({ generateStory }) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [formError, setFormError] = useState(null);
 	const [formParams, setFormParams] = useState(null);
-	const [showPdfBanner, setShowPdfBanner] = useState(true); // Added state for PDF banner
+	// const [showPdfBanner, setShowPdfBanner] = useState(true); // Added state for PDF banner
 	const { idToken, userProgress } = useAuth(); // Get idToken and userProgress
 
 	// Determine user subscription tier

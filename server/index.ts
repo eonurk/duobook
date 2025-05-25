@@ -2082,6 +2082,11 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 // Start the server
 const PORT = process.env.PORT || 3000; // Use environment variable or default
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`);
 });
+
+// Set server timeout to 5 minutes (300 seconds) to handle long-running story generation
+server.timeout = 300000; // 300 seconds in milliseconds
+server.keepAliveTimeout = 300000; // Keep-alive timeout
+server.headersTimeout = 300001; // Headers timeout (should be slightly higher than keepAliveTimeout)
