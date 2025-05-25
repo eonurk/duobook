@@ -48,6 +48,7 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 	// Expose the fetchStoryLimit function via ref
 	React.useImperativeHandle(ref, () => ({
 		fetchStoryLimit,
+		refreshStoryLimit: fetchStoryLimit, // Alias for better clarity
 	}));
 
 	// Fetch story generation limit when user is logged in

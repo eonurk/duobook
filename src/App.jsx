@@ -1058,29 +1058,17 @@ function App() {
 				grammarFocus: selectedGrammarFocus,
 			});
 
-			// Validation logic (unchanged)
-			const isProStory = params.length === "very_long_pro";
 			if (!generatedStoryContent) {
 				throw new Error("No story data received from backend.");
 			}
-			if (isProStory) {
-				if (
-					!generatedStoryContent.pages ||
-					!Array.isArray(generatedStoryContent.pages)
-				) {
-					throw new Error(
-						"Invalid paginated story data received from backend (missing 'pages' array)."
-					);
-				}
-			} else {
-				if (
-					!generatedStoryContent.sentencePairs ||
-					!generatedStoryContent.vocabulary
-				) {
-					throw new Error(
-						"Invalid standard story data received from backend (missing 'sentencePairs' or 'vocabulary')."
-					);
-				}
+
+			if (
+				!generatedStoryContent.pages ||
+				!Array.isArray(generatedStoryContent.pages)
+			) {
+				throw new Error(
+					"Invalid paginated story data received from backend (missing 'pages' array)."
+				);
 			}
 
 			console.log("Saving generated story to database...");

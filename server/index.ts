@@ -162,69 +162,162 @@ const optionalAuthenticateTokenMiddleware = async (
 // --- END OPTIONAL AUTH MIDDLEWARE ---
 
 // --- START RATE LIMITER SETUP ---
-const storyGenerationLimiter = rateLimit({
-	windowMs: 24 * 60 * 60 * 1000, // 24 hours window
-	max: 3, // Limit each FREE user to 3 story generations per day
-	message: {
-		error:
-			"Too many story generation requests today for free users. Upgrade to premium or try again tomorrow.",
-	},
-	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-	keyGenerator: (req: Request): string => {
-		return req.userId || req.ip || "unknown"; // Added 'unknown' as final fallback
-	},
-	// Use database-based tracking instead of in-memory
-	skip: async (req: Request, res: Response): Promise<boolean> => {
-		// If user is not authenticated for some reason, apply the limit based on IP
+// Custom middleware for weighted story generation limiting
+const storyGenerationLimiter = asyncHandler(
+	async (req: Request, res: Response, next: NextFunction) => {
+		// If user is not authenticated, apply basic IP-based rate limiting
 		if (!req.userId) {
 			console.warn("Rate limiting story generation by IP (userId not found)");
-			return false;
+			// For unauthenticated users, use a simple rate limiter
+			const basicLimiter = rateLimit({
+				windowMs: 24 * 60 * 60 * 1000, // 24 hours
+				max: 3, // 3 requests per IP per day
+				keyGenerator: (req: Request) => req.ip || "unknown",
+				message: {
+					error:
+						"Too many story generation requests. Please try again tomorrow.",
+				},
+			});
+			return basicLimiter(req, res, next);
 		}
 
-		// Check user's subscription tier
 		try {
+			// Check user's subscription tier
 			const userProgress = await prisma.userProgress.findUnique({
 				where: { userId: req.userId },
 				select: { subscriptionTier: true },
 			});
 
-			// If user has PREMIUM or PRO tier, skip the rate limit
+			// Premium users have unlimited generations, but Pro users have a higher limit
 			if (
 				userProgress &&
-				(userProgress.subscriptionTier === SubscriptionTier.PREMIUM ||
-					userProgress.subscriptionTier === SubscriptionTier.PRO)
+				userProgress.subscriptionTier === SubscriptionTier.PREMIUM
 			) {
-				return true; // Skip the limit for premium users
+				return next(); // Allow unlimited generations for premium users
 			}
 
-			// Check the number of stories generated in the last 24 hours
-			const recentStories = await prisma.story.count({
-				where: {
-					userId: req.userId,
-					createdAt: {
-						gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
-					},
-				},
-			});
+			// For PRO users, check their higher limit (10 weighted generations per day)
+			if (
+				userProgress &&
+				userProgress.subscriptionTier === SubscriptionTier.PRO
+			) {
+				const { length } = req.body || {};
+				console.log(
+					`DEBUG: PRO user - Received length parameter: "${length}" for user ${req.userId}`
+				);
+				const proposedStoryWeight = getStoryGenerationWeight(length || "short");
+				console.log(
+					`DEBUG: PRO user - Calculated weight: ${proposedStoryWeight} for length: "${length}" (normalized: "${(
+						length || "short"
+					).toLowerCase()}")`
+				);
+				const currentWeightedCount = await calculateWeightedStoryCount(
+					req.userId
+				);
 
-			const limit = 3; // Same as max in the rate limiter config
-			const remaining = Math.max(0, limit - recentStories);
+				const proLimit = 10; // PRO users get 10 weighted generations per day
 
-			// If user has reached the limit, don't skip the limiter
-			if (remaining <= 0) {
-				return false;
+				// Check if adding this story would exceed the PRO limit
+				if (currentWeightedCount + proposedStoryWeight > proLimit) {
+					console.log(
+						`PRO rate limit exceeded: ${currentWeightedCount} + ${proposedStoryWeight} > ${proLimit} for user ${req.userId}`
+					);
+
+					return res.status(429).json({
+						error: `You've reached your daily story generation limit of ${proLimit} for the PRO tier. You've used ${currentWeightedCount}/${proLimit} weighted generations, and this ${
+							length || "short"
+						} story (weight: ${proposedStoryWeight}) would exceed your limit. Please try again tomorrow.`,
+					});
+				}
+
+				// If within PRO limits, allow the request
+				console.log(
+					`PRO story generation allowed: ${currentWeightedCount} + ${proposedStoryWeight} <= ${proLimit} for user ${req.userId}`
+				);
+				return next();
 			}
 
-			return false; // Still apply the limiter but let DB count dictate
+			// For free users, check the weighted limit including the proposed story
+			const { length } = req.body || {};
+			console.log(
+				`DEBUG: Received length parameter: "${length}" for user ${req.userId}`
+			);
+			const proposedStoryWeight = getStoryGenerationWeight(length || "short");
+			console.log(
+				`DEBUG: Calculated weight: ${proposedStoryWeight} for length: "${length}" (normalized: "${(
+					length || "short"
+				).toLowerCase()}")`
+			);
+			const currentWeightedCount = await calculateWeightedStoryCount(
+				req.userId
+			);
+
+			const limit = 3; // Same as max in the original rate limiter config
+
+			// Check if adding this story would exceed the limit
+			if (currentWeightedCount + proposedStoryWeight > limit) {
+				console.log(
+					`Rate limit exceeded: ${currentWeightedCount} + ${proposedStoryWeight} > ${limit} for user ${req.userId}`
+				);
+
+				return res.status(429).json({
+					error: `Too many story generation requests today for free users. You've used ${currentWeightedCount}/3 weighted generations, and this ${
+						length || "short"
+					} story (weight: ${proposedStoryWeight}) would exceed your limit. Upgrade to premium or try again tomorrow.`,
+				});
+			}
+
+			// If within limits, allow the request
+			console.log(
+				`Story generation allowed: ${currentWeightedCount} + ${proposedStoryWeight} <= ${limit} for user ${req.userId}`
+			);
+			next();
 		} catch (error) {
-			console.error("Error fetching user progress for rate limiting:", error);
-			// Fallback: apply limit if DB check fails?
-			return false;
+			console.error("Error checking rate limit:", error);
+			// Fallback: deny the request if we can't determine the limit
+			return res.status(500).json({
+				error: "Could not verify rate limit. Please try again.",
+			});
 		}
-	},
-});
+	}
+);
 // --- END RATE LIMITER SETUP ---
+
+// --- START HELPER FUNCTIONS ---
+// Helper function to calculate story generation weight based on length
+const getStoryGenerationWeight = (length: string): number => {
+	const normalizedLength = length?.toLowerCase() || "short";
+	switch (normalizedLength) {
+		case "short":
+			return 1;
+		case "medium":
+			return 2;
+		case "long":
+			return 3;
+		case "very_long_pro":
+			return 3; // Pro stories also count as 3	
+		default:
+			return 1; // Default to 1 if length is unknown
+	}
+};
+
+// Helper function to calculate total weighted story count for a user in the last 24 hours
+const calculateWeightedStoryCount = async (userId: string): Promise<number> => {
+	const recentStories = await prisma.story.findMany({
+		where: {
+			userId: userId,
+			createdAt: {
+				gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+			},
+		},
+		select: { length: true },
+	});
+
+	return recentStories.reduce((total, story) => {
+		return total + getStoryGenerationWeight(story.length || "short");
+	}, 0);
+};
+// --- END HELPER FUNCTIONS ---
 
 // Health check route (public)
 app.get("/health", (req: Request, res: Response) => {
@@ -429,33 +522,42 @@ app.get(
 				select: { subscriptionTier: true },
 			})) as { subscriptionTier: SubscriptionTier } | null;
 
-			// Premium and Pro users have unlimited generations
+			// Premium users have unlimited generations
 			if (
 				userProgress &&
-				(userProgress.subscriptionTier === SubscriptionTier.PREMIUM ||
-					userProgress.subscriptionTier === SubscriptionTier.PRO)
+				userProgress.subscriptionTier === SubscriptionTier.PREMIUM
 			) {
 				return res.status(200).json({
-					limit: 10,
-					remaining: 10,
+					limit: 999,
+					remaining: 999,
 					isPremium: true,
 					subscriptionTier: userProgress.subscriptionTier,
 				});
 			}
 
-			// For free users, count stories created in the past 24 hours
+			// PRO users have a limit of 10 weighted generations per day
+			if (
+				userProgress &&
+				userProgress.subscriptionTier === SubscriptionTier.PRO
+			) {
+				const proLimit = 10;
+				const weightedStoryCount = await calculateWeightedStoryCount(userId);
+				const remaining = Math.max(0, proLimit - weightedStoryCount);
+
+				return res.status(200).json({
+					limit: proLimit,
+					remaining,
+					isPremium: true,
+					subscriptionTier: userProgress.subscriptionTier,
+				});
+			}
+
+			// For free users, count weighted stories created in the past 24 hours
 
 			const limit = 3; // Same as in the rate limiter config
-			const recentStories = await prisma.story.count({
-				where: {
-					userId: userId,
-					createdAt: {
-						gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
-					},
-				},
-			});
+			const weightedStoryCount = await calculateWeightedStoryCount(userId);
 
-			const remaining = Math.max(0, limit - recentStories);
+			const remaining = Math.max(0, limit - weightedStoryCount);
 
 			return res.status(200).json({
 				limit,
@@ -555,27 +657,27 @@ The story should be suitable for a ${difficulty} learner of ${target} whose nati
 				basePrompt += grammarInstruction;
 			}
 		}
-
+		let numPages;
 		if (isProStoryRequest) {
-			const numPages = 10; // Updated to 10 pages
-			prompt =
-				basePrompt +
-				`The story should have approximately ${numPages} pages.
+			numPages = 10; // Updated to 10 pages
+		} else if (length === "long") {
+			numPages = 4; // Updated to 4 pages
+		} else if (length === "medium") {
+			numPages = 2; // Updated to 2 pages
+		} else if (length === "short") {
+			numPages = 1; // Updated to 1 page
+		}
+
+		prompt =
+			basePrompt +
+			`The story should have exactly ${numPages} pages.
+			
 Return the story as a JSON object with a single key "pages".
 "pages" should be an array of page objects. Each page object must have two keys:
 1.  "sentencePairs": An array of objects, where each object has a "source" sentence (in ${source}) and a "target" sentence (translated to ${target}). Each "sentencePairs" array should contain between 10 and 12 sentence pairs.
 2.  "vocabulary": An array of objects, where each object has a "word" (in ${source}) and its "translation" (in ${target}), relevant to that page's content.
 Use simple language appropriate for the difficulty level. Ensure the JSON is valid.
 Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /* ...10 to 12 pairs total */], "vocabulary": [{ "word": "...", "translation": "..." }] }.`;
-		} else {
-			// Standard story request
-			prompt =
-				basePrompt +
-				`The story should be ${length} in length. 
-Return the story as a JSON object with two keys: "sentencePairs" (an array of objects, each with "source" and "target" sentences) and "vocabulary" (an array of objects, each with "word" in ${source} and "translation" in ${target}). Use simple language appropriate for the difficulty level. Ensure the JSON is valid. Example SentencePair format: { "source": "Sentence in source language.", "target": "Sentence translated to target language." }. 
-Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }.
-`;
-		}
 
 		try {
 			console.log("Sending request to OpenAI...");
@@ -701,21 +803,14 @@ Example Vocabulary format: { "word": "SourceWord", "translation": "TargetWord" }
 					}
 				}
 				// END MODERATION CHECK
-
-				if (isProStoryRequest) {
-					if (!parsedStory.pages || !Array.isArray(parsedStory.pages)) {
-						throw new Error(
-							"Invalid JSON structure for paginated story received from OpenAI (missing 'pages' array)."
-						);
-					}
-					// Could add deeper validation for each page object here if needed
-				} else {
-					if (!parsedStory.sentencePairs || !parsedStory.vocabulary) {
-						throw new Error(
-							"Invalid JSON structure for standard story received from OpenAI."
-						);
-					}
+				console.log(parsedStory);
+				if (!parsedStory.pages || !Array.isArray(parsedStory.pages)) {
+					throw new Error(
+						"Invalid JSON structure for paginated story received from OpenAI (missing 'pages' array)."
+					);
 				}
+				// Could add deeper validation for each page object here if needed
+
 				res.status(200).json(parsedStory); // Send parsed JSON back
 			} catch (parseError) {
 				console.error("Error parsing OpenAI response:", parseError);
@@ -807,29 +902,8 @@ app.post(
 					});
 				}
 			} else {
-				// Existing logic for non-PRO (or non-very_long_pro) stories: daily limit for FREE tier
-				if (
-					!userProgress ||
-					(userProgress.subscriptionTier !== SubscriptionTier.PREMIUM &&
-						userProgress.subscriptionTier !== SubscriptionTier.PRO)
-				) {
-					const recentStories = await prisma.story.count({
-						where: {
-							userId: userId,
-							createdAt: {
-								gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
-							},
-						},
-					});
-
-					// Free tier users limited to 3 stories per day (can be configured)
-					const dailyLimit = 3;
-					if (recentStories >= dailyLimit) {
-						return res.status(429).json({
-							error: `Daily story limit of ${dailyLimit} reached for your current plan. Upgrade for more stories.`,
-						});
-					}
-				}
+				// For non-PRO stories, the rate limiter already handled weighted checking
+				// No additional validation needed here since the request passed the rate limiter
 			}
 
 			const newStory = await prisma.story.create({

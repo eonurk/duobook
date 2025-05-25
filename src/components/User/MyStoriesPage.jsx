@@ -192,12 +192,15 @@ function MyStoriesPage() {
 					{savedStories.map((story) => {
 						const storyDataPreview = parseStoryData(story.story);
 						let sentenceCount = 0;
+						let pageCount = 0;
 						if (storyDataPreview) {
 							if (Array.isArray(storyDataPreview.pages)) {
+								pageCount = storyDataPreview.pages.length;
 								sentenceCount = storyDataPreview.pages.reduce((total, page) => {
 									return total + (page.sentencePairs?.length || 0);
 								}, 0);
 							} else if (Array.isArray(storyDataPreview.sentencePairs)) {
+								pageCount = 1; // Single page format
 								sentenceCount = storyDataPreview.sentencePairs.length;
 							}
 						}
@@ -234,7 +237,11 @@ function MyStoriesPage() {
 										) : (
 											story.length || "N/A"
 										)}
-										) - {sentenceCount} sentences
+										)
+									</p>
+									<p className="text-sm text-muted-foreground">
+										{pageCount} {pageCount === 1 ? "page" : "pages"},{" "}
+										{sentenceCount} sentences
 									</p>
 									<p className="text-xs text-muted-foreground mt-1">
 										Created: {formatTimestamp(story.createdAt)}
