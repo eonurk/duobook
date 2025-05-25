@@ -412,22 +412,6 @@ function MainAppView({ generateStory }) {
 				</div>
 			)}
 			<main className="flex-1 container mx-auto px-4 py-8">
-				{showPdfBanner && (
-					<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 text-sm rounded-md shadow-md mb-4 flex justify-between items-center">
-						<div>
-							<span className="font-bold">New Feature!</span> You can now
-							download your stories as PDF (Kindle friendly). Look for the
-							download icon on the story page.
-						</div>
-						<button
-							onClick={() => setShowPdfBanner(false)}
-							className="text-green-500 hover:text-green-700"
-							aria-label="Dismiss banner"
-						>
-							<X size={18} />
-						</button>
-					</div>
-				)}
 				{!isGenerating && (
 					<>
 						<img
@@ -454,12 +438,20 @@ function MainAppView({ generateStory }) {
 				{isGenerating && (
 					<div className="loading-indicator flex items-center justify-center flex-col text-center p-8">
 						<div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mb-4"></div>
-						Generating your{" "}
-						{formParams?.length === "very_long_pro"
-							? "Very Long (Pro)"
-							: formParams?.length}{" "}
-						{formParams?.difficulty} story in {formParams?.target} /{" "}
-						{formParams?.source}... Please wait.
+						<div className="mb-2">
+							Generating your{" "}
+							{formParams?.length === "very_long_pro"
+								? "Very Long (Pro)"
+								: formParams?.length}{" "}
+							{formParams?.difficulty} story in {formParams?.target} /{" "}
+							{formParams?.source}... Please wait.
+						</div>
+						{formParams?.length === "very_long_pro" && (
+							<div className="text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
+								⏳ PRO stories are longer and more detailed, so they may take
+								1-2 minutes to generate.
+							</div>
+						)}
 					</div>
 				)}
 

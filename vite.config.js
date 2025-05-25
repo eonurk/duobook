@@ -21,6 +21,8 @@ export default defineConfig({
 			"/api": {
 				target: "http://localhost:3000",
 				changeOrigin: true,
+				timeout: 120000, // 2 minutes timeout for large story generation responses
+				proxyTimeout: 120000,
 			},
 		},
 	},

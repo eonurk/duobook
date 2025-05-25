@@ -147,11 +147,24 @@ export const deleteStory = (storyId) =>
 	});
 
 // Story Generation Proxy
-export const generateStoryViaBackend = (generationParams) =>
-	authenticatedFetch("/generate-story", {
+export const generateStoryViaBackend = (generationParams) => {
+	console.log("Sending story generation request:", generationParams);
+	return authenticatedFetch("/generate-story", {
 		method: "POST",
 		body: JSON.stringify(generationParams), // e.g., { description, sourceLanguage, targetLanguage, difficulty, length }
+	}).then(result => {
+		console.log("Story generation successful, response size:", JSON.stringify(result).length);
+		return result;
+	}).catch(error => {
+		console.error("Story generation failed:", error);
+		console.error("Error details:", {
+			message: error.message,
+			status: error.status,
+			data: error.data
+		});
+		throw error;
 	});
+};
 
 // Get remaining story generation limit
 export const getStoryGenerationLimit = async () => {
