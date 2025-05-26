@@ -549,6 +549,18 @@ function InputForm({
 					color: #b45309;
 				}
 			`}</style>
+
+			<a
+				href="https://www.producthunt.com/posts/duobook-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-duobook&#0045;2"
+				target="_blank"
+			>
+				<img
+					src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=970118&theme=light&t=1748250528943"
+					alt="DuoBook - Generate&#0032;bilingual&#0032;stories&#0032;to&#0032;learn&#0032;any&#0032;language | Product Hunt"
+					className="center mx-auto mb-4"
+					style={{ maxWidth: "100%", height: "52px" }}
+				/>
+			</a>
 			<form
 				onSubmit={handleSubmit}
 				className="input-form"
