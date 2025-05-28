@@ -1941,26 +1941,27 @@ app.get(
 
 		const topN = 10; // Number of top users to fetch
 
-		// TODO: Implement date range filtering for 'weekly' and 'monthly' if you adapt your schema
-		// to track XP gained in specific periods (e.g., via an ExperienceGainLog table).
-		// For now, all periods will rank based on total UserProgress.points.
-		/*
+		// Implement date range filtering for 'weekly' and 'monthly' periods
 		let dateFilter = {};
 		if (period === "weekly") {
 			const today = new Date();
-			const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1))); // Adjust to your week start (e.g. Monday)
+			const startOfWeek = new Date(today);
+			// Set to Monday of current week (ISO week standard)
+			const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1; // Convert Sunday=0 to Monday=0
+			startOfWeek.setDate(today.getDate() - dayOfWeek);
 			startOfWeek.setHours(0, 0, 0, 0);
-			// dateFilter = { createdAt: { gte: startOfWeek } }; // If filtering logs
+			dateFilter = { updatedAt: { gte: startOfWeek } };
 		} else if (period === "monthly") {
 			const today = new Date();
 			const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 			startOfMonth.setHours(0, 0, 0, 0);
-			// dateFilter = { createdAt: { gte: startOfMonth } }; // If filtering logs
+			dateFilter = { updatedAt: { gte: startOfMonth } };
 		}
-		*/
+		// For 'allTime', no date filter is applied
 
-		// Fetch top N users based on total points
+		// Fetch top N users based on points with optional date filtering
 		topUsersData = await prisma.userProgress.findMany({
+			where: dateFilter,
 			orderBy: {
 				points: "desc",
 			},
@@ -1968,6 +1969,7 @@ app.get(
 			select: {
 				userId: true,
 				points: true,
+				updatedAt: true,
 			},
 		});
 
@@ -2022,8 +2024,11 @@ app.get(
 				}
 			} else {
 				// If current user is not in top N, fetch their specific rank
-				const currentUserProgress = await prisma.userProgress.findUnique({
-					where: { userId: currentAuthenticatedUserId },
+				const currentUserProgress = await prisma.userProgress.findFirst({
+					where: {
+						userId: currentAuthenticatedUserId,
+						...dateFilter, // Apply the same date filter
+					},
 					select: { points: true, userId: true },
 				});
 
@@ -2044,11 +2049,11 @@ app.get(
 						);
 					}
 
-					// Count users with more points than the current user
+					// Count users with more points than the current user, applying the same date filter
 					const usersAhead = await prisma.userProgress.count({
 						where: {
-							points: { gt: currentUserProgress.points }, // Corrected variable name
-							// Add period-specific filters here if points are not lifetime totals and you implement that logic
+							...dateFilter, // Apply the same date filter
+							points: { gt: currentUserProgress.points },
 						},
 					});
 					currentUserRankData = {
