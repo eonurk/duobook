@@ -247,21 +247,21 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 								>
 									<Link to="/practice">Practice</Link>
 								</Button>
-								{/* <Button
+								<Button
 									variant="link"
 									size="sm"
 									asChild
 									className={`px-0 ${
 										location.pathname === "/leaderboard"
 											? "text-primary font-semibold"
-											: "text-foreground/70 hover:text-foreground"
+											: "text-amber-500"
 									}`}
 								>
 									<Link to="/leaderboard">
 										Leaderboard
-										<Trophy className="h-4 w-4 " />
+										<Trophy className="h-4 w-4 mr-1" />
 									</Link>
-								</Button> */}
+								</Button>
 								<Button
 									variant="outline"
 									size="sm"
@@ -464,21 +464,18 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 									>
 										<Link to="/practice">Practice</Link>
 									</Button>
-									{/* <Button
+									<Button
 										variant="ghost"
 										asChild
 										className={`w-full justify-start ${
 											location.pathname === "/leaderboard"
 												? "text-primary font-semibold bg-accent"
-												: ""
+												: "text-amber-500 hover:bg-amber-100"
 										}`}
 										onClick={closeMobileMenu}
 									>
-										<Link to="/leaderboard">
-											Leaderboard
-											<Trophy className="h-4 w-4 mr-2 inline-block" />
-										</Link>
-									</Button> */}
+										<Link to="/leaderboard">Leaderboard</Link>
+									</Button>
 									<Button
 										variant="ghost"
 										asChild
