@@ -192,10 +192,11 @@
 
 /* Muted (not yet revealed) translation */
 .mobile-source-sentence .translation-text.muted {
-	opacity: 0.3;
+	opacity: 0.9;
 	filter: blur(3px);
 	cursor: pointer;
 	transition: all 0.3s ease;
+	color: #999; /* Muted color */
 }
 
 .mobile-source-sentence.source-not-revealed:hover .translation-text.muted {
