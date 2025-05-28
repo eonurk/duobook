@@ -124,14 +124,14 @@ function LeaderboardPage() {
 					{[1, 2, 3, 4, 5].map((i) => (
 						<div
 							key={i}
-							className="flex items-center p-4 bg-gradient-to-r from-slate-50 via-slate-100 to-slate-50 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 rounded-lg animate-pulse border"
+							className="flex items-center p-4 bg-gradient-to-r from-slate-50 via-slate-100 to-slate-50 rounded-lg animate-pulse border"
 						>
-							<div className="w-8 h-8 bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-700 dark:to-orange-700 rounded-full animate-pulse"></div>
+							<div className="w-8 h-8 bg-gradient-to-r from-amber-200 to-orange-200 rounded-full animate-pulse"></div>
 							<div className="ml-4 flex-1">
-								<div className="h-4 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-500 rounded animate-pulse mb-2"></div>
-								<div className="h-3 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-500 rounded w-2/3 animate-pulse"></div>
+								<div className="h-4 bg-gradient-to-r from-slate-200 to-slate-300 rounded animate-pulse mb-2"></div>
+								<div className="h-3 bg-gradient-to-r from-slate-200 to-slate-300 rounded w-2/3 animate-pulse"></div>
 							</div>
-							<div className="w-12 h-6 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-500 rounded animate-pulse"></div>
+							<div className="w-12 h-6 bg-gradient-to-r from-slate-200 to-slate-300 rounded animate-pulse"></div>
 						</div>
 					))}
 					<div className="flex justify-center items-center py-6">
@@ -177,24 +177,24 @@ function LeaderboardPage() {
 						currentUserData?.name === originalName;
 
 					const highlightClass = isCurrentEntryUser
-						? "bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-400 shadow-xl shadow-amber-500/20 scale-[1.02] ring-2 ring-amber-400/50"
-						: "bg-card hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 dark:hover:from-slate-800 dark:hover:to-slate-700 hover:shadow-lg hover:scale-[1.01] border-slate-200 dark:border-slate-700";
+						? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-400 shadow-xl shadow-amber-500/20 scale-[1.02] ring-2 ring-amber-400/50"
+						: "bg-card hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 hover:shadow-lg hover:scale-[1.01] border-slate-200";
 
-					let rankColorClass = "text-slate-600 dark:text-slate-400";
-					let rankBgClass = "bg-slate-100 dark:bg-slate-800";
+					let rankColorClass = "text-slate-600";
+					let rankBgClass = "bg-slate-100";
 
 					if (entry.rank === 1) {
 						rankColorClass = "text-amber-600 font-bold";
 						rankBgClass =
-							"bg-gradient-to-br from-amber-200 to-yellow-300 dark:from-amber-700 dark:to-yellow-600";
+							"bg-gradient-to-br from-amber-200 to-yellow-300";
 					} else if (entry.rank === 2) {
 						rankColorClass = "text-slate-600 font-semibold";
 						rankBgClass =
-							"bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-500";
+							"bg-gradient-to-br from-slate-200 to-slate-300";
 					} else if (entry.rank === 3) {
 						rankColorClass = "text-orange-600 font-semibold";
 						rankBgClass =
-							"bg-gradient-to-br from-orange-200 to-amber-300 dark:from-orange-700 dark:to-amber-600";
+							"bg-gradient-to-br from-orange-200 to-amber-300";
 					}
 
 					return (
@@ -228,7 +228,7 @@ function LeaderboardPage() {
 
 							{/* User Info Section (Avatar, Name, Score) */}
 							<div className="flex items-center flex-grow min-w-0 space-x-4">
-								<Avatar className="h-12 w-12 flex-shrink-0 border-3 border-white dark:border-slate-800 shadow-lg ring-2 ring-slate-200 dark:ring-slate-600 transition-transform duration-300 group-hover:scale-110">
+								<Avatar className="h-12 w-12 flex-shrink-0 border-3 border-white shadow-lg ring-2 ring-slate-200 transition-transform duration-300 group-hover:scale-110">
 									<AvatarImage
 										src={
 											entry.avatarUrl ||
@@ -236,7 +236,7 @@ function LeaderboardPage() {
 										}
 										alt={displayName}
 									/>
-									<AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-200 font-semibold">
+									<AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 font-semibold">
 										{originalName ? (
 											originalName.substring(0, 2).toUpperCase()
 										) : (
@@ -248,19 +248,19 @@ function LeaderboardPage() {
 									<p
 										className={`font-bold text-base truncate transition-colors duration-300 ${
 											isCurrentEntryUser
-												? "text-amber-600 dark:text-amber-400"
-												: "text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-slate-100"
+												? "text-amber-600"
+												: "text-slate-800 group-hover:text-slate-900"
 										}`}
 										title={originalName}
 									>
 										{displayName}
 										{isCurrentEntryUser && (
-											<span className="ml-2 text-xs font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 px-2 py-1 rounded-full">
+											<span className="ml-2 text-xs font-medium bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
 												YOU
 											</span>
 										)}
 									</p>
-									<p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+									<p className="text-sm text-slate-600 font-medium">
 										<span className="inline-flex items-center">
 											<span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
 											{entry.score?.toLocaleString()} XP
@@ -271,7 +271,7 @@ function LeaderboardPage() {
 
 							{/* Rank Change Section */}
 							<div className="flex-shrink-0 ml-4">
-								<div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
+								<div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
 									{renderRankChange(entry.change)}
 								</div>
 							</div>
@@ -281,19 +281,19 @@ function LeaderboardPage() {
 				{currentUserData && !isCurrentUserInTop && (
 					<>
 						<div className="text-center my-6 relative">
-							<div className="flex items-center justify-center space-x-2 text-slate-500 dark:text-slate-400">
-								<div className="w-8 h-px bg-gradient-to-r from-transparent via-slate-300 dark:via-slate-600 to-transparent"></div>
+							<div className="flex items-center justify-center space-x-2 text-slate-500">
+								<div className="w-8 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 								<span className="text-sm font-medium">Your Position</span>
-								<div className="w-8 h-px bg-gradient-to-r from-transparent via-slate-300 dark:via-slate-600 to-transparent"></div>
+								<div className="w-8 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
 							</div>
 						</div>
 						<Card
 							key="currentUser"
-							className="flex items-center p-4 transition-all duration-500 ease-out transform bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30 border-2 border-blue-200 dark:border-blue-800 shadow-xl hover:shadow-2xl scale-[1.02] hover:scale-[1.03] rounded-xl group animate-pulse-gentle"
+							className="flex items-center p-4 transition-all duration-500 ease-out transform bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-xl hover:shadow-2xl scale-[1.02] hover:scale-[1.03] rounded-xl group animate-pulse-gentle"
 						>
 							{/* Rank Section */}
-							<div className="relative flex-shrink-0 w-14 h-14 bg-gradient-to-br from-blue-200 to-indigo-300 dark:from-blue-700 dark:to-indigo-600 rounded-xl flex items-center justify-center mr-4 shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
-								<span className="text-xl font-bold text-blue-700 dark:text-blue-200 relative z-10">
+							<div className="relative flex-shrink-0 w-14 h-14 bg-gradient-to-br from-blue-200 to-indigo-300 rounded-xl flex items-center justify-center mr-4 shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+								<span className="text-xl font-bold text-blue-700 relative z-10">
 									{currentUserData.rank}
 								</span>
 								{/* Animated glow effect */}
@@ -307,7 +307,7 @@ function LeaderboardPage() {
 							{/* User Info Section (Avatar, Name, Score) */}
 							<div className="flex items-center flex-grow min-w-0 space-x-4">
 								<div className="relative">
-									<Avatar className="h-12 w-12 flex-shrink-0 border-3 border-blue-300 dark:border-blue-600 shadow-lg transition-all duration-300 group-hover:scale-110 ring-4 ring-blue-100 dark:ring-blue-900/50">
+									<Avatar className="h-12 w-12 flex-shrink-0 border-3 border-blue-300 shadow-lg transition-all duration-300 group-hover:scale-110 ring-4 ring-blue-100">
 										<AvatarImage
 											src={
 												currentUserData.avatarUrl ||
@@ -315,7 +315,7 @@ function LeaderboardPage() {
 											}
 											alt={formatUserEmailForDisplay(currentUserData.name)}
 										/>
-										<AvatarFallback className="bg-gradient-to-br from-blue-200 to-indigo-300 dark:from-blue-700 dark:to-indigo-600 text-blue-700 dark:text-blue-200 font-bold">
+										<AvatarFallback className="bg-gradient-to-br from-blue-200 to-indigo-300 text-blue-700 font-bold">
 											{currentUserData.name ? (
 												currentUserData.name.substring(0, 2).toUpperCase()
 											) : (
@@ -324,25 +324,25 @@ function LeaderboardPage() {
 										</AvatarFallback>
 									</Avatar>
 									{/* Online status indicator */}
-									<div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-slate-800 animate-pulse"></div>
+									<div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
 								</div>
 								<div className="flex-grow min-w-0">
 									<p
-										className="font-bold text-base text-blue-800 dark:text-blue-200 truncate transition-colors duration-300 group-hover:text-blue-900 dark:group-hover:text-blue-100"
+										className="font-bold text-base text-blue-800 truncate transition-colors duration-300 group-hover:text-blue-900"
 										title={currentUserData.name}
 									>
 										{currentUserData.name
 											? formatUserEmailForDisplay(currentUserData.name)
 											: ""}
-										<span className="ml-2 text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 text-transparent bg-clip-text animate-shimmer">
+										<span className="ml-2 text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text animate-shimmer">
 											(YOU)
 										</span>
 									</p>
-									<p className="text-sm text-blue-600 dark:text-blue-400 font-semibold">
+									<p className="text-sm text-blue-600 font-semibold">
 										<span className="inline-flex items-center">
 											<span className="w-2 h-2 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full mr-2 animate-pulse shadow-sm"></span>
 											{currentUserData.score?.toLocaleString()} XP
-											<span className="ml-2 text-xs text-blue-500/70 dark:text-blue-400/70">
+											<span className="ml-2 text-xs text-blue-500/70">
 												• Active
 											</span>
 										</span>
@@ -352,7 +352,7 @@ function LeaderboardPage() {
 
 							{/* Rank Change Section */}
 							<div className="flex-shrink-0 ml-4">
-								<div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-200 dark:from-blue-800 dark:to-indigo-700 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg shadow-md">
+								<div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-200 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg shadow-md">
 									{currentUserData.change ? (
 										renderRankChange(currentUserData.change)
 									) : (
@@ -388,7 +388,7 @@ function LeaderboardPage() {
 							onValueChange={setActiveTab}
 							className="w-full"
 						>
-							<TabsList className="grid w-full grid-cols-3 mb-8 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-xl shadow-lg border border-slate-200 dark:border-slate-600 overflow-visible">
+							<TabsList className="grid w-full grid-cols-3 mb-8 bg-gradient-to-r from-slate-100 to-slate-200 rounded-xl p-3 shadow-lg border border-slate-200 overflow-visible">
 								<TabsTrigger
 									value="weekly"
 									className="relative !flex !items-center !justify-center !text-center data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-400 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/25 data-[state=active]:scale-[1.02] data-[state=inactive]:hover:bg-white/50 data-[state=inactive]:hover:shadow-md data-[state=inactive]:hover:scale-[1.01] rounded-lg transition-all duration-300 ease-out transform font-semibold min-h-[44px] px-6 mx-1"
