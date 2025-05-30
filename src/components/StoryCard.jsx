@@ -126,21 +126,19 @@ const StoryCard = ({ story }) => {
 					</div>
 				)}
 
-				{/* Subtle page edge effect - a thin, slightly darker line on the right */}
-				<div className="absolute top-0 right-0 bottom-0 w-px bg-slate-500 opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+				{/* Page edge effect */}
 
-				{/* Overlay for information at the bottom left */}
-				<div className="absolute bottom-0 left-0 p-3 bg-gradient-to-t from-black/70 to-transparent w-full">
-					<h3 className="text-white text-sm font-semibold drop-shadow-md truncate">
+				{/* Text Overlay: Title, Description, and Languages */}
+				<div className="absolute bottom-0 left-0 right-0 p-3  from-black/80 via-black/70 to-black/40 rounded-b-lg overflow-hidden">
+					<h3 className="text-sm font-semibold text-white truncate hover:font-bold group-hover:text-orange-300 transition-colors duration-200">
 						{story.title}
 					</h3>
-					{(story.sourceLanguage || story.targetLanguage) && (
-						<p className="text-xs text-gray-200 drop-shadow-sm truncate">
-							{story.sourceLanguage} to {story.targetLanguage}
+
+					{story.targetLanguage && story.sourceLanguage && (
+						<p className="text-xs text-slate-200 mt-1">
+							{story.targetLanguage} / {story.sourceLanguage}
 						</p>
 					)}
-					{/* You can add more info here like story.length if available and desired */}
-					{/* e.g., <p className="text-xs text-gray-300">Length: {story.length}</p> */}
 				</div>
 			</a>
 		);
