@@ -846,7 +846,7 @@
 
 /* --- Added for 3D Effect on Book Cards --- */
 .perspective {
-  perspective: 1000px;
+	perspective: 1000px;
 }
 
 /* If you want to add a 3D hover effect later, you could do something like:

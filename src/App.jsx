@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
 	Routes,
 	Route,
@@ -25,6 +25,7 @@ import DailyLimitImage from "@/assets/daily-limit.webp"; // Import daily limit i
 import steveJpeg from "@/assets/steve.jpeg";
 import elonJpeg from "@/assets/elon.jpeg";
 import jeffJpeg from "@/assets/jeff.jpeg";
+import leonardoJpeg from "@/assets/leonardo.jpeg"; // Placeholder for Leonardo da Vinci image
 import PrivacyPolicy from "@/pages/PrivacyPolicy"; // Import PrivacyPolicy
 import TermsOfService from "@/pages/TermsOfService"; // Import TermsOfService
 import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import Practice Page
@@ -49,6 +50,8 @@ import {
 	Quote,
 	Star as StarIcon,
 	Rocket,
+	ChevronLeft, // Added
+	ChevronRight, // Added
 } from "lucide-react"; // Import ArrowDown icon and new icons
 import {
 	// getStories, // Commented out: Will be used in MyStoriesPage
@@ -152,6 +155,17 @@ const externalBookExamples = [
 		coverImageUrl: elonJpeg, // Actual image
 		externalUrl: "https://duobook.co/story/cmbapljqo0000mlf7oh6vxmpr",
 		targetLanguage: "French",
+		sourceLanguage: "English",
+		authorUsername: "Duobook.co",
+		isExternal: true,
+	},
+	{
+		id: "duobook-leonardo-da-vinci-it-en",
+		title: "Leonardo da Vinci: The Renaissance Man (Advanced)",
+		description: "Delve into the world of Leonardo da Vinci.",
+		coverImageUrl: leonardoJpeg, // Placeholder, ideally a new image
+		externalUrl: "https://duobook.co/story/cmbaqnnd30000ml061zi603cl", // Placeholder URL
+		targetLanguage: "Italian",
 		sourceLanguage: "English",
 		authorUsername: "Duobook.co",
 		isExternal: true,
@@ -319,6 +333,8 @@ function MainAppView({ generateStory }) {
 
 	// Ref for the scrollable container of external book examples
 	const externalBooksScrollRef = useRef(null);
+	const [canScrollPrev, setCanScrollPrev] = useState(false);
+	const [canScrollNext, setCanScrollNext] = useState(false);
 
 	// Determine user subscription tier
 	const userSubscriptionTier = userProgress?.subscriptionTier || "FREE";
@@ -328,14 +344,28 @@ function MainAppView({ generateStory }) {
 	const [loadingCommunityStories, setLoadingCommunityStories] = useState(false);
 	const [communityStoriesError, setCommunityStoriesError] = useState(null);
 
+	const updateScrollButtons = useCallback(() => {
+		const scrollContainer = externalBooksScrollRef.current;
+		if (scrollContainer) {
+			const { scrollLeft, scrollWidth, offsetWidth } = scrollContainer;
+			setCanScrollPrev(scrollLeft > 0);
+			// Check if there's enough content to scroll, and if we are not at the end
+			const isScrollable = scrollWidth > offsetWidth;
+			setCanScrollNext(
+				isScrollable && scrollLeft < scrollWidth - offsetWidth - 1
+			); // -1 for precision
+		} else {
+			setCanScrollPrev(false);
+			setCanScrollNext(false);
+		}
+	}, []);
+
 	useEffect(() => {
-		// Fetch community stories regardless of login state, but use idToken if available
-		// The getLatestStories function in api.js is already modified to handle nullable idToken
+		// Fetch community stories
 		const fetchCommunityStories = async () => {
 			setLoadingCommunityStories(true);
 			setCommunityStoriesError(null);
 			try {
-				// Pass idToken (which can be null) to getLatestStories
 				const data = await getLatestStories(idToken, 1, 3, true);
 				setLatestCommunityStories(data.stories || []);
 			} catch (err) {
@@ -347,14 +377,51 @@ function MainAppView({ generateStory }) {
 			setLoadingCommunityStories(false);
 		};
 		fetchCommunityStories();
-	}, [idToken]); // Depend on idToken so it re-fetches if user logs in/out
+	}, [idToken]);
 
-	// Effect to reset scroll position of external books section
+	// Effect to reset scroll position and update buttons
 	useEffect(() => {
 		if (!isGenerating && externalBooksScrollRef.current) {
 			externalBooksScrollRef.current.scrollLeft = 0;
+			// Call updateScrollButtons after a short delay to ensure DOM is updated
+			const timer = setTimeout(() => updateScrollButtons(), 50);
+			return () => clearTimeout(timer);
 		}
-	}, [isGenerating]);
+	}, [isGenerating, updateScrollButtons]);
+
+	// Effect for scroll event listener and initial button state
+	useEffect(() => {
+		const scrollContainer = externalBooksScrollRef.current;
+		const handleResizeOrScroll = () => {
+			updateScrollButtons();
+		};
+
+		if (scrollContainer && !isGenerating) {
+			// Initial check and update after content might have loaded
+			const timer = setTimeout(() => updateScrollButtons(), 100); // Delay to allow rendering
+			scrollContainer.addEventListener("scroll", handleResizeOrScroll);
+			window.addEventListener("resize", handleResizeOrScroll);
+
+			return () => {
+				clearTimeout(timer);
+				scrollContainer.removeEventListener("scroll", handleResizeOrScroll);
+				window.removeEventListener("resize", handleResizeOrScroll);
+			};
+		}
+	}, [isGenerating, updateScrollButtons]); // updateScrollButtons is memoized, removed externalBookExamples
+
+	const handleBookScroll = (direction) => {
+		const scrollContainer = externalBooksScrollRef.current;
+		if (scrollContainer) {
+			const scrollAmount = 300; // Or calculate based on card width
+			scrollContainer.scrollBy({
+				left: direction === "prev" ? -scrollAmount : scrollAmount,
+				behavior: "smooth",
+			});
+			// Update buttons after scroll animation might start
+			setTimeout(() => updateScrollButtons(), 350); // Adjust delay as needed for smooth behavior
+		}
+	};
 
 	const handleGenerate = async (
 		description,
@@ -501,13 +568,40 @@ function MainAppView({ generateStory }) {
 						<h2 className="text-3xl font-bold text-center mb-10 text-gray-800">
 							Explore Example Books
 						</h2>
-						<div
-							ref={externalBooksScrollRef} // Assign the ref here
-							className="flex overflow-x-auto py-2 snap-x snap-mandatory md:grid md:grid-cols-2 lg:grid-cols-3 gap-x-4 md:gap-6 max-w-6xl mx-auto"
-						>
-							{externalBookExamples.map((book) => (
-								<StoryCard key={book.id} story={book} />
-							))}
+						<div className="relative max-w-6xl mx-auto">
+							{canScrollPrev && (
+								<Button
+									// variant="outline" // Removed variant
+									// size="icon" // Removed size, using padding
+									className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-20 disabled:cursor-not-allowed"
+									onClick={() => handleBookScroll("prev")}
+									disabled={!canScrollPrev}
+									aria-label="Scroll previous books"
+								>
+									<ChevronLeft className="h-6 w-6" />
+								</Button>
+							)}
+							<div
+								ref={externalBooksScrollRef}
+								className="flex overflow-x-auto py-2 snap-x snap-mandatory gap-x-4 scroll-smooth "
+								style={{ scrollbarWidth: "none", msOverflowStyle: "none" }} // Hide scrollbar
+							>
+								{externalBookExamples.map((book) => (
+									<StoryCard key={book.id} story={book} />
+								))}
+							</div>
+							{canScrollNext && (
+								<Button
+									// variant="outline" // Removed variant
+									// size="icon" // Removed size, using padding
+									className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-20 disabled:cursor-not-allowed"
+									onClick={() => handleBookScroll("next")}
+									disabled={!canScrollNext}
+									aria-label="Scroll next books"
+								>
+									<ChevronRight className="h-6 w-6" />
+								</Button>
+							)}
 						</div>
 					</div>
 				)}

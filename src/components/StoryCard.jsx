@@ -102,16 +102,11 @@ const StoryCard = ({ story }) => {
 				target="_blank"
 				rel="noopener noreferrer"
 				title={story.title} // For hover tooltip showing the book title
-				className="relative block w-60 sm:w-72 md:w-full md:max-w-xs md:mx-auto bg-white shadow-xl rounded-lg hover:shadow-2xl transition-all duration-300 ease-in-out border border-slate-300 border-l-[8px] border-l-slate-400 overflow-hidden group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 aspect-[2/3] hover:-rotate-1 snap-center flex-shrink-0 perspective"
+				className="relative block w-60 sm:w-72 md:w-72 lg:w-80 snap-center flex-shrink-0 bg-white shadow-xl rounded-lg hover:shadow-2xl transition-all duration-300 ease-in-out border border-slate-300 border-l-[8px] border-l-slate-400 overflow-hidden group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 aspect-[2/3] hover:-rotate-1 perspective"
 				// MODIFIED:
-				// - Changed width from 'w-full max-w-xs mx-auto' to 'w-60 sm:w-72' for mobile scrolling.
-				// - Added 'md:w-full md:max-w-xs md:mx-auto' to restore original grid sizing on medium screens and up.
-				// - Added 'snap-center' for better scroll snapping alignment.
-				// - Added 'flex-shrink-0' to prevent cards from shrinking in the flex container.
-				// - Changed rounded-xl to rounded-lg for a slightly sharper book corner.
-				// - Increased left border to border-l-[8px] for a thicker spine.
-				// - Reduced hover rotation to hover:-rotate-1 for a more subtle effect.
-				// - Added a utility class 'perspective' (to be defined in CSS) for 3D effect potential
+				// - Adjusted widths: 'w-60 sm:w-72 md:w-72 lg:w-80' to provide consistent card sizes across breakpoints for scrolling.
+				// - Removed 'md:max-w-xs md:mx-auto' as it's not needed for a flex scroll layout.
+				// - Kept 'snap-center flex-shrink-0 perspective' and other styling.
 			>
 				{/* Book Cover Image */}
 				{story.coverImageUrl ? (
