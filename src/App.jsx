@@ -22,6 +22,9 @@ import Achievements from "@/components/Gamification/Achievements"; // Import Ach
 import AchievementNotifier from "@/components/Gamification/AchievementNotifier"; // Import AchievementNotifier
 import DuoBookExplain from "@/assets/duobook-explain.webp"; // Use alias
 import DailyLimitImage from "@/assets/daily-limit.webp"; // Import daily limit image
+import steveJpeg from "@/assets/steve.jpeg";
+import elonJpeg from "@/assets/elon.jpeg";
+import jeffJpeg from "@/assets/jeff.jpeg";
 import PrivacyPolicy from "@/pages/PrivacyPolicy"; // Import PrivacyPolicy
 import TermsOfService from "@/pages/TermsOfService"; // Import TermsOfService
 import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import Practice Page
@@ -134,7 +137,7 @@ const externalBookExamples = [
 		id: "duobook-steve-jobs-es-en",
 		title: "The Story of Steve Jobs (Intermediate)",
 		description: "Read the story of Steve Jobs on Duobook.",
-		coverImageUrl: "src/assets/steve.jpeg", // Actual image from Duobook
+		coverImageUrl: steveJpeg, // Actual image from Duobook
 		externalUrl: "https://duobook.co/story/cmbaoc59p0001ml8eo0meikxs",
 		// Adding fields StoryCard might expect for styling/layout, even if not all are used for external links
 		targetLanguage: "Spanish", // For display consistency if StoryCard uses it
@@ -146,7 +149,7 @@ const externalBookExamples = [
 		id: "duobook-elon-musk-fr-en",
 		title: "Life of Elon Musk (Intermediate)",
 		description: "Read the life story of Elon Musk on Duobook.",
-		coverImageUrl: "src/assets/elon.jpeg", // Actual image
+		coverImageUrl: elonJpeg, // Actual image
 		externalUrl: "https://duobook.co/story/cmbapljqo0000mlf7oh6vxmpr",
 		targetLanguage: "French",
 		sourceLanguage: "English",
@@ -157,7 +160,7 @@ const externalBookExamples = [
 		id: "duobook-jeff-bezos-de-en",
 		title: "Journey of Jeff Bezos (Easy)",
 		description: "Discover the journey of Jeff Bezos on Duobook.",
-		coverImageUrl: "src/assets/jeff.jpeg", // Actual image
+		coverImageUrl: jeffJpeg, // Actual image
 		externalUrl: "https://duobook.co/story/cmbapyzql0001mlf758aoy59z",
 		targetLanguage: "German",
 		sourceLanguage: "English",
