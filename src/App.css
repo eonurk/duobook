@@ -13,33 +13,33 @@
 	padding: 2rem;
 	max-width: 1200px;
 	width: 100%;
-	margin: 1rem auto 0; /* Add top margin to compensate for removed header space */
+	margin: 1rem auto 0;
 }
 
 .app-footer {
 	padding: 1rem 2rem;
 	text-align: center;
 	font-size: 0.9rem;
-	color: #93a1a1;
-	border-top: 1px solid #eee8d5;
-	margin-top: 2rem; /* Space above footer */
+	color: #6c757d; /* New: Medium gray text */
+	border-top: 1px solid #dee2e6; /* New: Light gray border */
+	margin-top: 2rem;
 }
 
 /* --- Feedback Elements --- */
 .error-message {
-	background-color: #fff0f0; /* Lighter red background */
-	color: #d0342c; /* Error red color */
-	border: 1px solid #ffbaba; /* Light red border */
+	background-color: #f8d7da; /* Lighter red background */
+	color: #721c24; /* Error red color */
+	border: 1px solid #f5c6cb; /* Light red border */
 	padding: 1rem 1.5rem;
-	margin: 1rem auto; /* Centered margin */
+	margin: 1rem auto;
 	border-radius: 6px;
 	max-width: 800px;
-	text-align: left; /* Align text left */
-	box-shadow: 0 2px 5px rgba(208, 52, 44, 0.1);
+	text-align: left;
+	box-shadow: 0 2px 5px rgba(114, 28, 36, 0.1);
 }
 
 .error-message strong {
-	color: #b02a23; /* Darker red */
+	color: #721c24; /* Darker red */
 	display: block;
 	margin-bottom: 0.3rem;
 }
@@ -48,7 +48,7 @@
 	text-align: center;
 	padding: 3rem 1rem;
 	font-size: 1.1rem;
-	color: #586e75;
+	color: #495057; /* New: Darker gray text */
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -56,8 +56,8 @@
 }
 
 .spinner {
-	border: 5px solid #f0eada; /* Lighter part of spinner */
-	border-top: 5px solid #cb4b16; /* Theme color */
+	border: 5px solid #e9ecef; /* New: Lighter gray for spinner track */
+	border-top: 5px solid #007bff; /* New: Blue for spinner active part */
 	border-radius: 50%;
 	width: 45px;
 	height: 45px;
@@ -78,16 +78,17 @@
 /* InputForm Styles Refined */
 .input-form {
 	background-color: #fffaf0; /* Page background color */
-	padding: 2rem 2.5rem; /* More padding */
+	padding: 2rem 1.5rem; /* More padding */
 	border-radius: 8px;
-	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-	border: 1px solid #eee8d5;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); /* New: Softer shadow */
+	border: 1px solid #dee2e6; /* New: Light gray border */
 	max-width: 750px;
 	margin: 1rem auto;
 }
 
 .input-form h2 {
-	color: #8b4513;
+	/* Assuming there might be an h2, though not in current JSX */
+	color: #007bff; /* New: Blue for headings */
 	margin-top: 0;
 	margin-bottom: 2rem;
 	text-align: center;
@@ -98,7 +99,7 @@
 	display: block;
 	margin-bottom: 0.6rem;
 	font-weight: bold;
-	color: #586e75;
+	color: #495057; /* New: Dark gray for labels */
 	font-size: 1rem;
 }
 
@@ -119,11 +120,11 @@
 	font-size: 1rem;
 	font-family: inherit;
 	border-radius: 5px;
-	border: 1px solid #d3c0a5;
-	background-color: #fdf6e3; /* Slightly different background */
-	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+	border: 1px solid #ced4da; /* New: Standard gray border */
+	background-color: #ffffff; /* New: White background */
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
 	appearance: none;
-	background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23839496%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+	background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); /* New: Gray arrow */
 	background-repeat: no-repeat;
 	background-position: right 0.8em top 50%;
 	background-size: 0.7em auto;
@@ -132,9 +133,9 @@
 }
 .input-form select:focus {
 	outline: none;
-	border-color: #b58900;
-	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06),
-		0 0 0 3px rgba(181, 137, 0, 0.25);
+	border-color: #007bff; /* New: Blue focus border */
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04),
+		0 0 0 3px rgba(0, 123, 255, 0.25); /* New: Blue focus shadow */
 }
 
 /* Style textarea */
@@ -145,18 +146,18 @@
 	font-size: 1rem;
 	font-family: inherit;
 	border-radius: 5px;
-	border: 1px solid #d3c0a5;
-	background-color: #fdf6e3;
+	border: 1px solid #ced4da; /* New: Standard gray border */
+	background-color: #ffffff; /* New: White background */
 	resize: vertical;
 	min-height: 120px;
-	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
 	transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .input-form textarea:focus {
 	outline: none;
-	border-color: #b58900;
-	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06),
-		0 0 0 3px rgba(181, 137, 0, 0.25);
+	border-color: #007bff; /* New: Blue focus border */
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04),
+		0 0 0 3px rgba(0, 123, 255, 0.25); /* New: Blue focus shadow */
 }
 
 /* BookView Styles Refined */
@@ -169,7 +170,7 @@
 	background-color: #fffaf0; /* Book cover color */
 	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 	border-radius: 10px;
-	border: 1px solid #eee8d5;
+	border: 1px solid #dee2e6; /* New: Light gray border */
 	position: relative;
 }
 
@@ -180,40 +181,38 @@
 	left: 50%;
 	top: 1rem;
 	bottom: 1rem;
-	width: 24px; /* Wider for a more noticeable but soft gutter */
+	width: 24px;
 	background-image: linear-gradient(
 		to right,
 		rgba(0, 0, 0, 0) 0%,
 		rgba(0, 0, 0, 0.01) 20%,
-		rgba(0, 0, 0, 0.05) 50%,
-		rgba(0, 0, 0, 0.01) 80%,
+		rgba(0, 0, 0, 0.03) 50%,
+		/* New: Softer spine shadow */ rgba(0, 0, 0, 0.01) 80%,
 		rgba(0, 0, 0, 0) 100%
-	); /* Softer, more spread out shadow */
+	);
 	transform: translateX(-50%);
-	border-radius: 0; /* Shadow doesn't need its own radius */
+	border-radius: 0;
 }
 
 .page {
 	flex: 1;
-	padding: 1.8rem 2.2rem; /* Adjusted padding */
-	border: 1px solid #e0d5c1; /* Page edge, complements new background */
-	background-color: #fffdf8; /* Warmer page color like the example */
+	padding: 1.8rem 2.2rem;
+	border: 1px solid #e9ecef; /* New: Lighter gray page edge */
+	background-color: #ffffff; /* New: White page color */
 	height: 68vh;
 	overflow-y: auto;
 	text-align: left;
-	margin: 0 0.6rem; /* Adjusted margin for visual gap */
-	border-radius: 8px; /* Softer corners */
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); /* Very subtle page shadow */
-	/* Subtle texture - can be enabled if desired */
-	/* background-image: url('...'); */
+	margin: 0 0.6rem;
+	border-radius: 8px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 /* Style page headers */
 .page h3 {
 	margin-top: 0;
 	margin-bottom: 1.5rem;
-	color: #8b4513;
-	border-bottom: 2px solid #eee8d5;
+	color: #007bff; /* New: Blue for page headers */
+	border-bottom: 2px solid #dee2e6; /* New: Light gray border */
 	padding-bottom: 0.8rem;
 	font-size: 1.4rem;
 	text-align: center;
@@ -224,7 +223,7 @@
 .page p {
 	margin-bottom: 1.3rem;
 	line-height: 1.75;
-	color: #333; /* Darker text */
+	color: #212529; /* New: Dark gray/black text */
 	font-size: 1.05rem;
 }
 
@@ -254,10 +253,10 @@
 	opacity: 0.7; /* Fade out past sentences slightly */
 }
 .target-sentence.sentence-active {
-	background-color: #fff8d1;
+	background-color: #e7f3ff; /* New: Light blue highlight */
 	padding: 0.1em 0.2em;
 	margin: -0.1em -0.2em; /* Prevent layout shift */
-	font-weight: 550; /* Keep active target slightly bolder */
+	font-weight: 550;
 }
 .target-sentence.sentence-future {
 	opacity: 0.3; /* Hide future sentences */
@@ -266,7 +265,7 @@
 
 /* Source Sentence Styling */
 .source-sentence {
-	color: #586e75;
+	color: #495057; /* New: Medium-dark gray for source text */
 	/* Removed explicit size/style difference */
 }
 
@@ -344,7 +343,7 @@
 .button {
 	padding: 0.9rem 2.2rem;
 	font-size: 1.1rem;
-	font-family: inherit; /* Use body font */
+	font-family: inherit;
 	cursor: pointer;
 	border-radius: 6px;
 	border: none;
@@ -365,26 +364,26 @@
 }
 
 .button-primary {
-	background-color: #cb4b16;
+	background-color: #007bff; /* New: Blue primary button */
 	color: white;
 }
 .button-primary:hover {
-	background-color: #e5591a;
+	background-color: #0056b3; /* New: Darker blue on hover */
 }
 .button-primary:disabled {
-	background-color: #cccccc; /* More distinct disabled state */
-	color: #888888;
+	background-color: #adb5bd; /* New: Gray for disabled */
+	color: #6c757d; /* New: Darker gray text for disabled */
 	cursor: not-allowed;
 	transform: none;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .button-secondary {
-	background-color: #839496;
-	color: #fdf6e3;
+	background-color: #6c757d; /* New: Gray secondary button */
+	color: #ffffff; /* New: White text */
 }
 .button-secondary:hover {
-	background-color: #93a1a1;
+	background-color: #5a6268; /* New: Darker gray on hover */
 }
 
 /* --- InputForm Specific Elements --- */
@@ -397,34 +396,34 @@
 	font-size: 1rem;
 	font-family: inherit;
 	border-radius: 5px;
-	border: 1px solid #d3c0a5;
-	background-color: #fdf6e3; /* Slightly different background */
-	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+	border: 1px solid #ced4da; /* New: Standard gray border */
+	background-color: #ffffff; /* New: White background */
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
 	transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input-select {
 	appearance: none;
-	background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23839496%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+	background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); /* New: Gray arrow */
 	background-repeat: no-repeat;
 	background-position: right 0.8em top 50%;
 	background-size: 0.7em auto;
 	cursor: pointer;
-	margin-bottom: 0; /* Remove margin from base style if needed */
+	margin-bottom: 0;
 }
 
 .input-textarea {
 	resize: vertical;
-	min-height: 100px; /* Slightly smaller default */
+	min-height: 100px;
 	margin-bottom: 1rem;
 }
 
 .input-select:focus,
 .input-textarea:focus {
 	outline: none;
-	border-color: #b58900;
-	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06),
-		0 0 0 3px rgba(181, 137, 0, 0.25);
+	border-color: #007bff; /* New: Blue focus border */
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04),
+		0 0 0 3px rgba(0, 123, 255, 0.25); /* New: Blue focus shadow */
 }
 
 /* Slider Container Styles */
@@ -439,7 +438,7 @@
 
 .slider-value {
 	font-weight: normal;
-	color: #cb4b16; /* Highlight color */
+	color: #007bff; /* New: Blue highlight color */
 	margin-left: 0.5em;
 	font-size: 0.95em;
 }
@@ -450,8 +449,12 @@
 	height: 8px;
 	cursor: pointer;
 	appearance: none;
-	background: linear-gradient(to right, #cb4b16, #b58900); /* Gradient track */
-	background-color: #d3c0a5; /* Fallback */
+	background: linear-gradient(
+		to right,
+		#007bff,
+		#0056b3
+	); /* New: Blue gradient track */
+	background-color: #dee2e6; /* New: Light gray Fallback */
 	border-radius: 5px;
 	outline: none;
 	margin-top: 0.5rem;
@@ -467,10 +470,10 @@
 	appearance: none;
 	width: 20px;
 	height: 20px;
-	background: #8b4513; /* Brown thumb */
+	background: #007bff; /* New: Blue thumb */
 	border-radius: 50%;
 	cursor: pointer;
-	border: 2px solid #fdf6e3; /* Light border around thumb */
+	border: 2px solid #ffffff; /* New: White border around thumb */
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
@@ -478,10 +481,10 @@
 .input-range::-moz-range-thumb {
 	width: 18px;
 	height: 18px;
-	background: #8b4513;
+	background: #007bff; /* New: Blue thumb */
 	border-radius: 50%;
 	cursor: pointer;
-	border: 2px solid #fdf6e3;
+	border: 2px solid #ffffff; /* New: White border around thumb */
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
@@ -495,22 +498,22 @@
 }
 
 .word-hoverable {
-	cursor: help; /* Indicate hover interaction */
-	background-color: rgba(
-		181,
-		137,
-		0,
-		0.08
-	); /* Faint highlight on hoverable words */
-	border-bottom: 1px dashed rgba(181, 137, 0, 0.3);
+	cursor: help;
+	background-color: rgba(0, 123, 255, 0.08); /* New: Faint blue highlight */
+	border-bottom: 1px dashed rgba(0, 123, 255, 0.3); /* New: Light blue dash */
 	transition: background-color 0.2s ease;
-	padding: 0 1px; /* Tiny padding */
-	margin: 0 -1px; /* Counteract padding */
+	padding: 0 1px;
+	margin: 0 -1px;
 	border-radius: 2px;
 }
 
 .word-hoverable:hover {
-	background-color: rgba(181, 137, 0, 0.2); /* Stronger highlight on hover */
+	background-color: rgba(
+		0,
+		123,
+		255,
+		0.2
+	); /* New: Stronger blue highlight on hover */
 }
 
 /* Congratulatory Message */
@@ -531,21 +534,25 @@
 /* --- Progress Bar --- */
 .progress-container {
 	max-width: 1150px;
-	margin: 1.5rem auto 0.5rem; /* Reduced bottom margin */
+	margin: 1.5rem auto 0.5rem;
 	padding: 0 1rem;
-	height: 16px; /* Set height for the bar itself */
+	height: 16px;
 	position: relative;
-	background-color: #eee8d5; /* Add track background */
-	border-radius: 8px; /* Match bar radius */
-	overflow: hidden; /* Keep fill contained */
+	background-color: #e9ecef; /* New: Light gray track background */
+	border-radius: 8px;
+	overflow: hidden;
 }
 
 .progress-bar-fill {
-	height: 100%; /* Fill container height */
-	background: linear-gradient(to right, #b58900, #cb4b16);
-	border-radius: 8px; /* Ensure radius matches container */
+	height: 100%;
+	background: linear-gradient(
+		to right,
+		#007bff,
+		#0056b3
+	); /* New: Blue gradient */
+	border-radius: 8px;
 	transition: width 0.4s ease-out;
-	box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.1); /* Subtle inner shadow */
+	box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.1);
 }
 
 .progress-text {
@@ -571,41 +578,40 @@
 
 /* Add Tertiary Button Style */
 .button-tertiary {
-	color: #657b83; /* Muted text */
-	border: 1px solid #d3c0a5;
-	box-shadow: none; /* Less prominent */
+	color: #495057; /* New: Dark gray text */
+	border: 1px solid #ced4da; /* New: Standard gray border */
+	box-shadow: none;
 	font-size: 0.9rem;
 }
 .button-tertiary:hover {
-	background-color: #eee8d5;
-	border-color: #b58900;
-	color: #586e75;
+	background-color: #e9ecef; /* New: Light gray hover */
+	border-color: #007bff; /* New: Blue border on hover */
+	color: #212529; /* New: Darker text on hover */
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* --- Form Section Grouping --- */
 .form-section {
-	border: 1px solid #d3c0a5;
+	border: 1px solid #dee2e6; /* New: Light gray border */
 	border-radius: 6px;
-	padding: 1.5rem 2rem; /* Adjust padding */
-	margin-bottom: 2rem; /* Space between sections */
-	background-color: #fdf6e3; /* Slightly different bg for sections */
+	padding: 1rem 1rem;
+	margin-bottom: 2rem;
+	background-color: #f8f9fa; /* New: Light gray-blue for sections */
 }
 
 .form-section-title {
 	font-size: 1.2rem;
 	font-weight: bold;
-	color: #8b4513; /* Brown color */
-	margin-left: -0.5rem; /* Align with padding */
+	color: #007bff; /* New: Blue color for section titles */
+	margin-left: -0.5rem;
 	padding: 0 0.5rem;
-	/* background-color: #fffaf0; */ /* Optional: match form bg */
 }
 
 .form-label {
 	display: block;
 	margin-bottom: 0.6rem;
 	font-weight: bold;
-	color: #586e75;
+	color: #495057; /* New: Dark gray for labels */
 	font-size: 1rem;
 }
 
@@ -624,40 +630,40 @@
 
 .form-helper-text {
 	font-size: 0.9rem;
-	color: #839496; /* Muted color */
+	color: #6c757d; /* New: Medium gray color */
 	margin-top: 0.5rem;
-	margin-bottom: 0; /* Reset default margin */
+	margin-bottom: 0;
 }
 
 /* Styling for Examples */
 .form-examples {
-	margin-top: 1rem; /* More space */
-	font-size: 0.9rem; /* Base size for this section */
-	color: #839496;
+	margin-top: 1rem;
+	font-size: 0.9rem;
+	color: #6c757d; /* New: Medium gray */
 }
 
 .examples-title {
 	font-weight: bold;
 	margin-right: 0.5em;
-	color: #586e75; /* Darker title */
-	display: block; /* Put title on its own line */
+	color: #495057; /* New: Darker gray title */
+	display: block;
 	margin-bottom: 0.5rem;
 }
 
 /* Styling for Examples List */
 .example-list {
-	list-style: none; /* Remove default bullet points */
+	list-style: none;
 	padding: 0;
-	margin: 0.5rem 0 0 0; /* Adjust spacing */
-	display: flex; /* Use flexbox for layout */
-	flex-wrap: wrap; /* Allow items to wrap */
-	gap: 0.6rem; /* Space between items */
+	margin: 0.5rem 0 0 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem;
 }
 
 .example-list-item {
-	background-color: #eee8d5; /* Match old button style */
-	color: #657b83;
-	border: 1px solid #d3c0a5;
+	background-color: #e9ecef; /* New: Light gray background */
+	color: #495057; /* New: Dark gray text */
+	border: 1px solid #dee2e6; /* New: Lighter gray border */
 	padding: 0.4rem 0.8rem;
 	border-radius: 4px;
 	cursor: pointer;
@@ -666,19 +672,19 @@
 	font-size: 0.9rem;
 	flex-grow: 0;
 	flex-shrink: 1;
-	/* Multi-line truncation */
-	display: -webkit-box; /* Required for line-clamp */
-	overflow: hidden; /* Hide the overflowing text */
-	-webkit-box-orient: vertical; /* Set box orientation */
-	-webkit-line-clamp: 2; /* Limit to 2 lines */
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
 }
 
 .example-list-item:hover,
 .example-list-item:focus {
-	background-color: #d3c0a5; /* Darker hover/focus */
-	border-color: #b58900;
-	color: #002b36;
-	outline: none; /* Remove default focus outline if desired */
+	background-color: #dee2e6; /* New: Slightly darker gray hover/focus */
+	border-color: #007bff; /* New: Blue border on hover/focus */
+	color: #212529; /* New: Black text on hover/focus */
+	outline: none;
 }
 
 /* --- Navigation Controls --- */
@@ -709,117 +715,43 @@
 	margin-top: 1.5rem; /* Space above action buttons */
 }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-	.content-area {
-		padding: 1rem;
-		margin-top: 0.5rem;
-	}
-	.input-form {
-		padding: 1.5rem;
-	}
-	.language-select-container {
-		flex-direction: column;
-		gap: 0;
-		margin-bottom: 1rem;
-	}
-	.input-form select {
-		margin-bottom: 1rem;
-	}
-	.book-view {
-		flex-direction: column;
-		padding: 0.5rem;
-		gap: 1rem;
-	}
-	.book-view::before {
-		display: none; /* Hide spine on mobile */
-	}
-	.page {
-		height: auto;
-		min-height: 45vh;
-		margin: 0;
-		padding: 1.5rem;
-	}
-	.page h3 {
-		font-size: 1.2rem;
-	}
-	.page p {
-		font-size: 1rem;
-	}
-	.story-content {
-		line-height: 1.7;
-	}
-	.source-sentence {
-		font-size: 0.95rem;
-	}
-	.reveal-button {
-		padding: 0.6rem 1.2rem;
-		font-size: 0.9rem;
-	}
-	.button {
-		padding: 0.8rem 1.8rem;
-		font-size: 1rem;
-	}
-	.slider-container {
-		flex-direction: column;
-		gap: 1rem; /* Adjust gap for column layout */
-		margin-bottom: 1.5rem;
-	}
-	.slider-item {
-		margin-bottom: 0.5rem; /* Add space between sliders */
-	}
-	.input-range {
-		margin-top: 0.3rem;
-	}
-	.target-sentence.sentence-active {
-		padding: 0.05em 0.1em;
-		margin: -0.05em -0.1em;
-	}
-	.progress-container {
-		height: 14px; /* Slightly smaller on mobile */
-		margin-top: 1rem;
-	}
-	.progress-text {
-		font-size: 0.75rem;
-	}
-	.button-container-multiple {
-		gap: 0.8rem;
-	}
-	.form-section {
-		padding: 1rem 1.2rem;
-		margin-bottom: 1.5rem;
-	}
-	.form-section-title {
-		font-size: 1.1rem;
-	}
-	.submit-button {
-		max-width: none; /* Full width on mobile */
-	}
-	.navigation-controls {
-		max-width: 100%; /* Full width on mobile */
-		margin-top: 1rem;
-		gap: 2rem; /* Adjust gap for mobile */
-	}
-	.nav-button {
-		min-width: 100px;
-		font-size: 0.9rem;
-		padding: 0.5rem 1rem;
-	}
-	.action-buttons {
-		margin-top: 1rem;
-		flex-direction: column;
-		gap: 0.8rem;
-	}
+/* Styles moved from InputForm.jsx for custom select and range inputs */
+.custom-select {
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%236c757d' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E"); /* New: Gray arrow */
+	background-repeat: no-repeat;
+	background-position: right 0.75rem center;
+	background-size: 16px 12px;
+	padding-right: 2.5rem;
+}
 
-	/* Adjust example buttons for mobile */
-	/* .example-buttons-container { ... removed ... } */
-	/* .example-button { ... removed ... } */
+.custom-range {
+	-webkit-appearance: none;
+	appearance: none;
+	height: 0.5rem;
+	border-radius: 0.5rem;
+	background-color: #dee2e6; /* New: Light gray background */
+}
 
-	/* Adjust example list items for mobile */
-	.example-list-item {
-		font-size: 0.75rem; /* Smaller font on mobile */
-		padding: 0.3rem 0.6rem; /* Adjust padding slightly */
-	}
+.custom-range::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background-color: #007bff; /* New: Blue thumb */
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	cursor: pointer;
+	margin-top: -6px;
+}
+
+.custom-range::-moz-range-thumb {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background-color: #007bff; /* New: Blue thumb */
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	cursor: pointer;
+	border: none;
 }
 
 /* --- Added for Vocabulary Practice Shake --- */

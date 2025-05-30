@@ -513,7 +513,7 @@ function InputForm({
 					-webkit-appearance: none;
 					height: 0.5rem;
 					border-radius: 0.5rem;
-					background-color: #e0e0e0;
+					background-color: #e0f2fe;
 				}
 				
 				.custom-range::-webkit-slider-thumb {
@@ -521,7 +521,7 @@ function InputForm({
 					width: 18px;
 					height: 18px;
 					border-radius: 50%;
-					background-color: #f59e0b;
+					background-color: #0891b2;
 					box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 					cursor: pointer;
 					margin-top: -6px;
@@ -531,7 +531,7 @@ function InputForm({
 					width: 18px;
 					height: 18px;
 					border-radius: 50%;
-					background-color: #f59e0b;
+					background-color: #0891b2;
 					box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 					cursor: pointer;
 					border: none;
@@ -546,7 +546,7 @@ function InputForm({
 					padding: 0.125rem 0.625rem;
 					font-size: 0.875rem;
 					font-weight: 500;
-					color: #b45309;
+					color: #0e7490;
 				}
 			`}</style>
 
@@ -570,7 +570,7 @@ function InputForm({
 					style={{
 						textAlign: "center",
 						fontSize: "1rem",
-						color: "#666",
+						color: "#0f172a",
 						marginBottom: "1.5rem",
 					}}
 				>
@@ -616,7 +616,7 @@ function InputForm({
 									key={index}
 									type="button"
 									onClick={() => handleExampleClick(example)}
-									className="px-4 py-2.5 text-xs font-normal  text-orange-800 border border-orange-800 rounded-md hover:bg-orange-800 hover:text-white focus:outline-none transition-colors flex items-center gap-1.5"
+									className="px-4 py-2.5 text-xs font-normal  text-blue-800 border border-blue-800 rounded-md hover:bg-blue-800 hover:text-white focus:outline-none transition-colors flex items-center gap-1.5"
 									disabled={isLoading}
 								>
 									<span>
@@ -629,7 +629,7 @@ function InputForm({
 							<button
 								type="button"
 								onClick={handleRandomExampleClick}
-								className="px-4 py-2.5 text-xs font-normal  text-orange-800 border border-orange-800 rounded-md hover:bg-orange-800 hover:text-white focus:outline-none transition-colors flex items-center gap-1.5"
+								className="px-4 py-2.5 text-xs font-normal  text-blue-800 border border-blue-800 rounded-md hover:bg-blue-800 hover:text-white focus:outline-none transition-colors flex items-center gap-1.5"
 								disabled={isLoading}
 							>
 								<Shuffle className="w-3.5 h-3.5" />
@@ -803,7 +803,7 @@ function InputForm({
 							</div>
 						</div>
 						{/* Toggle for Advanced Settings */}
-						{currentUser && (
+						{
 							<div className="text-center">
 								<Button
 									type="button"
@@ -815,10 +815,10 @@ function InputForm({
 									{showAdvancedSettings ? "Hide" : "Show"} Advanced Options
 								</Button>
 							</div>
-						)}
+						}
 
 						{/* Advanced Settings Section (conditionally rendered) */}
-						{currentUser && showAdvancedSettings && (
+						{showAdvancedSettings && (
 							<div className="pt-4 mt-4 border-t border-gray-200 space-y-4">
 								{/* Genre Selection */}
 								<div>
@@ -1164,35 +1164,80 @@ function InputForm({
 			</Dialog>
 
 			{statsLoading ? (
-				<p className="text-sm text-gray-500 mt-4">Loading stats...</p>
+				<div className="flex justify-center items-center py-8">
+					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+					<p className="text-sm text-slate-500 ml-3">Loading stats...</p>
+				</div>
 			) : (
-				<div className="mt-10 border-t pt-6">
-					<h1 className="text-2xl font-bold text-center text-gray-800 ">
-						DuoBook Stats
-					</h1>
-					<div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center ">
+				<div className="mt-10">
+					<div className="text-center mb-8">
+						<h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+							DuoBook Stats
+						</h1>
+						<p className="text-slate-600">
+							Join thousands of learners worldwide
+						</p>
+					</div>
+					<div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
 						{totalStories !== null && (
-							<div>
-								<p className="text-4xl font-bold text-gray-800 ">
-									{totalStories.toLocaleString()}+
-								</p>
-								<p className="text-sm text-gray-500  mt-1">Stories Generated</p>
+							<div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 shadow-sm hover:shadow-md transition-all duration-300">
+								<div className="flex items-center justify-between">
+									<div>
+										<p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+											{totalStories.toLocaleString()}+
+										</p>
+										<p className="text-sm text-slate-600 mt-1 font-medium">
+											Stories Generated
+										</p>
+									</div>
+									<div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+										<BookText className="w-6 h-6 text-white" />
+									</div>
+								</div>
 							</div>
 						)}
 						{totalUsers !== null && (
-							<div>
-								<p className="text-4xl font-bold text-gray-800 ">
-									{totalUsers.toLocaleString()}+
-								</p>
-								<p className="text-sm text-gray-500  mt-1">Language Learners</p>
+							<div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100 shadow-sm hover:shadow-md transition-all duration-300">
+								<div className="flex items-center justify-between">
+									<div>
+										<p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+											{totalUsers.toLocaleString()}+
+										</p>
+										<p className="text-sm text-slate-600 mt-1 font-medium">
+											Language Learners
+										</p>
+									</div>
+									<div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+										<Heart className="w-6 h-6 text-white" />
+									</div>
+								</div>
 							</div>
 						)}
 						{/* Display Number of Languages Supported */}
-						<div>
-							<p className="text-4xl font-bold text-gray-800 ">
-								{numberOfLanguages}+
-							</p>
-							<p className="text-sm text-gray-500  mt-1">Languages Supported</p>
+						<div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-6 border border-indigo-100 shadow-sm hover:shadow-md transition-all duration-300">
+							<div className="flex items-center justify-between">
+								<div>
+									<p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+										{numberOfLanguages}+
+									</p>
+									<p className="text-sm text-slate-600 mt-1 font-medium">
+										Languages Supported
+									</p>
+								</div>
+								<div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl flex items-center justify-center">
+									<svg
+										className="w-6 h-6 text-white"
+										fill="currentColor"
+										viewBox="0 0 20 20"
+									>
+										<path
+											fillRule="evenodd"
+											d="M7 2a1 1 0 011 1v1h3a1 1 0 110 2H9.578a18.87 18.87 0 01-1.724 4.78c.29.354.596.696.914 1.026a1 1 0 11-1.44 1.389c-.188-.196-.373-.396-.554-.6a19.098 19.098 0 01-3.107 3.567 1 1 0 01-1.334-1.49 17.087 17.087 0 003.13-3.733 18.992 18.992 0 01-1.487-2.494 1 1 0 111.79-.89c.234.47.489.928.764 1.372.417-.934.752-1.913.997-2.927H3a1 1 0 110-2h3V3a1 1 0 011-1zm6 6a1 1 0 01.894.553l2.991 5.982a.869.869 0 01.02.037l.99 1.98a1 1 0 11-1.79.895L15.383 16h-4.764l-.724 1.447a1 1 0 11-1.788-.894l.99-1.98.019-.038 2.99-5.982A1 1 0 0113 8zm-1.382 6h2.764L13 12.236 11.618 14z"
+											clipRule="evenodd"
+										/>
+									</svg>
+								</div>
+							</div>
 						</div>
 					</div>
 
