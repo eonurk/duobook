@@ -843,3 +843,15 @@
 .book-page-container {
 	animation: fadeInPage 1s ease-out forwards; /* Adjust duration and timing */
 }
+
+/* --- Added for 3D Effect on Book Cards --- */
+.perspective {
+  perspective: 1000px;
+}
+
+/* If you want to add a 3D hover effect later, you could do something like:
+.group:hover .book-cover-image {
+  transform: rotateY(-10deg) scale(1.03);
+}
+You'd need to add the 'book-cover-image' class to the img tag.
+*/

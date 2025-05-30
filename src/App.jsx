@@ -72,8 +72,8 @@ import {
 	CardFooter,
 } from "@/components/ui/card"; // Import Card component
 
-// Static Example Story Data
-const exampleStoryData = {
+// Static Example Story Data for the interactive demo on the main page
+const interactiveExampleStoryData = {
 	sentencePairs: [
 		{
 			id: 1,
@@ -128,6 +128,46 @@ const exampleStoryData = {
 	sourceLanguage: "English",
 };
 
+// ADDED: Array of external book examples for the new section
+const externalBookExamples = [
+	{
+		id: "duobook-steve-jobs-es-en",
+		title: "The Story of Steve Jobs (Intermediate)",
+		description: "Read the story of Steve Jobs on Duobook.",
+		coverImageUrl: "src/assets/steve.jpeg", // Actual image from Duobook
+		externalUrl: "https://duobook.co/story/cmbaoc59p0001ml8eo0meikxs",
+		// Adding fields StoryCard might expect for styling/layout, even if not all are used for external links
+		targetLanguage: "Spanish", // For display consistency if StoryCard uses it
+		sourceLanguage: "English", // For display consistency
+		authorUsername: "Duobook.co",
+		isExternal: true, // Flag to help StoryCard differentiate
+	},
+	{
+		id: "duobook-elon-musk-fr-en",
+		title: "Life of Elon Musk (Intermediate)",
+		description: "Read the life story of Elon Musk on Duobook.",
+		coverImageUrl: "src/assets/elon.jpeg", // Actual image
+		externalUrl: "https://duobook.co/story/cmbapljqo0000mlf7oh6vxmpr",
+		targetLanguage: "French",
+		sourceLanguage: "English",
+		authorUsername: "Duobook.co",
+		isExternal: true,
+	},
+	{
+		id: "duobook-jeff-bezos-de-en",
+		title: "Journey of Jeff Bezos (Easy)",
+		description: "Discover the journey of Jeff Bezos on Duobook.",
+		coverImageUrl: "src/assets/jeff.jpeg", // Actual image
+		externalUrl: "https://duobook.co/story/cmbapyzql0001mlf758aoy59z",
+		targetLanguage: "German",
+		sourceLanguage: "English",
+		authorUsername: "Duobook.co",
+		isExternal: true,
+	},
+
+	// Add more external books here if needed
+];
+
 // Protected Route Component
 function ProtectedRoute({ children }) {
 	const { currentUser } = useAuth();
@@ -159,67 +199,53 @@ function StoryViewPage() {
 				// Process storyData if it's a string (from DB) or use directly
 				if (typeof initialStoryData.story === "string") {
 					try {
-						setStoryContent(JSON.parse(initialStoryData.story));
-						// Ensure paramsForBookView is set if not already from initialParams
-						if (!initialParams) {
-							setParamsForBookView({
-								target: initialStoryData.targetLanguage,
-								source: initialStoryData.sourceLanguage,
-								// Add other relevant params from initialStoryData
-							});
-						}
-					} catch (e) {
-						console.error(
-							"StoryViewPage: Failed to parse story JSON from state:",
-							e
-						);
-						setError("Failed to load story: Invalid format from state.");
-					}
-				} else if (initialStoryData.pages || initialStoryData.sentencePairs) {
-					setStoryContent(initialStoryData); // Already parsed
-					if (!initialParams) {
+						const parsedStory = JSON.parse(initialStoryData.story);
+						setStoryContent(parsedStory);
+						// Ensure paramsForBookView is set correctly from initialStoryData if available
 						setParamsForBookView({
 							target: initialStoryData.targetLanguage,
 							source: initialStoryData.sourceLanguage,
-							// Add other relevant params
+							title: initialStoryData.title,
+							// any other params needed by BookView
 						});
+					} catch (e) {
+						console.error("Failed to parse story JSON from state:", e);
+						setError("Failed to load story content from navigation state.");
 					}
+				} else if (initialStoryData.pages || initialStoryData.sentencePairs) {
+					// Story data is already in the correct object format
+					setStoryContent(initialStoryData);
+					setParamsForBookView({
+						target: initialStoryData.targetLanguage,
+						source: initialStoryData.sourceLanguage,
+						title: initialStoryData.title,
+					});
 				} else {
 					console.warn(
-						"StoryViewPage: storyData from state structure not recognized."
+						"StoryViewPage: initialStoryData provided but not in expected format."
 					);
-					setError("Failed to load story: Unrecognized format from state.");
+					setError("Story data is in an unexpected format.");
 				}
 				setIsLoading(false);
 			} else if (shareId) {
 				// No valid state data, or shareId mismatch, fetch from API using shareId
 				console.log(`StoryViewPage: Fetching story with shareId: ${shareId}`);
 				try {
-					// Assuming getStoryById can take the shareId (string CUID)
-					const fetchedStory = await getStoryById(shareId);
-					if (fetchedStory && fetchedStory.story) {
-						// Parse the story JSON
-						const parsedContent = JSON.parse(fetchedStory.story);
-						// Add the shareId to the parsed content object
-						parsedContent.shareId = shareId;
-						setStoryContent(parsedContent);
-
-						setParamsForBookView({
-							target: fetchedStory.targetLanguage,
-							source: fetchedStory.sourceLanguage,
-							difficulty: fetchedStory.difficulty,
-							length: fetchedStory.length,
-							description: fetchedStory.description,
-						});
+					const fetchedStory = await getStoryById(shareId); // Assuming getStoryById fetches all necessary data
+					if (typeof fetchedStory.story === "string") {
+						setStoryContent(JSON.parse(fetchedStory.story));
 					} else {
-						console.warn(
-							"StoryViewPage: Story not found or no content from API."
-						);
-						setError("Story not found.");
+						setStoryContent(fetchedStory.story); // Assuming story is already an object
 					}
+					setParamsForBookView({
+						target: fetchedStory.targetLanguage,
+						source: fetchedStory.sourceLanguage,
+						title: fetchedStory.title,
+						// any other params needed by BookView based on fetchedStory
+					});
 				} catch (err) {
-					console.error("StoryViewPage: Error fetching story by shareId:", err);
-					setError(err.message || "Failed to fetch story.");
+					console.error(`Error fetching story ${shareId}:`, err);
+					setError(err.message || `Could not load story with ID: ${shareId}.`);
 				}
 				setIsLoading(false);
 			} else {
@@ -263,6 +289,7 @@ function StoryViewPage() {
 		console.warn(
 			"Redirecting to home: StoryViewPage missing valid storyContent or paramsForBookView after loading."
 		);
+		// REMOVED: Conditional logic for isExampleStory
 		return <Navigate to="/" replace />;
 	}
 
@@ -273,7 +300,8 @@ function StoryViewPage() {
 				targetLanguage={paramsForBookView.target}
 				sourceLanguage={paramsForBookView.source}
 				onGoBack={handleGoBackToForm}
-				isExample={false}
+				isExample={false} // MODIFIED: Always false now for internal stories
+				// title={paramsForBookView.title} // Pass title if BookView uses it
 			/>
 		</main>
 	);
@@ -284,8 +312,10 @@ function MainAppView({ generateStory }) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [formError, setFormError] = useState(null);
 	const [formParams, setFormParams] = useState(null);
-	// const [showPdfBanner, setShowPdfBanner] = useState(true); // Added state for PDF banner
 	const { idToken, userProgress } = useAuth(); // Get idToken and userProgress
+
+	// Ref for the scrollable container of external book examples
+	const externalBooksScrollRef = useRef(null);
 
 	// Determine user subscription tier
 	const userSubscriptionTier = userProgress?.subscriptionTier || "FREE";
@@ -315,6 +345,13 @@ function MainAppView({ generateStory }) {
 		};
 		fetchCommunityStories();
 	}, [idToken]); // Depend on idToken so it re-fetches if user logs in/out
+
+	// Effect to reset scroll position of external books section
+	useEffect(() => {
+		if (!isGenerating && externalBooksScrollRef.current) {
+			externalBooksScrollRef.current.scrollLeft = 0;
+		}
+	}, [isGenerating]);
 
 	const handleGenerate = async (
 		description,
@@ -455,6 +492,23 @@ function MainAppView({ generateStory }) {
 					</div>
 				)}
 
+				{/* MODIFIED: External Book Examples Section */}
+				{!isGenerating && externalBookExamples.length > 0 && (
+					<div className="mt-16 pt-12 border-t">
+						<h2 className="text-3xl font-bold text-center mb-10 text-gray-800">
+							Explore Example Books
+						</h2>
+						<div
+							ref={externalBooksScrollRef} // Assign the ref here
+							className="flex overflow-x-auto py-2 snap-x snap-mandatory md:grid md:grid-cols-2 lg:grid-cols-3 gap-x-4 md:gap-6 max-w-6xl mx-auto"
+						>
+							{externalBookExamples.map((book) => (
+								<StoryCard key={book.id} story={book} />
+							))}
+						</div>
+					</div>
+				)}
+
 				{!isGenerating && (
 					<div className="mt-12 pt-8 border-t">
 						<div className="flex justify-center mb-8">
@@ -476,9 +530,9 @@ function MainAppView({ generateStory }) {
 						</div>
 
 						<BookView
-							storyContent={exampleStoryData}
-							targetLanguage={exampleStoryData.targetLanguage}
-							sourceLanguage={exampleStoryData.sourceLanguage}
+							storyContent={interactiveExampleStoryData} // MODIFIED: Renamed variable
+							targetLanguage={interactiveExampleStoryData.targetLanguage} // MODIFIED: Renamed variable
+							sourceLanguage={interactiveExampleStoryData.sourceLanguage} // MODIFIED: Renamed variable
 							isExample={true}
 							onGoBack={() => {}}
 						/>

@@ -75,6 +75,9 @@ const StoryCard = ({ story }) => {
 				}
 			}
 		} else {
+			// For external links, native share might not be ideal if we just want to copy link or open directly.
+			// However, keeping it for consistency if user expects share button to work similarly.
+			// If it's an external link, perhaps the primary action is to open it, not share its internal-looking URL.
 			setShowShareOptions((prev) => !prev);
 		}
 	};
@@ -91,8 +94,66 @@ const StoryCard = ({ story }) => {
 		setShowShareOptions(false);
 	};
 
+	if (story.isExternal) {
+		// Render a card with the image as a background and info overlay
+		return (
+			<a
+				href={story.externalUrl}
+				target="_blank"
+				rel="noopener noreferrer"
+				title={story.title} // For hover tooltip showing the book title
+				className="relative block w-60 sm:w-72 md:w-full md:max-w-xs md:mx-auto bg-white shadow-xl rounded-lg hover:shadow-2xl transition-all duration-300 ease-in-out border border-slate-300 border-l-[8px] border-l-slate-400 overflow-hidden group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 aspect-[2/3] hover:-rotate-1 snap-center flex-shrink-0 perspective"
+				// MODIFIED:
+				// - Changed width from 'w-full max-w-xs mx-auto' to 'w-60 sm:w-72' for mobile scrolling.
+				// - Added 'md:w-full md:max-w-xs md:mx-auto' to restore original grid sizing on medium screens and up.
+				// - Added 'snap-center' for better scroll snapping alignment.
+				// - Added 'flex-shrink-0' to prevent cards from shrinking in the flex container.
+				// - Changed rounded-xl to rounded-lg for a slightly sharper book corner.
+				// - Increased left border to border-l-[8px] for a thicker spine.
+				// - Reduced hover rotation to hover:-rotate-1 for a more subtle effect.
+				// - Added a utility class 'perspective' (to be defined in CSS) for 3D effect potential
+			>
+				{/* Book Cover Image */}
+				{story.coverImageUrl ? (
+					<img
+						src={story.coverImageUrl}
+						alt={`Cover for ${story.title}`}
+						className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-r-sm"
+						// Image is now absolute, covers the entire <a> tag, and scales on hover
+						// Added rounded-r-sm to slightly round the right edge of the cover, mimicking pages.
+					/>
+				) : (
+					// Fallback if no cover image is provided, still respecting aspect ratio
+					<div className="absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center text-center p-4">
+						<span className="text-sm text-gray-500">
+							{story.title || "External Book"}
+						</span>
+					</div>
+				)}
+
+				{/* Subtle page edge effect - a thin, slightly darker line on the right */}
+				<div className="absolute top-0 right-0 bottom-0 w-px bg-slate-500 opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+
+				{/* Overlay for information at the bottom left */}
+				<div className="absolute bottom-0 left-0 p-3 bg-gradient-to-t from-black/70 to-transparent w-full">
+					<h3 className="text-white text-sm font-semibold drop-shadow-md truncate">
+						{story.title}
+					</h3>
+					{(story.sourceLanguage || story.targetLanguage) && (
+						<p className="text-xs text-gray-200 drop-shadow-sm truncate">
+							{story.sourceLanguage} to {story.targetLanguage}
+						</p>
+					)}
+					{/* You can add more info here like story.length if available and desired */}
+					{/* e.g., <p className="text-xs text-gray-300">Length: {story.length}</p> */}
+				</div>
+			</a>
+		);
+	}
+
+	// Original card rendering for internal stories
 	return (
-		<div className="bg-white shadow-lg rounded-xl p-5 hover:shadow-xl transition-shadow h-full flex flex-col justify-between border border-slate-100">
+		<div className="bg-white shadow-lg rounded-xl p-5 hover:shadow-xl transition-shadow h-full flex flex-col justify-between border border-slate-100 group">
 			<div className="flex-grow">
 				<h3
 					className="text-lg font-semibold mb-2 text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2"
@@ -124,7 +185,7 @@ const StoryCard = ({ story }) => {
 			<div className="flex items-center justify-between mt-auto">
 				<Link
 					to={`/story/${story.shareId}`}
-					className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors group"
+					className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors group-hover:bg-orange-700"
 				>
 					Read Story <ArrowRight className="w-4 h-4 ml-2" />
 				</Link>
