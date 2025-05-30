@@ -538,18 +538,6 @@ function MainAppView({ generateStory }) {
 				{/* FSRS Effectiveness Charts Section */}
 				{!isGenerating && <FsrsEffectivenessCharts />}
 
-				{/* Example Quiz Section */}
-				{!isGenerating && (
-					<div className="mt-12 pt-12 bg-slate-100 py-12 rounded-lg">
-						<h2 className="text-2xl sm:text-3xl font-bold text-center mb-10 text-gray-800">
-							Test Your Understanding
-						</h2>
-						<div className="max-w-2xl mx-auto px-4">
-							<ExampleQuiz />
-						</div>
-					</div>
-				)}
-
 				{/* Call to Action Section */}
 				{!isGenerating && (
 					<div className="mt-16 pt-12 text-center bg-gradient-to-r from-amber-200 to-amber-500 text-white py-16 px-6 rounded-lg">
@@ -557,9 +545,8 @@ function MainAppView({ generateStory }) {
 						<h2 className="text-2xl md:text-4xl font-bold mb-4 text-amber-800">
 							Ready to Craft Your Language Adventure?
 						</h2>
-						<p className="text-md md:text-xl max-w-2xl mx-auto mb-8">
+						<p className="text-md md:text-xl max-w-2xl mx-auto mb-8 px-8 ">
 							Stop just memorizing words. Start understanding in context.
-							<br />
 							Generate your first personalized bilingual story now!
 						</p>
 						<Button
