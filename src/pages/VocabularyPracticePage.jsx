@@ -210,7 +210,7 @@ function VocabularyPracticePage() {
 	// --- Timer State ---
 	const [isTimerEnabled, setIsTimerEnabled] = useState(false);
 	const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
-	const [timerInterval, setTimerInterval] = useState(null);
+	const [_, setTimerInterval] = useState(null); // Using underscore to indicate intentionally unused variable
 
 	// --- Difficulty and Settings State ---
 	const [selectedDifficulty, setSelectedDifficulty] = useState("MEDIUM");
@@ -670,9 +670,17 @@ function VocabularyPracticePage() {
 		setShowHint(false);
 		setTypedAnswer("");
 
-		// Start timer if enabled
+		// Reset and start timer if enabled
 		if (isTimerEnabled) {
 			setTimeLeft(TIMER_DURATION);
+			
+			// Clear any existing timer first
+			setTimerInterval(prevInterval => {
+				if (prevInterval) clearInterval(prevInterval);
+				return null;
+			});
+			
+			// Start a new timer
 			startTimer();
 		}
 
@@ -693,17 +701,24 @@ function VocabularyPracticePage() {
 	// --- Timer Functions ---
 
 	const clearTimer = React.useCallback(() => {
-		if (timerInterval) {
-			clearInterval(timerInterval);
-			setTimerInterval(null);
-		}
-	}, [timerInterval]);
+		setTimerInterval(prevInterval => {
+			if (prevInterval) {
+				clearInterval(prevInterval);
+			}
+			return null;
+		});
+	}, []); // No dependencies needed as we use function form of setState
 
 	// Handle next question navigation
 	const handleNextQuestion = React.useCallback(async () => {
 		if (!isAnswered) return;
 
-		clearTimer();
+		// Clear timer safely
+		setTimerInterval(prevInterval => {
+			if (prevInterval) clearInterval(prevInterval);
+			return null;
+		});
+		
 		const nextIndex = currentQuestionIndex + 1;
 
 		if (nextIndex < shuffledList.length) {
@@ -787,6 +802,12 @@ function VocabularyPracticePage() {
 	const handleTimeUp = React.useCallback(async () => {
 		if (isAnswered) return;
 
+		// Clear the timer when time is up
+		setTimerInterval(prevInterval => {
+			if (prevInterval) clearInterval(prevInterval);
+			return null;
+		});
+		
 		setIsAnswered(true);
 		setFeedback("Time's up! ⏰");
 		setCorrectStreak(0);
@@ -836,25 +857,27 @@ function VocabularyPracticePage() {
 	]);
 
 	const startTimer = React.useCallback(() => {
-		if (timerInterval) {
-			clearInterval(timerInterval);
-		}
-		const interval = setInterval(() => {
-			setTimeLeft((prev) => {
-				if (prev <= 1) {
-					clearInterval(interval);
-					setTimerInterval(null);
-					// Auto-advance to next question when time runs out
-					if (!isAnswered) {
-						handleTimeUp();
+		// First clear any existing interval using functional update to avoid dependencies
+		setTimerInterval(prevInterval => {
+			if (prevInterval) {
+				clearInterval(prevInterval);
+			}
+			
+			// Create new interval
+			const interval = setInterval(() => {
+				setTimeLeft((prev) => {
+					if (prev <= 1) {
+						clearInterval(interval);
+						setTimerInterval(null);
+						return 0;
 					}
-					return 0;
-				}
-				return prev - 1;
-			});
-		}, 1000);
-		setTimerInterval(interval);
-	}, [timerInterval, isAnswered, handleTimeUp]);
+					return prev - 1;
+				});
+			}, 1000);
+			
+			return interval;
+		});
+	}, []);
 
 	// --- Helper Functions ---
 	const updateSessionStats = (isCorrect, questionTime) => {
@@ -897,8 +920,16 @@ function VocabularyPracticePage() {
 	// Effect to reset timer on question change only
 	useEffect(() => {
 		if (isQuizActive && !quizCompleted && isTimerEnabled) {
+			// Reset timeLeft value
 			setTimeLeft(TIMER_DURATION);
-			clearTimer();
+			
+			// Clear any existing timer first
+			setTimerInterval(prevInterval => {
+				if (prevInterval) clearInterval(prevInterval);
+				return null;
+			});
+			
+			// Start new timer if not answered
 			if (!isAnswered) {
 				startTimer();
 			}
@@ -908,9 +939,8 @@ function VocabularyPracticePage() {
 		isQuizActive,
 		quizCompleted,
 		isTimerEnabled,
-		clearTimer,
-		startTimer,
 		isAnswered,
+		startTimer,
 	]);
 
 	// --- Missing Handler Functions ---
@@ -930,7 +960,12 @@ function VocabularyPracticePage() {
 		setSelectedAnswer(null);
 		setTypedAnswer("");
 		setIsAnswered(false);
-		clearTimer();
+		
+		// Clear timer safely
+		setTimerInterval(prevInterval => {
+			if (prevInterval) clearInterval(prevInterval);
+			return null;
+		});
 	};
 
 	const speakWord = (word, language) => {
@@ -960,7 +995,10 @@ function VocabularyPracticePage() {
 		if (isAnswered) return;
 
 		// Clear timer if running
-		clearTimer();
+		setTimerInterval(prevInterval => {
+			if (prevInterval) clearInterval(prevInterval);
+			return null;
+		});
 
 		// Track question timing
 		const questionTime = sessionStats.questionStartTime
@@ -1074,7 +1112,10 @@ function VocabularyPracticePage() {
 		if (isAnswered || !typedAnswer.trim()) return;
 
 		// Clear timer if running
-		clearTimer();
+		setTimerInterval(prevInterval => {
+			if (prevInterval) clearInterval(prevInterval);
+			return null;
+		});
 
 		// Track question timing
 		const questionTime = sessionStats.questionStartTime
@@ -1193,7 +1234,10 @@ function VocabularyPracticePage() {
 		if (isAnswered) return;
 
 		// Clear timer if running
-		clearTimer();
+		setTimerInterval(prevInterval => {
+			if (prevInterval) clearInterval(prevInterval);
+			return null;
+		});
 
 		// Track question timing
 		const questionTime = sessionStats.questionStartTime
@@ -1295,14 +1339,17 @@ function VocabularyPracticePage() {
 	};
 
 	// --- Effects for Timer Management ---
+	// Cleanup the timer when component unmounts
 	useEffect(() => {
 		return () => {
-			if (timerInterval) {
-				clearInterval(timerInterval);
-			}
+			setTimerInterval(prev => {
+				if (prev) clearInterval(prev);
+				return null;
+			});
 		};
-	}, [timerInterval]);
+	}, []); // No dependencies as this is only for unmount
 
+	// Handle timeout when timer reaches zero
 	useEffect(() => {
 		if (
 			isQuizActive &&
@@ -1311,6 +1358,7 @@ function VocabularyPracticePage() {
 			isTimerEnabled &&
 			timeLeft === 0
 		) {
+			// Timer reached zero, call handleTimeUp
 			handleTimeUp();
 		}
 	}, [
@@ -1322,13 +1370,18 @@ function VocabularyPracticePage() {
 		handleTimeUp,
 	]);
 
+	// Main timer management effect
 	useEffect(() => {
+		// Start timer when conditions are right
 		if (isQuizActive && !quizCompleted && isTimerEnabled && !isAnswered) {
 			startTimer();
+		} else {
+			// Clear timer when conditions are not met or component unmounts
+			setTimerInterval(prevInterval => {
+				if (prevInterval) clearInterval(prevInterval);
+				return null;
+			});
 		}
-		return () => {
-			clearTimer();
-		};
 	}, [
 		currentQuestionIndex,
 		isQuizActive,
@@ -1336,7 +1389,6 @@ function VocabularyPracticePage() {
 		isTimerEnabled,
 		isAnswered,
 		startTimer,
-		clearTimer,
 	]);
 
 	// --- Keyboard Shortcuts for Audio Match Mode ---
