@@ -245,10 +245,25 @@ function UserProgressDashboard() {
 									<div className="text-xl font-semibold">
 										{Math.floor(
 											userStories.reduce((total, story) => {
-												const storyContent = JSON.parse(
-													story.story || '{"vocabulary":[]}'
-												);
-												return total + (storyContent.vocabulary?.length || 0);
+												const storyContent = JSON.parse(story.story || "{}");
+												let vocabCount = 0;
+												if (
+													storyContent?.pages &&
+													Array.isArray(storyContent.pages)
+												) {
+													vocabCount = storyContent.pages.reduce(
+														(acc, page) => {
+															return acc + (page.vocabulary?.length || 0);
+														},
+														0
+													);
+												} else if (
+													storyContent?.vocabulary &&
+													Array.isArray(storyContent.vocabulary)
+												) {
+													vocabCount = storyContent.vocabulary.length;
+												}
+												return total + vocabCount;
 											}, 0)
 										).toLocaleString()}
 									</div>
@@ -284,11 +299,26 @@ function UserProgressDashboard() {
 											? Math.floor(
 													userStories.reduce((total, story) => {
 														const storyContent = JSON.parse(
-															story.story || '{"vocabulary":[]}'
+															story.story || "{}"
 														);
-														return (
-															total + (storyContent.vocabulary?.length || 0)
-														);
+														let vocabCount = 0;
+														if (
+															storyContent?.pages &&
+															Array.isArray(storyContent.pages)
+														) {
+															vocabCount = storyContent.pages.reduce(
+																(acc, page) => {
+																	return acc + (page.vocabulary?.length || 0);
+																},
+																0
+															);
+														} else if (
+															storyContent?.vocabulary &&
+															Array.isArray(storyContent.vocabulary)
+														) {
+															vocabCount = storyContent.vocabulary.length;
+														}
+														return total + vocabCount;
 													}, 0) / Math.max(1, userProgress?.streak || 1)
 											  )
 											: 0}

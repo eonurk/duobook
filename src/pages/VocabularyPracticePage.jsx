@@ -175,12 +175,12 @@ function VocabularyPracticePage() {
 	useEffect(() => {
 		if (currentUser) {
 			setIsLoading(true);
-			setError(null);
-			setIsQuizActive(false); // Ensure quiz is not active on load/user change
-			setVocabularyList([]); // Clear previous vocab
+			setError(null); // Clear general errors at the start of fetching
+			setIsQuizActive(false);
+			setVocabularyList([]);
 			setVoices([]);
 			setTtsReady(false);
-			setCanStartQuiz(false);
+			setCanStartQuiz(false); // Reset quiz start capability
 
 			// If storyId is provided, fetch just that story
 			if (storyId) {
@@ -190,34 +190,55 @@ function VocabularyPracticePage() {
 							const storyData = JSON.parse(storyFromApi.story);
 							setStoryTitle(storyFromApi.description || "Story");
 
-							if (storyData?.vocabulary && storyFromApi.targetLanguage) {
-								const validVocab = storyData.vocabulary
+							let extractedVocab = [];
+							if (storyData?.pages && Array.isArray(storyData.pages)) {
+								extractedVocab = storyData.pages.reduce((acc, page) => {
+									if (page.vocabulary && Array.isArray(page.vocabulary)) {
+										return acc.concat(page.vocabulary);
+									}
+									return acc;
+								}, []);
+							} else if (
+								storyData?.vocabulary &&
+								Array.isArray(storyData.vocabulary)
+							) {
+								extractedVocab = storyData.vocabulary;
+							}
+
+							// Set vocab and related language states
+							// Error for "no vocab" will be handled by the new useEffect
+							if (extractedVocab.length > 0 && storyFromApi.targetLanguage) {
+								const validVocab = extractedVocab
 									.filter((v) => v && v.word && v.translation)
 									.map((v) => ({
 										...v,
 										targetLanguage: storyFromApi.targetLanguage,
 										sourceLanguage: storyFromApi.sourceLanguage,
 									}));
-
 								setVocabularyList(validVocab);
-
-								// For a single story, we only have one language
 								setAvailableLanguages([storyFromApi.targetLanguage].sort());
 								setSelectedLanguage(storyFromApi.targetLanguage);
-
-								// Check if quiz can start
-								checkIfCanStart(validVocab, storyFromApi.targetLanguage);
 							} else {
-								setError("No vocabulary found in this story.");
+								// If no vocab extracted, set an empty list.
+								// The new useEffect will handle the "No vocabulary" message.
+								setVocabularyList([]);
+								setAvailableLanguages([]);
+								// setSelectedLanguage will remain or be 'All' by default
 							}
 						} catch (e) {
 							console.error(`Failed to parse story ${storyId}:`, e);
-							setError("Failed to load vocabulary for this story.");
+							setError(
+								"Failed to load vocabulary for this story. (Parsing Error)"
+							);
+							setVocabularyList([]); // Ensure list is empty on error
 						}
 					})
 					.catch((err) => {
 						console.error("Error fetching specific story for practice:", err);
-						setError(err.message || "Failed to load story vocabulary.");
+						setError(
+							err.message || "Failed to load story vocabulary. (Fetch Error)"
+						);
+						setVocabularyList([]); // Ensure list is empty on error
 					})
 					.finally(() => {
 						setIsLoading(false);
@@ -229,23 +250,44 @@ function VocabularyPracticePage() {
 						const allVocab = storiesFromApi.reduce((acc, story) => {
 							try {
 								const storyData = JSON.parse(story.story);
-								if (storyData?.vocabulary && story.targetLanguage) {
-									const validVocab = storyData.vocabulary
+								let extractedVocab = [];
+
+								if (storyData?.pages && Array.isArray(storyData.pages)) {
+									extractedVocab = storyData.pages.reduce((pageAcc, page) => {
+										if (page.vocabulary && Array.isArray(page.vocabulary)) {
+											return pageAcc.concat(page.vocabulary);
+										}
+										return pageAcc;
+									}, []);
+								} else if (
+									storyData?.vocabulary &&
+									Array.isArray(storyData.vocabulary)
+								) {
+									extractedVocab = storyData.vocabulary;
+								}
+
+								if (extractedVocab.length > 0 && story.targetLanguage) {
+									const vocabWithLang = extractedVocab
 										.filter((v) => v && v.word && v.translation)
 										.map((v) => ({
 											...v,
 											targetLanguage: story.targetLanguage,
 											sourceLanguage: story.sourceLanguage,
 										}));
-									acc.push(...validVocab);
+									acc.push(...vocabWithLang);
 								}
 							} catch (e) {
-								console.error(`Failed to parse story ${story.id}:`, e);
+								console.error(
+									`Failed to parse story data for story ID ${
+										story.id || "unknown"
+									}:`,
+									e
+								);
+								// Do not set a general error here, just skip this story's vocab
 							}
 							return acc;
 						}, []);
 
-						// Deduplicate vocabulary list (keeping language tag)
 						const uniqueVocabMap = new Map();
 						allVocab.forEach((item) => {
 							if (
@@ -260,32 +302,81 @@ function VocabularyPracticePage() {
 						const uniqueVocab = Array.from(uniqueVocabMap.values());
 						setVocabularyList(uniqueVocab);
 
-						// Extract available languages
 						const languages = [
 							...new Set(
 								uniqueVocab.map((v) => v.targetLanguage).filter(Boolean)
 							),
 						];
 						setAvailableLanguages(languages.sort());
-
-						// Check if quiz can start with default "All"
-						checkIfCanStart(uniqueVocab, "All");
+						// setSelectedLanguage will remain 'All' or its current value
 					})
 					.catch((err) => {
 						console.error("Error fetching stories for practice:", err);
-						setError(err.message || "Failed to load vocabulary.");
+						setError(
+							err.message || "Failed to load vocabulary. (Fetch All Error)"
+						);
+						setVocabularyList([]); // Ensure list is empty on error
 					})
 					.finally(() => {
 						setIsLoading(false);
 					});
 			}
 		} else {
+			// Not logged in
 			setIsLoading(false);
 			setVocabularyList([]);
 			setShuffledList([]);
 			setIsQuizActive(false);
+			setCanStartQuiz(false);
 		}
-	}, [currentUser, storyId]);
+	}, [currentUser, storyId]); // Simplified dependencies
+
+	// New useEffect to handle quiz readiness and vocabulary-related errors
+	useEffect(() => {
+		if (isLoading) {
+			// If still loading, don't make decisions about quiz readiness or errors yet
+			return;
+		}
+
+		if (!currentUser) {
+			// If user logs out, clear relevant states
+			setError(null);
+			setCanStartQuiz(false);
+			return;
+		}
+
+		if (vocabularyList.length === 0) {
+			// This covers both "No vocabulary found in this story" and "No stories with vocab"
+			setError(
+				"No vocabulary available. Create some stories or check existing ones."
+			);
+			setCanStartQuiz(false);
+			return;
+		}
+
+		// Calculate if quiz can start based on current vocabularyList and selectedLanguage
+		let count = 0;
+		if (selectedLanguage === "All") {
+			const uniqueWords = new Set(vocabularyList.map((v) => v.word));
+			count = uniqueWords.size;
+		} else {
+			count = vocabularyList.filter(
+				(v) => v.targetLanguage === selectedLanguage
+			).length;
+		}
+
+		if (count < MIN_WORDS_FOR_QUIZ) {
+			setError(
+				`Not enough unique words for ${
+					selectedLanguage === "All" ? "any language" : selectedLanguage
+				} (minimum ${MIN_WORDS_FOR_QUIZ} needed).`
+			);
+			setCanStartQuiz(false);
+		} else {
+			setError(null); // Clear previous "not enough words" or "no vocab" errors
+			setCanStartQuiz(true);
+		}
+	}, [isLoading, vocabularyList, selectedLanguage, currentUser]);
 
 	// --- TTS Effects (Adapted from BookView) ---
 	const populateVoiceList = React.useCallback(() => {
@@ -313,28 +404,6 @@ function VocabularyPracticePage() {
 		};
 	}, [populateVoiceList, synth]);
 	// --- End TTS Effects ---
-
-	// Helper function to check if enough words exist for the selected language
-	const checkIfCanStart = (list, language) => {
-		let count = 0;
-		if (language === "All") {
-			// Need to count unique words across all languages
-			const uniqueWords = new Set(list.map((v) => v.word));
-			count = uniqueWords.size;
-		} else {
-			count = list.filter((v) => v.targetLanguage === language).length;
-		}
-		setCanStartQuiz(count >= MIN_WORDS_FOR_QUIZ);
-		if (count < MIN_WORDS_FOR_QUIZ && !isLoading) {
-			setError(
-				`Not enough unique words for ${
-					language === "All" ? "any language" : language
-				} (minimum ${MIN_WORDS_FOR_QUIZ} needed).`
-			);
-		} else if (error && count >= MIN_WORDS_FOR_QUIZ) {
-			setError(null); // Clear error if enough words are now available
-		}
-	};
 
 	// Prepare and start the quiz
 	const handleStartQuiz = () => {
@@ -681,17 +750,14 @@ function VocabularyPracticePage() {
 		setIsQuizActive(false); // Go back to setup screen
 		setQuizCompleted(false); // Ensure completion screen is hidden
 		setError(null); // Clear any previous errors
-		// Re-check if quiz can start with the current selection
-		checkIfCanStart(vocabularyList, selectedLanguage);
+		// The new useEffect will automatically re-evaluate canStartQuiz
 	};
 
 	// Handle language selection change
 	const handleLanguageChange = (event) => {
 		const newLanguage = event.target.value;
 		setSelectedLanguage(newLanguage);
-		// Check if quiz can be started with the new language
-		checkIfCanStart(vocabularyList, newLanguage);
-		setError(null); // Clear potential "not enough words" error from previous selection
+		setError(null); // Clear potential "not enough words" error from previous selection, new effect will check
 	};
 
 	// --- TTS Speak Function ---
