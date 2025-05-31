@@ -855,3 +855,384 @@
 }
 You'd need to add the 'book-cover-image' class to the img tag.
 */
+
+/* Game-like Animations for Vocabulary Practice */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes slideInUp {
+	from {
+		opacity: 0;
+		transform: translateY(30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes slideInDown {
+	from {
+		opacity: 0;
+		transform: translateY(-30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes bounce {
+	0%,
+	20%,
+	53%,
+	80%,
+	100% {
+		transform: translate3d(0, 0, 0);
+	}
+	40%,
+	43% {
+		transform: translate3d(0, -15px, 0);
+	}
+	70% {
+		transform: translate3d(0, -7px, 0);
+	}
+	90% {
+		transform: translate3d(0, -2px, 0);
+	}
+}
+
+@keyframes shake {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	10%,
+	30%,
+	50%,
+	70%,
+	90% {
+		transform: translateX(-5px);
+	}
+	20%,
+	40%,
+	60%,
+	80% {
+		transform: translateX(5px);
+	}
+}
+
+@keyframes glow {
+	0% {
+		box-shadow: 0 0 5px currentColor;
+	}
+	50% {
+		box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+	}
+	100% {
+		box-shadow: 0 0 5px currentColor;
+	}
+}
+
+@keyframes float {
+	0%,
+	100% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-10px);
+	}
+}
+
+/* Custom Tailwind-like Animation Classes */
+.animate-fadeIn {
+	animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-slideInUp {
+	animation: slideInUp 0.5s ease-out forwards;
+}
+
+.animate-slideInDown {
+	animation: slideInDown 0.4s ease-out forwards;
+}
+
+.animate-bounce {
+	animation: bounce 2s infinite;
+}
+
+.animate-shake {
+	animation: shake 0.5s ease-in-out;
+}
+
+.animate-glow {
+	animation: glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+	animation: float 3s ease-in-out infinite;
+}
+
+/* Animation Delays */
+.delay-75 {
+	animation-delay: 75ms;
+}
+
+.delay-150 {
+	animation-delay: 150ms;
+}
+
+.delay-200 {
+	animation-delay: 200ms;
+}
+
+.delay-300 {
+	animation-delay: 300ms;
+}
+
+.delay-400 {
+	animation-delay: 400ms;
+}
+
+.delay-500 {
+	animation-delay: 500ms;
+}
+
+.delay-700 {
+	animation-delay: 700ms;
+}
+
+/* Enhanced Hover and Interactive Effects */
+.hover\:scale-103:hover {
+	transform: scale(1.03);
+}
+
+.hover\:scale-110:hover {
+	transform: scale(1.1);
+}
+
+.hover\:shadow-3xl:hover {
+	box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+}
+
+.hover\:-translate-y-2:hover {
+	transform: translateY(-8px);
+}
+
+/* Border Width Utilities */
+.border-3 {
+	border-width: 3px;
+}
+
+/* Backdrop Blur for Glass Effects */
+.backdrop-blur {
+	backdrop-filter: blur(8px);
+}
+
+.backdrop-blur-sm {
+	backdrop-filter: blur(4px);
+}
+
+/* Gradient Text Effects */
+.bg-clip-text {
+	background-clip: text;
+	-webkit-background-clip: text;
+	color: transparent;
+}
+
+/* Enhanced Welcome Screen Animations */
+.animate-float {
+	animation: float 6s ease-in-out infinite;
+}
+
+.animate-float.delay-100 {
+	animation-delay: 1s;
+}
+
+.animate-float.delay-200 {
+	animation-delay: 2s;
+}
+
+.animate-float.delay-300 {
+	animation-delay: 3s;
+}
+
+/* Pulse variations */
+.animate-pulse.delay-500 {
+	animation-delay: 0.5s;
+}
+
+.animate-pulse.delay-1000 {
+	animation-delay: 1s;
+}
+
+/* Enhanced hover effects */
+.hover\:scale-103:hover {
+	transform: scale(1.03);
+}
+
+.hover\:scale-110:hover {
+	transform: scale(1.1);
+}
+
+.hover\:-translate-y-2:hover {
+	transform: translateY(-0.5rem);
+}
+
+/* Advanced animations for welcome screen */
+@keyframes welcomePulse {
+	0%,
+	100% {
+		opacity: 0.5;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.05);
+	}
+}
+
+@keyframes welcomeGlow {
+	0%,
+	100% {
+		box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+	}
+	50% {
+		box-shadow: 0 0 40px rgba(255, 255, 255, 0.4),
+			0 0 60px rgba(255, 255, 255, 0.2);
+	}
+}
+
+@keyframes welcomeFloat {
+	0%,
+	100% {
+		transform: translateY(0px) rotate(0deg);
+	}
+	33% {
+		transform: translateY(-10px) rotate(1deg);
+	}
+	66% {
+		transform: translateY(5px) rotate(-1deg);
+	}
+}
+
+.animate-welcomePulse {
+	animation: welcomePulse 3s ease-in-out infinite;
+}
+
+.animate-welcomeGlow {
+	animation: welcomeGlow 4s ease-in-out infinite;
+}
+
+.animate-welcomeFloat {
+	animation: welcomeFloat 8s ease-in-out infinite;
+}
+
+/* Mobile-responsive enhancements for vocabulary practice setup */
+@media (max-width: 640px) {
+	.content-area {
+		padding: 1rem;
+		margin: 0.5rem auto 0;
+	}
+
+	/* Setup screen mobile optimizations */
+	.vocabulary-setup-container {
+		padding: 1rem !important;
+		margin: 0.5rem 0 !important;
+	}
+
+	.vocabulary-setup-header {
+		margin-bottom: 1rem !important;
+		flex-direction: column !important;
+		gap: 0.75rem !important;
+	}
+
+	.vocabulary-setup-header .flex {
+		justify-content: center !important;
+	}
+
+	/* Game mode cards mobile layout */
+	.game-mode-grid {
+		grid-template-columns: 1fr !important;
+		gap: 0.75rem !important;
+	}
+
+	.game-mode-card {
+		padding: 1rem !important;
+		text-align: center !important;
+	}
+
+	.game-mode-icon {
+		width: 3rem !important;
+		height: 3rem !important;
+		margin-bottom: 0.75rem !important;
+	}
+
+	.game-mode-icon svg {
+		width: 1.5rem !important;
+		height: 1.5rem !important;
+	}
+
+	/* Advanced settings mobile layout */
+	.settings-grid {
+		grid-template-columns: 1fr !important;
+		gap: 1rem !important;
+	}
+
+	.settings-panel {
+		padding: 1rem !important;
+		margin-bottom: 1rem !important;
+	}
+
+	/* Language selector mobile */
+	.language-selector {
+		padding: 0.75rem !important;
+		font-size: 1rem !important;
+	}
+
+	/* Start button mobile */
+	.start-quiz-button {
+		width: 100% !important;
+		padding: 1rem !important;
+		font-size: 1.125rem !important;
+		margin-top: 1.5rem !important;
+	}
+
+	/* Mobile touch targets */
+	.mobile-touch-target {
+		min-height: 44px !important;
+		min-width: 44px !important;
+	}
+}
+
+@media (max-width: 480px) {
+	.content-area {
+		padding: 0.75rem;
+	}
+
+	/* Extra small screens */
+	.vocabulary-setup-container {
+		padding: 0.75rem !important;
+	}
+
+	.game-mode-card {
+		padding: 0.75rem !important;
+	}
+
+	.game-mode-card h3 {
+		font-size: 1rem !important;
+		margin-bottom: 0.5rem !important;
+	}
+
+	.game-mode-card p {
+		font-size: 0.8rem !important;
+	}
+}
