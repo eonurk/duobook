@@ -669,6 +669,9 @@ function VocabularyPracticePage() {
 		setAnimateTrigger(0);
 		setShowHint(false);
 		setTypedAnswer("");
+		
+		// Always reset flashcard to front side for new questions
+		setIsFlashcardFlipped(false);
 
 		// Reset and start timer if enabled
 		if (isTimerEnabled) {
@@ -960,6 +963,8 @@ function VocabularyPracticePage() {
 		setSelectedAnswer(null);
 		setTypedAnswer("");
 		setIsAnswered(false);
+		// Make sure flashcards start with front side showing
+		setIsFlashcardFlipped(false);
 		
 		// Clear timer safely
 		setTimerInterval(prevInterval => {
