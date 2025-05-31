@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+	useState,
+	useEffect,
+	useRef,
+	useCallback,
+	Suspense,
+	lazy,
+} from "react";
 import {
 	Routes,
 	Route,
@@ -15,10 +22,6 @@ import { useAuth } from "@/context/AuthContext"; // Use alias
 import CookieConsent from "@/components/CookieConsent"; // Import Cookie Consent
 import Navbar from "@/components/Layout/Navbar"; // Use alias - Import Navbar
 import SiteFooter from "@/components/Layout/SiteFooter"; // Use alias - Import Footer
-import UserProfilePage from "@/components/User/UserProfilePage"; // Use alias
-import MyStoriesPage from "@/components/User/MyStoriesPage"; // Use alias
-import UserProgressDashboard from "@/components/User/UserProgressDashboard"; // Import ProgressDashboard
-import Achievements from "@/components/Gamification/Achievements"; // Import Achievements component
 import AchievementNotifier from "@/components/Gamification/AchievementNotifier"; // Import AchievementNotifier
 import DuoBookExplain from "@/assets/duobook-explain.webp"; // Use alias
 import DailyLimitImage from "@/assets/daily-limit.webp"; // Import daily limit image
@@ -26,15 +29,28 @@ import steveJpeg from "@/assets/steve.jpeg";
 import elonJpeg from "@/assets/elon.jpeg";
 import jeffJpeg from "@/assets/jeff.jpeg";
 import leonardoJpeg from "@/assets/leonardo.jpeg"; // Placeholder for Leonardo da Vinci image
-import PrivacyPolicy from "@/pages/PrivacyPolicy"; // Import PrivacyPolicy
-import TermsOfService from "@/pages/TermsOfService"; // Import TermsOfService
-import VocabularyPracticePage from "@/pages/VocabularyPracticePage"; // Import Practice Page
-import ContactUs from "@/pages/ContactUs"; // Import Contact Us page
-import ExploreStoriesPage from "@/pages/ExploreStoriesPage"; // ADDED: Import ExploreStoriesPage
-import NewsPage from "@/pages/NewsPage"; // Import NewsPage
-import PricingPage from "@/pages/PricingPage"; // Import Pricing Page
-import LeaderboardPage from "@/components/Gamification/LeaderboardPage"; // ADDED: Import LeaderboardPage
 import FsrsEffectivenessCharts from "@/components/Gamification/FsrsEffectivenessCharts"; // ADDED: Import FSRS Charts
+
+const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
+const VocabularyPracticePage = lazy(() =>
+	import("@/pages/VocabularyPracticePage")
+);
+const ContactUs = lazy(() => import("@/pages/ContactUs"));
+const ExploreStoriesPage = lazy(() => import("@/pages/ExploreStoriesPage"));
+const NewsPage = lazy(() => import("@/pages/NewsPage"));
+const PricingPage = lazy(() => import("@/pages/PricingPage"));
+const UserProfilePage = lazy(() => import("@/components/User/UserProfilePage"));
+const MyStoriesPage = lazy(() => import("@/components/User/MyStoriesPage"));
+const UserProgressDashboard = lazy(() =>
+	import("@/components/User/UserProgressDashboard")
+);
+const Achievements = lazy(() =>
+	import("@/components/Gamification/Achievements")
+);
+const LeaderboardPage = lazy(() =>
+	import("@/components/Gamification/LeaderboardPage")
+);
 
 import {
 	ArrowDown,
@@ -677,12 +693,14 @@ function MainAppView({ generateStory }) {
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto mb-12">
 							{[
 								{
+									id: 1,
 									icon: <BookHeart className="w-10 h-10 text-rose-500 mb-3" />,
 									title: "Bilingual Stories",
 									description:
 										"Read engaging stories with parallel text in your target and source languages.",
 								},
 								{
+									id: 2,
 									icon: (
 										<TrendingUp className="w-10 h-10 text-green-500 mb-3" />
 									),
@@ -691,20 +709,22 @@ function MainAppView({ generateStory }) {
 										"Monitor your learning journey with streaks, levels, and experience points.",
 								},
 								{
+									id: 3,
 									icon: <Award className="w-10 h-10 text-amber-500 mb-3" />,
 									title: "Earn Achievements",
 									description:
 										"Stay motivated by unlocking achievements as you learn and explore.",
 								},
 								{
+									id: 4,
 									icon: <Puzzle className="w-10 h-10 text-sky-500 mb-3" />,
 									title: "Practice & Reinforce",
 									description:
 										"Solidify your knowledge with vocabulary practice and upcoming interactive exercises.",
 								},
-							].map((feature, index) => (
+							].map((feature) => (
 								<div
-									key={index}
+									key={feature.id} // Use a stable key like an id
 									className="flex flex-col items-center text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
 								>
 									{feature.icon}
@@ -843,6 +863,7 @@ function MainAppView({ generateStory }) {
 						<div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
 							{[
 								{
+									id: 1,
 									quote:
 										"The parallel text feature is genius. I have to work but I can't get out of the stories!",
 									name: "Cagla L.",
@@ -850,6 +871,7 @@ function MainAppView({ generateStory }) {
 									stars: 5,
 								},
 								{
+									id: 2,
 									quote:
 										"Arabic is hard but being able to read and listen at the same time is a game changer.",
 									name: "Laura R.",
@@ -857,15 +879,16 @@ function MainAppView({ generateStory }) {
 									stars: 5,
 								},
 								{
+									id: 3,
 									quote:
 										"I'm learning Spanish and DuoBook is my favorite way to learn so far. My stories are so engaging :D",
 									name: "Onur K.",
 									role: "Spanish Learner",
 									stars: 5,
 								},
-							].map((testimonial, index) => (
+							].map((testimonial) => (
 								<Card
-									key={index}
+									key={testimonial.id} // Use a stable key like an id
 									className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col"
 								>
 									<CardContent className="pt-6 flex-grow">
@@ -1240,6 +1263,65 @@ function App() {
 	// 	trackPageView(pageName); // Requires import
 	// }, [location]);
 
+	// Define static data outside the component or import if moved to a constants file
+	const keyFeaturesData = [
+		{
+			id: 1,
+			icon: <BookHeart className="w-10 h-10 text-rose-500 mb-3" />,
+			title: "Bilingual Stories",
+			description:
+				"Read engaging stories with parallel text in your target and source languages.",
+		},
+		{
+			id: 2,
+			icon: <TrendingUp className="w-10 h-10 text-green-500 mb-3" />,
+			title: "Track Your Progress",
+			description:
+				"Monitor your learning journey with streaks, levels, and experience points.",
+		},
+		{
+			id: 3,
+			icon: <Award className="w-10 h-10 text-amber-500 mb-3" />,
+			title: "Earn Achievements",
+			description:
+				"Stay motivated by unlocking achievements as you learn and explore.",
+		},
+		{
+			id: 4,
+			icon: <Puzzle className="w-10 h-10 text-sky-500 mb-3" />,
+			title: "Practice & Reinforce",
+			description:
+				"Solidify your knowledge with vocabulary practice and upcoming interactive exercises.",
+		},
+	];
+
+	const testimonialsData = [
+		{
+			id: 1,
+			quote:
+				"The parallel text feature is genius. I have to work but I can't get out of the stories!",
+			name: "Cagla L.",
+			role: "Dutch Learner",
+			stars: 5,
+		},
+		{
+			id: 2,
+			quote:
+				"Arabic is hard but being able to read and listen at the same time is a game changer.",
+			name: "Laura R.",
+			role: "Arabic Learner",
+			stars: 5,
+		},
+		{
+			id: 3,
+			quote:
+				"I'm learning Spanish and DuoBook is my favorite way to learn so far. My stories are so engaging :D",
+			name: "Onur K.",
+			role: "Spanish Learner",
+			stars: 5,
+		},
+	];
+
 	// generateStory function defined within App
 	const generateStory = async (
 		description,
@@ -1438,71 +1520,85 @@ function App() {
 			<Toaster position="top-center" reverseOrder={false} />
 			<AchievementNotifier />
 			<Navbar ref={navbarRef} />
-
-			<Routes>
-				<Route
-					path="/"
-					element={<MainAppView generateStory={generateStory} />}
-				/>
-				<Route path="/story/:shareId" element={<StoryViewPage />} />
-				<Route path="/privacy" element={<PrivacyPolicy />} />
-				<Route path="/terms" element={<TermsOfService />} />
-				<Route path="/contact" element={<ContactUs />} />
-				<Route path="/explore-stories" element={<ExploreStoriesPage />} />
-				<Route path="/news" element={<NewsPage />} />
-				<Route path="/pricing" element={<PricingPage />} />
-				{/* Protected Routes */}
-				<Route
-					path="/profile"
-					element={
-						<ProtectedRoute>
-							<UserProfilePage />
-						</ProtectedRoute>
-					}
-				/>
-				<Route
-					path="/my-stories"
-					element={
-						<ProtectedRoute>
-							<MyStoriesPage />
-						</ProtectedRoute>
-					}
-				/>
-				<Route
-					path="/progress"
-					element={
-						<ProtectedRoute>
-							<UserProgressDashboard />
-						</ProtectedRoute>
-					}
-				/>
-				<Route
-					path="/practice"
-					element={
-						<ProtectedRoute>
-							<VocabularyPracticePage />
-						</ProtectedRoute>
-					}
-				/>
-				<Route
-					path="/achievements"
-					element={
-						<ProtectedRoute>
-							<Achievements />
-						</ProtectedRoute>
-					}
-				/>
-				<Route
-					path="/leaderboard"
-					element={
-						<ProtectedRoute>
-							<LeaderboardPage />
-						</ProtectedRoute>
-					}
-				/>
-				<Route path="*" element={<Navigate to="/" replace />} />
-			</Routes>
+			<Suspense
+				fallback={
+					<div className="flex justify-center items-center h-screen">
+						<Loader2 className="h-12 w-12 animate-spin text-primary" />
+					</div>
+				}
+			>
+				<Routes>
+					<Route
+						path="/"
+						element={
+							<MainAppView
+								generateStory={generateStory}
+								keyFeaturesData={keyFeaturesData}
+								testimonialsData={testimonialsData}
+							/>
+						}
+					/>
+					<Route path="/story/:shareId" element={<StoryViewPage />} />
+					<Route path="/privacy" element={<PrivacyPolicy />} />
+					<Route path="/terms" element={<TermsOfService />} />
+					<Route path="/contact" element={<ContactUs />} />
+					<Route path="/explore-stories" element={<ExploreStoriesPage />} />
+					<Route path="/news" element={<NewsPage />} />
+					<Route path="/pricing" element={<PricingPage />} />
+					{/* Protected Routes */}
+					<Route
+						path="/profile"
+						element={
+							<ProtectedRoute>
+								<UserProfilePage />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/my-stories"
+						element={
+							<ProtectedRoute>
+								<MyStoriesPage />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/progress"
+						element={
+							<ProtectedRoute>
+								<UserProgressDashboard />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/practice"
+						element={
+							<ProtectedRoute>
+								<VocabularyPracticePage />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/achievements"
+						element={
+							<ProtectedRoute>
+								<Achievements />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/leaderboard"
+						element={
+							<ProtectedRoute>
+								<LeaderboardPage />
+							</ProtectedRoute>
+						}
+					/>
+					<Route path="*" element={<Navigate to="/" replace />} />
+				</Routes>
+			</Suspense>
 			<SiteFooter />
+			<CookieConsent />
 		</div>
 	);
 }

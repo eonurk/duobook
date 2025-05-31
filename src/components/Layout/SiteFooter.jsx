@@ -25,13 +25,13 @@ export function SiteFooter() {
 						Contact Us
 					</Link>
 					<Link
-						to="/privacy-policy"
+						to="/privacy"
 						className="text-xs hover:underline underline-offset-4 text-muted-foreground"
 					>
 						Privacy Policy
 					</Link>
 					<Link
-						to="/terms-of-service"
+						to="/terms"
 						className="text-xs hover:underline underline-offset-4 text-muted-foreground"
 					>
 						Terms of Service

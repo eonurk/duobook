@@ -268,7 +268,7 @@ function CookieConsent() {
 
 					<div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
 						<a
-							href="/privacy-policy"
+							href="/privacy"
 							className="text-amber-600 dark:text-amber-400 hover:underline"
 						>
 							Privacy Policy
