@@ -35,10 +35,13 @@ import NewsPage from "@/pages/NewsPage"; // Import NewsPage
 import PricingPage from "@/pages/PricingPage"; // Import Pricing Page
 import LeaderboardPage from "@/components/Gamification/LeaderboardPage"; // ADDED: Import LeaderboardPage
 import FsrsEffectivenessCharts from "@/components/Gamification/FsrsEffectivenessCharts"; // ADDED: Import FSRS Charts
+
 import {
 	ArrowDown,
 	Sparkles,
 	CheckCircle2,
+	BookText,
+	Heart,
 	Loader2,
 	X,
 	BookHeart,
@@ -53,6 +56,8 @@ import {
 	ChevronLeft, // Added
 	ChevronRight, // Added
 } from "lucide-react"; // Import ArrowDown icon and new icons
+
+import { getTotalStoriesCount, getTotalUsersCount } from "@/lib/api"; // Import stats API functions
 import {
 	// getStories, // Commented out: Will be used in MyStoriesPage
 	// deleteStory, // Commented out: Will be used in MyStoriesPage
@@ -184,6 +189,8 @@ const externalBookExamples = [
 
 	// Add more external books here if needed
 ];
+
+// Calculate the number of supported languages
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -344,6 +351,12 @@ function MainAppView({ generateStory }) {
 	const [loadingCommunityStories, setLoadingCommunityStories] = useState(false);
 	const [communityStoriesError, setCommunityStoriesError] = useState(null);
 
+	// Stats State
+	const [totalStories, setTotalStories] = useState(null);
+	const [totalUsers, setTotalUsers] = useState(null);
+	const [statsLoading, setStatsLoading] = useState(true);
+	const numberOfLanguages = 110;
+
 	const updateScrollButtons = useCallback(() => {
 		const scrollContainer = externalBooksScrollRef.current;
 		if (scrollContainer) {
@@ -378,6 +391,25 @@ function MainAppView({ generateStory }) {
 		};
 		fetchCommunityStories();
 	}, [idToken]);
+
+	useEffect(() => {
+		const fetchStats = async () => {
+			try {
+				setStatsLoading(true);
+				const storiesData = await getTotalStoriesCount();
+				setTotalStories(storiesData.totalStories);
+
+				const usersData = await getTotalUsersCount();
+				setTotalUsers(usersData.totalUsers);
+			} catch (error) {
+				console.error("Failed to fetch site statistics:", error);
+			} finally {
+				setStatsLoading(false);
+			}
+		};
+
+		fetchStats();
+	}, []);
 
 	// Effect to reset scroll position and update buttons
 	useEffect(() => {
@@ -685,37 +717,101 @@ function MainAppView({ generateStory }) {
 						</div>
 					</div>
 				)}
-
 				{/* FSRS Effectiveness Charts Section */}
 				{!isGenerating && <FsrsEffectivenessCharts />}
 
-				{/* Call to Action Section */}
-				{!isGenerating && (
-					<div className="mt-16 pt-12 text-center bg-gradient-to-r from-amber-200 to-amber-500 text-white py-16 px-6 rounded-lg">
-						<Rocket className="w-16 h-16 mx-auto mb-6 " />
-						<h2 className="text-2xl md:text-4xl font-bold mb-4 text-amber-800">
-							Ready to Craft Your Language Adventure?
-						</h2>
-						<p className="text-md md:text-xl max-w-2xl mx-auto mb-8 px-8 ">
-							Stop just memorizing words. Start understanding in context.
-							Generate your first personalized bilingual story now!
-						</p>
-						<Button
-							onClick={() => {
-								const inputForm = document.getElementById("input-form-section"); // Assuming InputForm has an id
-								if (inputForm) {
-									inputForm.scrollIntoView({ behavior: "smooth" });
-								}
-							}}
-							className=" bg-amber-800 hover:bg-amber-500 text-lg py-6 px-8 rounded-lg transition-transform transform hover:scale-105"
-						>
-							Create Your First Story
-						</Button>
-						<div className="mt-8 flex flex-col items-center text-amber-900">
-							3 free stories&nbsp;each day
-							<p className="text-xs  mt-1 opacity-70">
-								No card required. Just start reading.
+				{statsLoading ? (
+					<div className="flex justify-center items-center py-8">
+						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+						<p className="text-sm text-slate-500 ml-3">Loading stats...</p>
+					</div>
+				) : (
+					<div className="mt-10">
+						<div className="text-center mb-8">
+							<h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+								DuoBook Stats
+							</h1>
+							<p className="text-slate-600">
+								Join thousands of learners worldwide
 							</p>
+						</div>
+						<div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+							{totalStories !== null && (
+								<div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 shadow-sm hover:shadow-md transition-all duration-300">
+									<div className="flex items-center justify-between">
+										<div>
+											<p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+												{totalStories.toLocaleString()}+
+											</p>
+											<p className="text-sm text-slate-600 mt-1 font-medium">
+												Stories Generated
+											</p>
+										</div>
+										<div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+											<BookText className="w-6 h-6 text-white" />
+										</div>
+									</div>
+								</div>
+							)}
+							{totalUsers !== null && (
+								<div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100 shadow-sm hover:shadow-md transition-all duration-300">
+									<div className="flex items-center justify-between">
+										<div>
+											<p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+												{totalUsers.toLocaleString()}+
+											</p>
+											<p className="text-sm text-slate-600 mt-1 font-medium">
+												Language Learners
+											</p>
+										</div>
+										<div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+											<Heart className="w-6 h-6 text-white" />
+										</div>
+									</div>
+								</div>
+							)}
+							{/* Display Number of Languages Supported */}
+							<div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-6 border border-indigo-100 shadow-sm hover:shadow-md transition-all duration-300">
+								<div className="flex items-center justify-between">
+									<div>
+										<p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+											{numberOfLanguages}+
+										</p>
+										<p className="text-sm text-slate-600 mt-1 font-medium">
+											Languages Supported
+										</p>
+									</div>
+									<div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl flex items-center justify-center">
+										<svg
+											className="w-6 h-6 text-white"
+											fill="currentColor"
+											viewBox="0 0 20 20"
+										>
+											<path
+												fillRule="evenodd"
+												d="M7 2a1 1 0 011 1v1h3a1 1 0 110 2H9.578a18.87 18.87 0 01-1.724 4.78c.29.354.596.696.914 1.026a1 1 0 11-1.44 1.389c-.188-.196-.373-.396-.554-.6a19.098 19.098 0 01-3.107 3.567 1 1 0 01-1.334-1.49 17.087 17.087 0 003.13-3.733 18.992 18.992 0 01-1.487-2.494 1 1 0 111.79-.89c.234.47.489.928.764 1.372.417-.934.752-1.913.997-2.927H3a1 1 0 110-2h3V3a1 1 0 011-1zm6 6a1 1 0 01.894.553l2.991 5.982a.869.869 0 01.02.037l.99 1.98a1 1 0 11-1.79.895L15.383 16h-4.764l-.724 1.447a1 1 0 11-1.788-.894l.99-1.98.019-.038 2.99-5.982A1 1 0 0113 8zm-1.382 6h2.764L13 12.236 11.618 14z"
+												clipRule="evenodd"
+											/>
+										</svg>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div className="text-center mt-12">
+							<a
+								href="https://news.ycombinator.com/item?id=43886381"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="inline-block"
+								// Classes for a more badge-like appearance: smaller, rounded, specific colors
+							>
+								<img
+									src="https://hackerbadge.vercel.app/api?id=43886381"
+									alt="Hacker News Logo"
+									className="aspect-auto w-48"
+								/>
+							</a>
 						</div>
 					</div>
 				)}
@@ -806,7 +902,36 @@ function MainAppView({ generateStory }) {
 						</div>
 					</div>
 				)}
-
+				{/* Call to Action Section */}
+				{!isGenerating && (
+					<div className="mt-16 pt-12 text-center bg-gradient-to-r from-amber-200 to-amber-500 text-white py-16 px-6 rounded-lg">
+						<Rocket className="w-16 h-16 mx-auto mb-6 " />
+						<h2 className="text-2xl md:text-4xl font-bold mb-4 text-amber-800">
+							Ready to Craft Your Language Adventure?
+						</h2>
+						<p className="text-md md:text-xl max-w-2xl mx-auto mb-8 px-8 ">
+							Stop just memorizing words. Start understanding in context.
+							Generate your first personalized bilingual story now!
+						</p>
+						<Button
+							onClick={() => {
+								const inputForm = document.getElementById("input-form-section"); // Assuming InputForm has an id
+								if (inputForm) {
+									inputForm.scrollIntoView({ behavior: "smooth" });
+								}
+							}}
+							className=" bg-amber-800 hover:bg-amber-500 text-lg py-6 px-8 rounded-lg transition-transform transform hover:scale-105"
+						>
+							Create Your First Story
+						</Button>
+						<div className="mt-8 flex flex-col items-center text-amber-900">
+							3 free stories&nbsp;each day
+							<p className="text-xs  mt-1 opacity-70">
+								No card required. Just start reading.
+							</p>
+						</div>
+					</div>
+				)}
 				{/* ADDED: Latest Community Stories Section */}
 				{!isGenerating &&
 					(latestCommunityStories.length > 0 ||
