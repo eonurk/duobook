@@ -620,13 +620,26 @@ app.post(
 		let prompt;
 		const isProStoryRequest = length === "very_long_pro";
 
+		let numPages;
+		if (isProStoryRequest) {
+			numPages = 10; // Updated to 10 pages
+		} else if (length === "long") {
+			numPages = 4; // Updated to 4 pages
+		} else if (length === "medium") {
+			numPages = 2; // Updated to 2 pages
+		} else if (length === "short") {
+			numPages = 1; // Updated to 1 page
+		} else {
+			console.log("Invalid length parameter:", numPages);
+		}
+
 		// Common part of the prompt
 		let basePrompt = `Analyze the user's description: "${description}".
 			
 If the description contains profanity, hate speech, incitement to violence, or other severely harmful content, then do not generate the story. Instead, return a JSON object with a single key "moderation_error", and its value being a string explaining the violation. For example: { "moderation_error": "The story description contains prohibited content (e.g., profanity or hate speech). Please revise." }
 If the description is acceptable, proceed to generate a story as requested below. 
 
-Create an interesting story based on this description. 
+Create an interesting story based on this description. The story should have exactly ${numPages} pages.
 The story should be suitable for a ${story_difficulty} learner of ${target} whose native language is ${source}. 
 `;
 
@@ -666,22 +679,10 @@ The story should be suitable for a ${story_difficulty} learner of ${target} whos
 				basePrompt += grammarInstruction;
 			}
 		}
-		let numPages;
-		if (isProStoryRequest) {
-			numPages = 10; // Updated to 10 pages
-		} else if (length === "long") {
-			numPages = 4; // Updated to 4 pages
-		} else if (length === "medium") {
-			numPages = 2; // Updated to 2 pages
-		} else if (length === "short") {
-			numPages = 1; // Updated to 1 page
-		}
 
 		prompt =
 			basePrompt +
-			`The story should have exactly ${numPages} pages.
-			
-Return the story as a JSON object with a single key "pages".
+			`Return the story as a JSON object with a single key "pages".
 "pages" should be an array of page objects. Each page object must have two keys:
 1.  "sentencePairs": An array of objects, where each object has a "source" sentence (in ${source}) and a "target" sentence (translated to ${target}). Each "sentencePairs" array should contain between 10 and 12 sentence pairs.
 2.  "vocabulary": An array of objects, where each object has a "word" (in ${source}) and its "translation" (in ${target}), relevant to that page's content.
