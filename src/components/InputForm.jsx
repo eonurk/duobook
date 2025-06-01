@@ -536,7 +536,6 @@ function InputForm({
 				>
 					Craft <b>your story</b> to learn a language
 				</p>
-
 				<img
 					src={duobookImg}
 					alt="DuoBook"
@@ -546,7 +545,6 @@ function InputForm({
 						margin: "0 auto 1.5rem auto", // Center horizontally, keep bottom margin
 					}}
 				/>
-
 				{/* Section 1: Story Idea */}
 				<fieldset className="form-section mb-0">
 					<legend className="form-section-title">Story Idea</legend>
@@ -598,7 +596,6 @@ function InputForm({
 						</div>
 					</div>
 				</fieldset>
-
 				{/* Section 2: Languages */}
 				<fieldset className="form-section">
 					<legend className="form-section-title">Languages</legend>
@@ -654,7 +651,6 @@ function InputForm({
 						</div>
 					</div>
 				</fieldset>
-
 				{/* Section 3: Story Settings */}
 				<fieldset className="form-section mt-6">
 					<legend className="form-section-title">Story Settings</legend>
@@ -896,31 +892,44 @@ function InputForm({
 					</div>
 				</fieldset>
 
-				{isMobile && !isLoading && !currentUser && (
-					<p className="text-center text-xs px-2 text-slate-500 mb-0">
-						<button
-							type="button"
-							onClick={() => {
-								setActiveTab("login");
-								setShowAuthDialog(true);
-							}}
-							className="underline font-normal hover:text-amber-800"
-						>
-							Log in
-						</button>{" "}
-						or{" "}
-						<button
-							type="button"
-							onClick={() => {
-								setActiveTab("signup");
-								setShowAuthDialog(true);
-							}}
-							className="underline font-normal hover:text-amber-800"
-						>
-							Sign up
-						</button>{" "}
-						to create your story.
-					</p>
+				{!isLoading && !currentUser && (
+					<div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl text-center transform transition-all duration-500 ease-out animate-in slide-in-from-bottom-3 fade-in">
+						<div className="flex items-center justify-center mb-2">
+							<div className="text-sm font-medium text-amber-800 transition-colors duration-300">
+								Create your account to get started
+							</div>
+						</div>
+
+						<p className="text-xs text-amber-700 mb-1">
+							Join thousands of language learners.<br></br> 3 free stories
+							daily.
+						</p>
+						<div className="flex justify-center">
+							<Heart className="w-5 h-5 text-amber-600 mb-3" />
+						</div>
+						<div className="flex gap-3 justify-center">
+							<button
+								type="button"
+								onClick={() => {
+									setActiveTab("signup");
+									setShowAuthDialog(true);
+								}}
+								className="px-5 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 active:bg-amber-700 transition-all duration-200 ease-out transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
+							>
+								Sign Up
+							</button>
+							<button
+								type="button"
+								onClick={() => {
+									setActiveTab("login");
+									setShowAuthDialog(true);
+								}}
+								className="px-5 py-2.5 border border-amber-300 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-50 hover:border-amber-400 active:bg-amber-100 transition-all duration-200 ease-out transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-1"
+							>
+								Log In
+							</button>
+						</div>
+					</div>
 				)}
 
 				<button
@@ -1042,7 +1051,6 @@ function InputForm({
 						</>
 					)}
 				</button>
-
 				{/* Subtle call-to-action to view a sample DuoBook */}
 				{!currentUser && (
 					<div className="flex justify-center mt-1.5">
@@ -1065,13 +1073,11 @@ function InputForm({
 						</button>
 					</div>
 				)}
-
 				{isMobile && !isLoading && !description.trim() && currentUser && (
 					<p className="text-center text-sm text-amber-700 mt-3 px-2">
 						Please add a story idea above to create your book.
 					</p>
 				)}
-
 				{!isLoading && description.trim() && sourceLang === targetLang && (
 					<p className="text-center text-sm text-red-600 mt-3 px-2">
 						Your language and the language to learn must be different.

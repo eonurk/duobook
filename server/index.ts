@@ -295,7 +295,7 @@ const getStoryGenerationWeight = (length: string): number => {
 		case "long":
 			return 3;
 		case "very_long_pro":
-			return 3; // Pro stories also count as 3	
+			return 3; // Pro stories also count as 3
 		default:
 			return 1; // Default to 1 if length is unknown
 	}
@@ -608,6 +608,15 @@ app.post(
 			return next(err);
 		}
 
+		let story_difficulty;
+		if (difficulty == "beginner") {
+			story_difficulty = "A1/A2";
+		} else if (difficulty == "intermediate") {
+			story_difficulty = "B1/B2";
+		} else if (difficulty == "advanced") {
+			story_difficulty = "C1/C2";
+		}
+
 		let prompt;
 		const isProStoryRequest = length === "very_long_pro";
 
@@ -618,7 +627,7 @@ If the description contains profanity, hate speech, incitement to violence, or o
 If the description is acceptable, proceed to generate a story as requested below. 
 
 Create an interesting story based on this description. 
-The story should be suitable for a ${difficulty} learner of ${target} whose native language is ${source}. 
+The story should be suitable for a ${story_difficulty} learner of ${target} whose native language is ${source}. 
 `;
 
 		// Add genre if provided
