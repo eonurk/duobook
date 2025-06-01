@@ -546,12 +546,13 @@ function InputForm({
 					.custom-range::-webkit-slider-thumb {
 						width: 24px;
 						height: 24px;
-						margin-top: -10px;
+						margin-top: 0px;
 					}
 					
 					.custom-range::-moz-range-thumb {
 						width: 24px;
 						height: 24px;
+						margin-top: 0px;
 					}
 					
 					/* Add larger touch targets for mobile */
