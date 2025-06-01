@@ -544,14 +544,14 @@ function InputForm({
 					}
 					
 					.custom-range::-webkit-slider-thumb {
-						width: 32px;
-						height: 32px;
+						width: 24px;
+						height: 24px;
 						margin-top: -10px;
 					}
 					
 					.custom-range::-moz-range-thumb {
-						width: 32px;
-						height: 32px;
+						width: 24px;
+						height: 24px;
 					}
 					
 					/* Add larger touch targets for mobile */
