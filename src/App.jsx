@@ -82,7 +82,7 @@ import {
 	// getAllAchievements, // Commented out: Will be used elsewhere (e.g., Achievements page)
 	// getUserAchievements // Commented out: Will be used elsewhere
 	// generateStoryViaBackend, // Removed unused import (now handled within generateStory)
-	getLatestStories, // ADDED: Import for fetching latest stories
+	//getLatestStories, // ADDED: Import for fetching latest stories
 	createStory,
 	generateStoryViaBackend,
 	getStoryGenerationLimit, // Ensure getStoryGenerationLimit is imported from the correct path
@@ -352,7 +352,7 @@ function MainAppView({ generateStory }) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [formError, setFormError] = useState(null);
 	const [formParams, setFormParams] = useState(null);
-	const { idToken, userProgress } = useAuth(); // Get idToken and userProgress
+	const { userProgress } = useAuth(); // Get idToken and userProgress
 
 	// Ref for the scrollable container of external book examples
 	const externalBooksScrollRef = useRef(null);
@@ -363,9 +363,9 @@ function MainAppView({ generateStory }) {
 	const userSubscriptionTier = userProgress?.subscriptionTier || "FREE";
 
 	// State for latest community stories
-	const [latestCommunityStories, setLatestCommunityStories] = useState([]);
-	const [loadingCommunityStories, setLoadingCommunityStories] = useState(false);
-	const [communityStoriesError, setCommunityStoriesError] = useState(null);
+	// const [latestCommunityStories, setLatestCommunityStories] = useState([]);
+	// const [loadingCommunityStories, setLoadingCommunityStories] = useState(false);
+	// const [communityStoriesError, setCommunityStoriesError] = useState(null);
 
 	// Stats State
 	const [totalStories, setTotalStories] = useState(null);
@@ -389,24 +389,24 @@ function MainAppView({ generateStory }) {
 		}
 	}, []);
 
-	useEffect(() => {
-		// Fetch community stories
-		const fetchCommunityStories = async () => {
-			setLoadingCommunityStories(true);
-			setCommunityStoriesError(null);
-			try {
-				const data = await getLatestStories(idToken, 1, 3, true);
-				setLatestCommunityStories(data.stories || []);
-			} catch (err) {
-				console.error("Error fetching community stories for main page:", err);
-				setCommunityStoriesError(
-					err.message || "Could not load community stories."
-				);
-			}
-			setLoadingCommunityStories(false);
-		};
-		fetchCommunityStories();
-	}, [idToken]);
+	// useEffect(() => {
+	// 	// Fetch community stories
+	// 	const fetchCommunityStories = async () => {
+	// 		setLoadingCommunityStories(true);
+	// 		setCommunityStoriesError(null);
+	// 		try {
+	// 			const data = await getLatestStories(idToken, 1, 3, true);
+	// 			setLatestCommunityStories(data.stories || []);
+	// 		} catch (err) {
+	// 			console.error("Error fetching community stories for main page:", err);
+	// 			setCommunityStoriesError(
+	// 				err.message || "Could not load community stories."
+	// 			);
+	// 		}
+	// 		setLoadingCommunityStories(false);
+	// 	};
+	// 	fetchCommunityStories();
+	// }, [idToken]);
 
 	useEffect(() => {
 		const fetchStats = async () => {
@@ -956,7 +956,7 @@ function MainAppView({ generateStory }) {
 					</div>
 				)}
 				{/* ADDED: Latest Community Stories Section */}
-				{!isGenerating &&
+				{/* {!isGenerating &&
 					(latestCommunityStories.length > 0 ||
 						loadingCommunityStories ||
 						communityStoriesError) && (
@@ -1000,249 +1000,11 @@ function MainAppView({ generateStory }) {
 									</p>
 								)}
 						</div>
-					)}
+					)} */}
 			</main>
 		</>
 	);
 }
-
-// --- Example Quiz Component ---
-const exampleQuizQuestions = [
-	{
-		question:
-			"What is the primary way DuoBook helps you learn languages, according to the example?",
-		options: [
-			"Through natural learning with stories",
-			"By watching long video lectures",
-			"With complex grammar exercises",
-			"By translating word lists",
-		],
-		correctAnswer: "Through natural learning with stories",
-		hint: 'The first sentence is: "DuoBook te ayuda a aprender idiomas de manera natural."',
-	},
-	{
-		question:
-			"What specific feature does every DuoBook story include, as stated in the example?",
-		options: [
-			"Parallel text in two languages",
-			"Character voices for dialogues",
-			"Downloadable PDF versions",
-			"Built-in video chat",
-		],
-		correctAnswer: "Parallel text in two languages",
-		hint: 'The second sentence mentions: "Cada historia tiene texto paralelo en dos idiomas."',
-	},
-	{
-		question:
-			"How do you move forward in a DuoBook story, based on the example description?",
-		options: [
-			"By tapping on a sentence",
-			"By typing the translation",
-			"By answering a quiz question",
-			"By clicking a 'Next Page' button",
-		],
-		correctAnswer: "By tapping on a sentence",
-		hint: 'Sentence 3 says: "Toca una frase para avanzar en la historia."',
-	},
-	{
-		question: "What action reveals blurred translations in the example story?",
-		options: [
-			"Tapping on them",
-			"Hovering over them",
-			"Shaking your device",
-			"Speaking the word aloud",
-		],
-		correctAnswer: "Tapping on them",
-		hint: 'Check sentence 4: "Toca las traducciones borrosas para revelarlas."',
-	},
-	{
-		question:
-			"According to the example, what can you do with the audio button?",
-		options: [
-			"Hear the pronunciation of sentences",
-			"Record your own voice",
-			"Change the background music",
-			"Translate text to speech",
-		],
-		correctAnswer: "Hear the pronunciation of sentences",
-		hint: 'Sentence 6 mencions: "Puedes escuchar la pronunciación con el botón de audio."',
-	},
-];
-
-function ExampleQuiz() {
-	const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-	const [selectedAnswer, setSelectedAnswer] = useState(null);
-	const [showFeedback, setShowFeedback] = useState(false);
-	const [score, setScore] = useState(0);
-	const [quizFinished, setQuizFinished] = useState(false);
-
-	const currentQuestion = exampleQuizQuestions[currentQuestionIndex];
-
-	const handleAnswerSelect = (option) => {
-		if (showFeedback) return; // Don't allow changing answer after feedback
-		setSelectedAnswer(option);
-	};
-
-	const handleSubmitAnswer = () => {
-		if (!selectedAnswer) return;
-		setShowFeedback(true);
-		if (selectedAnswer === currentQuestion.correctAnswer) {
-			setScore((prevScore) => prevScore + 1);
-		}
-	};
-
-	const handleNextQuestion = () => {
-		setSelectedAnswer(null);
-		setShowFeedback(false);
-		if (currentQuestionIndex < exampleQuizQuestions.length - 1) {
-			setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
-		} else {
-			setQuizFinished(true);
-		}
-	};
-
-	const handleRestartQuiz = () => {
-		setCurrentQuestionIndex(0);
-		setSelectedAnswer(null);
-		setShowFeedback(false);
-		setScore(0);
-		setQuizFinished(false);
-	};
-
-	if (quizFinished) {
-		return (
-			<Card className="shadow-xl">
-				<CardHeader>
-					<CardTitle className="text-xl sm:text-2xl text-center text-purple-700">
-						Quiz Complete!
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="text-center">
-					<p className="text-lg mb-4 text-gray-700">
-						You scored {score} out of {exampleQuizQuestions.length}!
-					</p>
-					<Award
-						className={`w-16 h-16 mx-auto mb-4 ${
-							score === exampleQuizQuestions.length
-								? "text-amber-500"
-								: "text-slate-400"
-						}`}
-					/>
-					<Button
-						onClick={handleRestartQuiz}
-						className="bg-purple-600 hover:bg-purple-700 text-white py-6"
-					>
-						Restart Quiz
-					</Button>
-				</CardContent>
-			</Card>
-		);
-	}
-
-	if (!currentQuestion) {
-		return <p>Loading quiz...</p>; // Should not happen if questions are defined
-	}
-
-	return (
-		<Card className="shadow-xl bg-white">
-			<CardHeader>
-				<CardTitle className="text-lg sm:text-xl font-semibold text-gray-800">
-					Question {currentQuestionIndex + 1} of {exampleQuizQuestions.length}
-				</CardTitle>
-				<p className="text-md mt-2 text-gray-700">{currentQuestion.question}</p>
-			</CardHeader>
-			<CardContent className="space-y-2">
-				{currentQuestion.options.map((option, index) => {
-					const isCorrect = option === currentQuestion.correctAnswer;
-					const isSelected = option === selectedAnswer;
-					let buttonClass =
-						"justify-start w-full text-left py-2 px-0 sm:py-3 sm:px-2 rounded-lg transition-colors duration-200 text-gray-700 text-xs sm:text-sm ";
-					if (showFeedback) {
-						if (isCorrect) {
-							buttonClass +=
-								"bg-green-100 border-green-500 ring-2 ring-green-500";
-						} else if (isSelected && !isCorrect) {
-							buttonClass += "bg-red-100 border-red-500 ring-2 ring-red-500";
-						} else {
-							buttonClass += "bg-slate-50 border-slate-300";
-						}
-					} else {
-						if (isSelected) {
-							buttonClass +=
-								"bg-purple-100 border-purple-500 ring-2 ring-purple-500";
-						} else {
-							buttonClass +=
-								"bg-slate-50 hover:bg-slate-100 border border-slate-300";
-						}
-					}
-
-					return (
-						<Button
-							key={index}
-							variant="outline"
-							className={buttonClass}
-							onClick={() => handleAnswerSelect(option)}
-							disabled={showFeedback}
-						>
-							<span className="ml-1">
-								{showFeedback &&
-									(isCorrect ? (
-										<Check className="w-5 h-5 text-green-600" />
-									) : isSelected ? (
-										<X className="w-5 h-5 text-red-600" />
-									) : (
-										<HelpCircle className="w-5 h-5 text-slate-400" />
-									))}
-							</span>
-							{option}
-						</Button>
-					);
-				})}
-			</CardContent>
-			<CardFooter className="flex flex-col items-center space-y-3">
-				{showFeedback && (
-					<div
-						className={`p-3 rounded-md w-full text-center text-sm ${
-							selectedAnswer === currentQuestion.correctAnswer
-								? "bg-green-50 text-green-700"
-								: "bg-red-50 text-red-700"
-						}`}
-					>
-						{selectedAnswer === currentQuestion.correctAnswer
-							? "Correct!"
-							: "Not quite."}
-						{!(selectedAnswer === currentQuestion.correctAnswer) &&
-							currentQuestion.hint && (
-								<p className="text-xs mt-1 text-gray-500">
-									Hint: {currentQuestion.hint}
-								</p>
-							)}
-					</div>
-				)}
-				{!showFeedback ? (
-					<Button
-						onClick={handleSubmitAnswer}
-						disabled={!selectedAnswer}
-						className=" bg-slate-500 hover:bg-slate-700 text-sm py-4 px-8 transition-transform transform hover:scale-105 text-white"
-					>
-						Submit Answer
-					</Button>
-				) : (
-					<Button
-						onClick={handleNextQuestion}
-						className="w-full bg-slate-600 hover:bg-slate-700 text-white"
-					>
-						{currentQuestionIndex < exampleQuizQuestions.length - 1
-							? "Next Question"
-							: "Finish Quiz"}
-					</Button>
-				)}
-			</CardFooter>
-		</Card>
-	);
-}
-
-// --- END Example Quiz Component ---
 
 function App() {
 	const { loading, currentUser } = useAuth();
