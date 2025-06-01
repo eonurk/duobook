@@ -71,6 +71,11 @@ import {
 	Rocket,
 	ChevronLeft, // Added
 	ChevronRight, // Added
+	Target,
+	Zap,
+	Brain,
+	FileText,
+	Wand2,
 } from "lucide-react"; // Import ArrowDown icon and new icons
 
 import { getTotalStoriesCount, getTotalUsersCount } from "@/lib/api"; // Import stats API functions
@@ -582,6 +587,23 @@ function MainAppView({ generateStory }) {
 						<p className="text-center text-muted-foreground mb-4">
 							Generate bilingual stories to learn any language
 						</p>
+
+						{
+							<div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 mb-4">
+								<div className="flex items-center gap-1">
+									<Sparkles className="w-4 h-4 text-indigo-500" />
+									<span>AI-Powered</span>
+								</div>
+								<div className="flex items-center gap-1">
+									<Target className="w-4 h-4 text-indigo-500" />
+									<span>Your Level</span>
+								</div>
+								<div className="flex items-center gap-1">
+									<Heart className="w-4 h-4 text-indigo-500" />
+									<span>Your Interests</span>
+								</div>
+							</div>
+						}
 						<InputForm
 							onSubmit={handleGenerate}
 							isLoading={isGenerating}
@@ -591,22 +613,99 @@ function MainAppView({ generateStory }) {
 				)}
 
 				{isGenerating && (
-					<div className="loading-indicator flex items-center justify-center flex-col text-center p-8">
-						<div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mb-4"></div>
-						<div className="mb-2">
-							Generating your{" "}
-							{formParams?.length === "very_long_pro"
-								? "Very Long (Pro)"
-								: formParams?.length}{" "}
-							{formParams?.difficulty} story in {formParams?.target} /{" "}
-							{formParams?.source}... Please wait.
-						</div>
-						{formParams?.length === "very_long_pro" && (
-							<div className="text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
-								⏳ PRO stories are longer and more detailed, so they may take
-								1-2 minutes to generate.
+					<div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 z-50 flex items-center justify-center">
+						<div className="max-w-md w-full mx-4 bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+							{/* Main Loading Animation */}
+							<div className="flex items-center justify-center mb-8">
+								<div className="relative">
+									<div className="w-20 h-20 rounded-full border-4 border-indigo-100 border-t-indigo-500 animate-spin"></div>
+									<div className="absolute inset-0 flex items-center justify-center">
+										<Wand2 className="w-8 h-8 text-indigo-500 animate-pulse" />
+									</div>
+								</div>
 							</div>
-						)}
+
+							{/* Story Details */}
+							<div className="text-center mb-8">
+								<h3 className="text-xl font-semibold text-gray-800 mb-2">
+									Creating Your Story
+								</h3>
+								<p className="text-gray-600 text-sm leading-relaxed">
+									Generating your{" "}
+									<span className="font-medium text-indigo-600">
+										{formParams?.length === "very_long_pro"
+											? "Very Long (Pro)"
+											: formParams?.length}
+									</span>{" "}
+									<span className="font-medium text-indigo-600">
+										{formParams?.difficulty}
+									</span>{" "}
+									story in{" "}
+									<span className="font-medium text-indigo-600">
+										{formParams?.target} / {formParams?.source}
+									</span>
+								</p>
+							</div>
+
+							{/* Progress Steps */}
+							<div className="space-y-4 mb-6">
+								<div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg border border-green-200">
+									<div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+										<Check className="w-3 h-3 text-white" />
+									</div>
+									<span className="text-sm text-green-700 font-medium">
+										Processing your preferences
+									</span>
+								</div>
+
+								<div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+									<div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+										<Brain className="w-3 h-3 text-white animate-pulse" />
+									</div>
+									<span className="text-sm text-blue-700 font-medium">
+										AI crafting your story
+									</span>
+								</div>
+
+								<div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+									<div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+										<FileText className="w-3 h-3 text-white" />
+									</div>
+									<span className="text-sm text-gray-500 font-medium">
+										Finalizing format
+									</span>
+								</div>
+							</div>
+
+							{/* Pro Story Notice */}
+							{formParams?.length === "very_long_pro" && (
+								<div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
+									<div className="flex items-start space-x-3">
+										<div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+											<Zap className="w-3 h-3 text-white" />
+										</div>
+										<div>
+											<p className="text-sm font-medium text-amber-800 mb-1">
+												PRO Story Generation
+											</p>
+											<p className="text-xs text-amber-700 leading-relaxed">
+												Creating longer, more detailed content. This may take
+												1-2 minutes for the best quality.
+											</p>
+										</div>
+									</div>
+								</div>
+							)}
+
+							{/* Motivational Message */}
+							<div className="text-center mt-6 pt-6 border-t border-gray-100">
+								<p className="text-xs text-gray-500 flex items-center justify-center space-x-1">
+									<Sparkles className="w-3 h-3" />
+									<span>Crafting the perfect learning experience for you</span>
+									<Sparkles className="w-3 h-3" />
+								</p>
+							</div>
+						</div>
 					</div>
 				)}
 

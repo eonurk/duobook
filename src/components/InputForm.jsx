@@ -10,7 +10,10 @@ import {
 	Eye,
 	EyeOff,
 	Settings2,
-} from "lucide-react"; // Replace existing icons with cuter alternatives & ADDED Lightbulb, Shuffle, Eye, EyeOff, Settings2
+	Sparkles,
+	Target,
+	BookOpen,
+} from "lucide-react"; // Replace existing icons with cuter alternatives & ADDED Lightbulb, Shuffle, Eye, EyeOff, Settings2, Sparkles, Target, BookOpen
 import {
 	Dialog,
 	DialogContent,
@@ -482,30 +485,96 @@ function InputForm({
 				
 				.custom-range {
 					-webkit-appearance: none;
-					height: 0.5rem;
+					height: 0.75rem;
 					border-radius: 0.5rem;
 					background-color: #e0f2fe;
+					outline: none;
 				}
 				
 				.custom-range::-webkit-slider-thumb {
 					-webkit-appearance: none;
-					width: 18px;
-					height: 18px;
+					width: 28px;
+					height: 28px;
 					border-radius: 50%;
 					background-color: #0891b2;
-					box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+					box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 					cursor: pointer;
-					margin-top: -6px;
+					margin-top: -8px;
+					transition: all 0.2s ease;
+				}
+				
+				.custom-range::-webkit-slider-thumb:hover {
+					transform: scale(1.1);
+					background-color: #0e7490;
+					box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+				}
+				
+				.custom-range::-webkit-slider-thumb:active {
+					transform: scale(1.2);
+					background-color: #155e75;
 				}
 				
 				.custom-range::-moz-range-thumb {
-					width: 18px;
-					height: 18px;
+					width: 28px;
+					height: 28px;
 					border-radius: 50%;
 					background-color: #0891b2;
-					box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+					box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 					cursor: pointer;
 					border: none;
+					transition: all 0.2s ease;
+				}
+				
+				.custom-range::-moz-range-thumb:hover {
+					transform: scale(1.1);
+					background-color: #0e7490;
+				}
+				
+				.custom-range::-moz-range-thumb:active {
+					transform: scale(1.2);
+					background-color: #155e75;
+				}
+				
+				/* Mobile-specific enhancements */
+				@media (max-width: 768px) {
+					.custom-range {
+						height: 1rem;
+						touch-action: manipulation;
+						padding: 8px 0; /* Increase touch target area */
+					}
+					
+					.custom-range::-webkit-slider-thumb {
+						width: 32px;
+						height: 32px;
+						margin-top: -10px;
+					}
+					
+					.custom-range::-moz-range-thumb {
+						width: 32px;
+						height: 32px;
+					}
+					
+					/* Add larger touch targets for mobile */
+					.slider-container {
+						padding: 12px 0;
+						margin: 8px 0;
+					}
+					
+					.slider-container:active {
+						background-color: rgba(245, 158, 11, 0.05);
+						border-radius: 8px;
+					}
+				}
+				
+				/* Add visual feedback for slider interaction */
+				.custom-range:focus {
+					outline: none;
+					box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+					border-radius: 0.5rem;
+				}
+				
+				.custom-range:active {
+					background-color: #bae6fd;
 				}
 				
 				.custom-range:disabled {
@@ -526,16 +595,19 @@ function InputForm({
 				className="input-form"
 				id="input-form-section"
 			>
+				{/* Value Proposition Section for Non-Authenticated Users */}
+
 				<p
 					style={{
 						textAlign: "center",
 						fontSize: "1rem",
 						color: "#0f172a",
-						marginBottom: "1.5rem",
+						marginBottom: "0.5rem",
 					}}
 				>
 					Craft <b>your story</b> to learn a language
 				</p>
+
 				<img
 					src={duobookImg}
 					alt="DuoBook"
@@ -655,19 +727,18 @@ function InputForm({
 				<fieldset className="form-section mt-6">
 					<legend className="form-section-title">Story Settings</legend>
 					<div className="space-y-6">
-						<div className="px-1">
-							<div className="flex justify-between">
+						<div className={`px-1 ${isMobile ? "py-2" : ""}`}>
+							<div className="flex justify-between items-center mb-3">
 								<label
 									htmlFor="difficulty"
-									className="block text-sm font-medium"
+									className={`block font-medium ${
+										isMobile ? "text-base" : "text-sm"
+									}`}
 								>
 									Difficulty:
 								</label>
-								{/* <span className="status-pill">
-									{difficultyLabels[difficultyIndex]}
-								</span> */}
 							</div>
-							<div className="relative pt-1">
+							<div className={`relative ${isMobile ? "pt-2 pb-1" : "pt-1"}`}>
 								<input
 									type="range"
 									id="difficulty"
@@ -678,27 +749,63 @@ function InputForm({
 									onChange={(e) =>
 										setDifficultyIndex(parseInt(e.target.value, 10))
 									}
-									className="w-full custom-range"
+									className={`w-full custom-range ${isMobile ? "py-2" : ""}`}
 									disabled={isLoading}
+									style={
+										isMobile
+											? {
+													WebkitTapHighlightColor: "transparent",
+											  }
+											: {}
+									}
 								/>
-								<div className="flex justify-between text-xs text-gray-500 mt-1.5">
-									<span>Beginner</span>
-									<span>Intermediate</span>
-									<span>Advanced</span>
+								<div
+									className={`flex justify-between text-gray-500 ${
+										isMobile ? "text-sm mt-3" : "text-xs mt-1.5"
+									}`}
+								>
+									<span
+										className={
+											difficultyIndex === 0
+												? "font-semibold text-amber-600"
+												: ""
+										}
+									>
+										Beginner
+									</span>
+									<span
+										className={
+											difficultyIndex === 1
+												? "font-semibold text-amber-600"
+												: ""
+										}
+									>
+										Intermediate
+									</span>
+									<span
+										className={
+											difficultyIndex === 2
+												? "font-semibold text-amber-600"
+												: ""
+										}
+									>
+										Advanced
+									</span>
 								</div>
 							</div>
 						</div>
-						<div className="px-1">
-							<div className="flex justify-between">
+						<div className={`px-1 ${isMobile ? "py-2" : ""}`}>
+							<div className="flex justify-between items-center mb-3">
 								<label
 									htmlFor="storyLength"
-									className="block text-sm font-medium"
+									className={`block font-medium ${
+										isMobile ? "text-base" : "text-sm"
+									}`}
 								>
 									Story Length:
 								</label>
-								{/* <span className="status-pill">{lengthLabels[lengthIndex]}</span> */}
 							</div>
-							<div className="relative pt-1">
+							<div className={`relative ${isMobile ? "pt-2 pb-1" : "pt-1"}`}>
 								<input
 									type="range"
 									id="storyLength"
@@ -706,15 +813,27 @@ function InputForm({
 									max={lengthMap.length - 1}
 									value={lengthIndex}
 									onChange={(e) => setLengthIndex(parseInt(e.target.value))}
-									className="w-full custom-range"
+									className={`w-full custom-range ${isMobile ? "py-2" : ""}`}
 									disabled={isLoading}
+									style={
+										isMobile
+											? {
+													WebkitTapHighlightColor: "transparent",
+											  }
+											: {}
+									}
 								/>
-								{/* Story Length Labels - New Absolute Positioning Implementation */}
-								<div className="relative w-full text-xs text-gray-500 mt-1.5 h-6">
+								{/* Story Length Labels - Mobile-Optimized Implementation */}
+								<div
+									className={`relative w-full text-gray-500 ${
+										isMobile ? "text-sm mt-3 h-7" : "text-xs mt-1.5 h-6"
+									}`}
+								>
 									{lengthMap.map((label, index) => {
 										const numLabels = lengthMap.length;
 										let style = {};
 										let textAlignmentClass = "";
+										const isSelected = lengthIndex === index;
 
 										if (numLabels === 1) {
 											style = { left: "50%", transform: "translateX(-50%)" };
@@ -742,15 +861,29 @@ function InputForm({
 										return (
 											<span
 												key={label}
-												className={`absolute ${textAlignmentClass}`}
+												className={`absolute ${textAlignmentClass} transition-all duration-200 ${
+													isSelected ? "font-semibold text-blue-600" : ""
+												}`}
 												style={style}
 											>
 												{label === "very_long_pro" ? (
-													<span className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-2.5 py-1 rounded-md shadow-md whitespace-nowrap">
+													<span
+														className={`bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-md shadow-md whitespace-nowrap ${
+															isMobile ? "px-3 py-1.5 text-sm" : "px-2.5 py-1"
+														} ${isSelected ? "ring-2 ring-purple-300" : ""}`}
+													>
 														XL
 													</span>
 												) : (
-													<span className="whitespace-nowrap">{label}</span>
+													<span
+														className={`whitespace-nowrap ${
+															isSelected && isMobile
+																? "px-2 py-1 bg-blue-50 rounded-md"
+																: ""
+														}`}
+													>
+														{label}
+													</span>
 												)}
 											</span>
 										);
