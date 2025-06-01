@@ -609,11 +609,11 @@ app.post(
 		}
 
 		let story_difficulty;
-		if (difficulty == "beginner") {
+		if (difficulty == "Beginner") {
 			story_difficulty = "A1/A2";
-		} else if (difficulty == "intermediate") {
+		} else if (difficulty == "Intermediate") {
 			story_difficulty = "B1/B2";
-		} else if (difficulty == "advanced") {
+		} else if (difficulty == "Advanced") {
 			story_difficulty = "C1/C2";
 		}
 
@@ -623,11 +623,11 @@ app.post(
 		let numPages;
 		if (isProStoryRequest) {
 			numPages = 10; // Updated to 10 pages
-		} else if (length === "long") {
+		} else if (length === "Long") {
 			numPages = 4; // Updated to 4 pages
-		} else if (length === "medium") {
+		} else if (length === "Medium") {
 			numPages = 2; // Updated to 2 pages
-		} else if (length === "short") {
+		} else if (length === "Short") {
 			numPages = 1; // Updated to 1 page
 		} else {
 			console.log("Invalid length parameter:", numPages);
