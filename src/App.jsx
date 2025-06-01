@@ -71,7 +71,6 @@ import {
 	Rocket,
 	ChevronLeft, // Added
 	ChevronRight, // Added
-	Target,
 	Zap,
 	Brain,
 	FileText,
@@ -587,23 +586,6 @@ function MainAppView({ generateStory }) {
 						<p className="text-center text-muted-foreground mb-4">
 							Generate bilingual stories to learn any language
 						</p>
-
-						{
-							<div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 mb-4">
-								<div className="flex items-center gap-1">
-									<Sparkles className="w-4 h-4 text-indigo-500" />
-									<span>AI-Powered</span>
-								</div>
-								<div className="flex items-center gap-1">
-									<Target className="w-4 h-4 text-indigo-500" />
-									<span>Your Level</span>
-								</div>
-								<div className="flex items-center gap-1">
-									<Heart className="w-4 h-4 text-indigo-500" />
-									<span>Your Interests</span>
-								</div>
-							</div>
-						}
 						<InputForm
 							onSubmit={handleGenerate}
 							isLoading={isGenerating}
