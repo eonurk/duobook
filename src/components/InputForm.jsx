@@ -1026,42 +1026,68 @@ function InputForm({
 					</div>
 				</fieldset>
 
-				{!isLoading && !currentUser && (
-					<div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl text-center transform transition-all duration-500 ease-out animate-in slide-in-from-bottom-3 fade-in">
-						<div className="flex items-center justify-center mb-2">
-							<div className="text-sm font-medium text-amber-800 transition-colors duration-300">
-								Create your account to get started
+				{/* Enhanced mobile authentication prompt */}
+				{!currentUser && (
+					<div className={`text-center mt-6 mb-4`}>
+						<div
+							className={`bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl ${
+								isMobile ? "p-4" : "p-6"
+							} shadow-sm`}
+						>
+							<div className="flex flex-col items-center space-y-3">
+								<div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
+									<Heart className="w-6 h-6 text-white" />
+								</div>
+								<div className="text-center">
+									<h3
+										className={`font-semibold text-amber-800 ${
+											isMobile ? "text-base" : "text-lg"
+										} mb-2`}
+									>
+										Ready to Create Your Story?
+									</h3>
+									<p
+										className={`text-amber-700 ${
+											isMobile ? "text-sm" : "text-base"
+										} mb-4`}
+									>
+										Sign up to create and save personalized stories. It's
+										completely free!
+									</p>
+									<div
+										className={`flex ${
+											isMobile
+												? "flex-col space-y-2"
+												: "flex-row justify-center space-x-3"
+										}`}
+									>
+										<button
+											type="button"
+											onClick={() => {
+												setActiveTab("signup");
+												setShowAuthDialog(true);
+											}}
+											className={`${
+												isMobile ? "w-full" : ""
+											} px-6 py-3 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 transition-all duration-200 transform hover:scale-105 shadow-md`}
+										>
+											Sign Up Free
+										</button>
+										<button
+											type="button"
+											onClick={() => {
+												setActiveTab("login");
+												setShowAuthDialog(true);
+											}}
+											className={`${
+												isMobile ? "w-full" : ""
+											} px-6 py-3 border border-amber-300 text-amber-700 font-medium rounded-lg hover:bg-amber-50 transition-all duration-200`}
+										>
+											Log In
+										</button>
+									</div>
+								</div>
 							</div>
-						</div>
-
-						<p className="text-xs text-amber-700 mb-1">
-							Join thousands of language learners.<br></br> 3 free stories
-							daily.
-						</p>
-						<div className="flex justify-center">
-							<Heart className="w-5 h-5 text-amber-600 mb-3" />
-						</div>
-						<div className="flex gap-3 justify-center">
-							<button
-								type="button"
-								onClick={() => {
-									setActiveTab("signup");
-									setShowAuthDialog(true);
-								}}
-								className="px-5 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 active:bg-amber-700 transition-all duration-200 ease-out transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
-							>
-								Sign Up
-							</button>
-							<button
-								type="button"
-								onClick={() => {
-									setActiveTab("login");
-									setShowAuthDialog(true);
-								}}
-								className="px-5 py-2.5 border border-amber-300 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-50 hover:border-amber-400 active:bg-amber-100 transition-all duration-200 ease-out transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-1"
-							>
-								Log In
-							</button>
 						</div>
 					</div>
 				)}
