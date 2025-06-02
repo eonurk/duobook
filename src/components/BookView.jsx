@@ -582,7 +582,7 @@ function BookView({
 	// Handle word clicks on mobile (tap to show tooltip)
 	const handleWordClick = async (event, word) => {
 		event.stopPropagation(); // Prevent sentence navigation
-		
+
 		// If tooltip is already visible for this word, hide it
 		if (tooltipVisible && tooltipContent) {
 			setTooltipVisible(false);
@@ -592,7 +592,7 @@ function BookView({
 
 		// Show tooltip (similar to hover behavior)
 		await handleWordHover(event, word);
-		
+
 		// On mobile, auto-hide tooltip after 3 seconds
 		if (isMobileView) {
 			setTimeout(() => {
@@ -1599,18 +1599,101 @@ function BookView({
 				</div>
 			)}
 
-			{/* Congratulatory Message - Show always when finished (applies to page finish if paginated AND it's the last page) */}
+			{/* Enhanced Completion Message - Show always when finished (applies to page finish if paginated AND it's the last page) */}
 			{isFinished && (!isPaginated || currentPageIndex === totalPages - 1) && (
-				<div className="congrats-message grid grid-cols-1 gap-4">
-					🎉 Well done! You finished the story! 🎉
-					{/* Practice Vocabulary button - show when story is finished and not an example */}
-					{!isExample && storyContent?.shareId && (
-						<a
-							href={`/practice?storyId=${storyContent.shareId}`}
-							className="max-w-xs mx-auto button button-primary bg-gradient-to-r from-green-500 to-teal-600 text-white text-xs px-2.5 py-4 rounded-md shadow-md whitespace-nowrap "
-						>
-							Practice Vocabulary
-						</a>
+				<div className="completion-container bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-200 rounded-xl p-4 sm:p-6 mx-auto mb-6 max-w-3xl w-full">
+					{/* Celebration Header */}
+					<div className="text-center mb-4 sm:mb-6">
+						<div className="text-3xl sm:text-4xl mb-2">🎉</div>
+						<h2 className="text-xl sm:text-2xl font-bold text-green-700 mb-2">
+							Congratulations!
+						</h2>
+						<p className="text-green-600 text-base sm:text-lg">
+							You've completed the story successfully!
+						</p>
+					</div>
+
+					{/* Progress Summary for logged-in users */}
+					{currentUser && !isExample && (
+						<div className="bg-white rounded-lg p-3 sm:p-4 border border-gray-200 shadow-sm mb-4">
+							<div className="flex items-center justify-between">
+								<div className="flex items-center">
+									<CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2" />
+									<span className="text-sm sm:text-base font-medium text-gray-700">
+										Story saved to your library
+									</span>
+								</div>
+								<div className="text-xs sm:text-sm text-gray-500">
+									{currentVocabulary?.length || 0} new words learned
+								</div>
+							</div>
+						</div>
+					)}
+
+					{/* Action Cards */}
+					<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+						{/* Practice Vocabulary Card - Show for all stories with shareId */}
+						{storyContent.shareId && (
+							<div className="bg-white rounded-lg p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
+								<div className="flex items-center mb-3">
+									<Zap className="w-5 h-5 text-yellow-500 mr-2" />
+									<h3 className="font-semibold text-gray-800 text-sm sm:text-base">
+										Practice Vocabulary
+									</h3>
+								</div>
+								<p className="text-xs sm:text-sm text-gray-600 mb-4">
+									Master the new words you learned with interactive exercises
+								</p>
+								<a
+									href={`/practice?storyId=${storyContent.shareId}`}
+									className="w-full inline-block text-center bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-2.5 sm:py-3 rounded-md shadow-md hover:from-green-600 hover:to-teal-700 transition-all text-sm sm:text-base font-medium"
+								>
+									Start Practice
+								</a>
+							</div>
+						)}
+						{/* My Stories Card */}
+						{currentUser && !isExample && (
+							<div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+								<div className="flex items-center mb-3">
+									<BarChart3 className="w-5 h-5 text-blue-500 mr-2" />
+									<h3 className="font-semibold text-gray-800 text-sm sm:text-base">
+										View My Stories
+									</h3>
+								</div>
+								<p className="text-xs sm:text-sm text-gray-600 mb-4">
+									Access all your saved stories and track your progress
+								</p>
+								<a
+									href="/my-stories"
+									className="w-full inline-block text-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2.5 sm:py-3 rounded-md shadow-md hover:from-blue-600 hover:to-indigo-700 transition-all text-sm sm:text-base font-medium"
+								>
+									My Stories
+								</a>
+							</div>
+						)}
+					</div>
+
+					{/* Sign up prompt for non-logged users */}
+					{!currentUser && !isExample && (
+						<div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4">
+							<div className="flex items-center mb-2">
+								<Info className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 mr-2" />
+								<h3 className="font-semibold text-amber-800 text-sm sm:text-base">
+									Save Your Progress
+								</h3>
+							</div>
+							<p className="text-xs sm:text-sm text-amber-700 mb-3">
+								Sign up to save your stories, track vocabulary, and access
+								practice exercises
+							</p>
+							<a
+								href="/auth?mode=signup"
+								className="inline-block bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-md text-sm transition-colors font-medium"
+							>
+								Sign Up Free
+							</a>
+						</div>
 					)}
 				</div>
 			)}
@@ -1674,12 +1757,23 @@ function BookView({
 						</button>
 					)}
 
-				<button
-					onClick={handleGoBack}
-					className="button-tertiary button button-secondary create-button bg-amber-500 hover:bg-amber-800"
-				>
-					Create Your First Story
-				</button>
+				{/* Conditional navigation based on user state */}
+				{currentUser ? (
+					<a
+						href="/create"
+						className="button-tertiary button button-secondary create-button bg-green-500 hover:bg-green-600 text-white flex items-center"
+					>
+						<Zap className="w-4 h-4 mr-2" />
+						Create Another Story
+					</a>
+				) : (
+					<button
+						onClick={handleGoBack}
+						className="button-tertiary button button-secondary create-button bg-amber-500 hover:bg-amber-800"
+					>
+						Create Your First Story
+					</button>
+				)}
 				{/* Conditionally render Download PDF button for PRO users using userProgress */}
 			</div>
 		</div>

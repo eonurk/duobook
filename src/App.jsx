@@ -102,6 +102,7 @@ import {
 	CardContent,
 	CardFooter,
 } from "@/components/ui/card"; // Import Card component
+import PostStoryGuidance from "@/components/PostStoryGuidance"; // Import PostStoryGuidance
 
 // Static Example Story Data for the interactive demo on the main page
 const interactiveExampleStoryData = {
@@ -244,6 +245,8 @@ function StoryViewPage() {
 				if (typeof initialStoryData.story === "string") {
 					try {
 						const parsedStory = JSON.parse(initialStoryData.story);
+						// Add shareId to the story content so BookView can access it
+						parsedStory.shareId = initialStoryData.shareId;
 						setStoryContent(parsedStory);
 						// Ensure paramsForBookView is set correctly from initialStoryData if available
 						setParamsForBookView({
@@ -258,6 +261,8 @@ function StoryViewPage() {
 					}
 				} else if (initialStoryData.pages || initialStoryData.sentencePairs) {
 					// Story data is already in the correct object format
+					// Add shareId to the story content so BookView can access it
+					initialStoryData.shareId = initialStoryData.shareId || shareId;
 					setStoryContent(initialStoryData);
 					setParamsForBookView({
 						target: initialStoryData.targetLanguage,
@@ -276,11 +281,15 @@ function StoryViewPage() {
 				console.log(`StoryViewPage: Fetching story with shareId: ${shareId}`);
 				try {
 					const fetchedStory = await getStoryById(shareId); // Assuming getStoryById fetches all necessary data
+					let parsedStoryContent;
 					if (typeof fetchedStory.story === "string") {
-						setStoryContent(JSON.parse(fetchedStory.story));
+						parsedStoryContent = JSON.parse(fetchedStory.story);
 					} else {
-						setStoryContent(fetchedStory.story); // Assuming story is already an object
+						parsedStoryContent = fetchedStory.story; // Assuming story is already an object
 					}
+					// Add shareId to the story content so BookView can access it
+					parsedStoryContent.shareId = fetchedStory.shareId;
+					setStoryContent(parsedStoryContent);
 					setParamsForBookView({
 						target: fetchedStory.targetLanguage,
 						source: fetchedStory.sourceLanguage,
@@ -1093,6 +1102,11 @@ function App() {
 	const navigate = useNavigate();
 	const navbarRef = useRef(null);
 
+	// State for post-story guidance
+	const [showPostStoryGuidance, setShowPostStoryGuidance] = useState(false);
+	const [guidanceStoryData, setGuidanceStoryData] = useState(null);
+	const [isFirstStory, setIsFirstStory] = useState(false);
+
 	// Optional: Firebase init check (if auth might not be ready)
 	// useEffect(() => {
 	// 	if (!auth) { // If auth import is needed
@@ -1264,6 +1278,35 @@ function App() {
 				grammarFocus: selectedGrammarFocus, // Pass the grammar focus (array)
 			});
 
+			// Check if this is the user's first story
+			try {
+				const userStories = await fetch("/api/stories", {
+					headers: {
+						Authorization: `Bearer ${await currentUser.getIdToken()}`,
+					},
+				}).then((res) => res.json());
+
+				const isUserFirstStory = userStories.length === 1; // Just created their first story
+
+				setIsFirstStory(isUserFirstStory);
+				setGuidanceStoryData(generatedStoryContent);
+
+				if (isUserFirstStory) {
+					setTimeout(() => {
+						setShowPostStoryGuidance(true);
+					}, 1000); // Delay to allow story page to load}
+				}
+				// Show guidance after navigation
+			} catch (error) {
+				console.error("Error checking story count:", error);
+				// Still show guidance even if check fails
+				setIsFirstStory(false);
+				setGuidanceStoryData(generatedStoryContent);
+				setTimeout(() => {
+					setShowPostStoryGuidance(true);
+				}, 1500);
+			}
+
 			// Refresh navbar limit
 			if (navbarRef.current) {
 				navbarRef.current.refreshStoryLimit();
@@ -1363,6 +1406,15 @@ function App() {
 			<Toaster position="top-center" reverseOrder={false} />
 			<AchievementNotifier />
 			<Navbar ref={navbarRef} />
+
+			{/* Post-Story Guidance Modal */}
+			<PostStoryGuidance
+				isOpen={showPostStoryGuidance}
+				onClose={() => setShowPostStoryGuidance(false)}
+				storyData={guidanceStoryData}
+				isFirstStory={isFirstStory}
+			/>
+
 			<Suspense
 				fallback={
 					<div className="flex justify-center items-center h-screen">
