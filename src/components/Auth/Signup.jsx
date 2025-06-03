@@ -409,26 +409,26 @@ function ModernSignup({ onSuccess }) {
 		<div className="w-full max-w-md mx-auto">
 			{/* Modern Header with animated gradient */}
 			<div className="text-center mb-4">
-				<h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent mb-3">
+				<h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-3">
 					Join DuoBook
 				</h1>
-				<p className="text-gray-600 dark:text-gray-400 text-sm">
+				<p className="text-gray-600 text-sm">
 					Start your language learning journey today
 				</p>
 			</div>
 
 			{/* Email verification success banner */}
 			{emailSent && (
-				<div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl">
+				<div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl">
 					<div className="flex items-start gap-3">
-						<div className="w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-xl flex items-center justify-center flex-shrink-0">
-							<Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+						<div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+							<Mail className="h-5 w-5 text-blue-600" />
 						</div>
 						<div>
-							<h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+							<h4 className="font-semibold text-blue-900 mb-1">
 								Verification Email Sent!
 							</h4>
-							<p className="text-sm text-blue-700 dark:text-blue-300">
+							<p className="text-sm text-blue-700">
 								We've sent a verification link to{" "}
 								<span className="font-medium">{email}</span>. Please check your
 								inbox and click the link to verify your account.
@@ -443,7 +443,7 @@ function ModernSignup({ onSuccess }) {
 				<div className="space-y-2">
 					<Label
 						htmlFor="email"
-						className="text-sm font-semibold text-gray-700 dark:text-gray-300"
+						className="text-sm font-semibold text-gray-700"
 					>
 						Email Address
 					</Label>
@@ -461,29 +461,29 @@ function ModernSignup({ onSuccess }) {
 							required
 							className={`h-14 pl-4 pr-12 rounded-2xl border-2 transition-all duration-300 text-base ${
 								!emailValidation.isValid && email
-									? "border-red-500 focus:border-red-500 bg-red-50/50 dark:bg-red-900/10 shadow-red-100"
+									? "border-red-500 focus:border-red-500 bg-red-50/50 shadow-red-100"
 									: emailValidation.isValid && email
-									? "border-emerald-500 focus:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10 shadow-emerald-100"
-									: "border-gray-200 dark:border-gray-700 focus:border-amber-500 dark:focus:border-amber-400 bg-white dark:bg-gray-800"
+									? "border-emerald-500 focus:border-emerald-500 bg-emerald-50/50 shadow-emerald-100"
+									: "border-gray-200 focus:border-amber-500 bg-white"
 							} focus:ring-4 focus:ring-amber-500/10 shadow-lg`}
 						/>
 						{emailValidation.isValid && email && (
 							<div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-								<div className="w-6 h-6 bg-emerald-100 dark:bg-emerald-800 rounded-full flex items-center justify-center">
-									<CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+								<div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
+									<CheckCircle className="h-4 w-4 text-emerald-600" />
 								</div>
 							</div>
 						)}
 						{!emailValidation.isValid && email && (
 							<div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-								<div className="w-6 h-6 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center">
-									<XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+								<div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+									<XCircle className="h-4 w-4 text-red-600" />
 								</div>
 							</div>
 						)}
 					</div>
 					{!emailValidation.isValid && email && (
-						<p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2 mt-2">
+						<p className="text-sm text-red-600 flex items-center gap-2 mt-2">
 							<XCircle className="h-4 w-4" />
 							{emailValidation.message}
 						</p>
@@ -494,7 +494,7 @@ function ModernSignup({ onSuccess }) {
 				<div className="space-y-2">
 					<Label
 						htmlFor="password"
-						className="text-sm font-semibold text-gray-700 dark:text-gray-300"
+						className="text-sm font-semibold text-gray-700"
 					>
 						Password
 					</Label>
@@ -509,16 +509,16 @@ function ModernSignup({ onSuccess }) {
 							required
 							className={`h-14 pl-4 pr-12 rounded-2xl border-2 transition-all duration-300 text-base ${
 								!passwordValidation.isValid && password
-									? "border-red-500 focus:border-red-500 bg-red-50/50 dark:bg-red-900/10"
+									? "border-red-500 focus:border-red-500 bg-red-50/50"
 									: passwordValidation.isValid && password
-									? "border-emerald-500 focus:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10"
-									: "border-gray-200 dark:border-gray-700 focus:border-amber-500 dark:focus:border-amber-400 bg-white dark:bg-gray-800"
+									? "border-emerald-500 focus:border-emerald-500 bg-emerald-50/50"
+									: "border-gray-200 focus:border-amber-500 bg-white"
 							} focus:ring-4 focus:ring-amber-500/10 shadow-lg`}
 						/>
 						<button
 							type="button"
 							onClick={() => setShowPassword(!showPassword)}
-							className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+							className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
 							disabled={isLoading || isGoogleLoading}
 						>
 							<div className="w-6 h-6 flex items-center justify-center">
@@ -531,7 +531,7 @@ function ModernSignup({ onSuccess }) {
 						</button>
 					</div>
 					{!passwordValidation.isValid && password && (
-						<p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2 mt-2">
+						<p className="text-sm text-red-600 flex items-center gap-2 mt-2">
 							<XCircle className="h-4 w-4" />
 							{passwordValidation.message}
 						</p>
@@ -542,7 +542,7 @@ function ModernSignup({ onSuccess }) {
 				<div className="space-y-2">
 					<Label
 						htmlFor="confirmPassword"
-						className="text-sm font-semibold text-gray-700 dark:text-gray-300"
+						className="text-sm font-semibold text-gray-700"
 					>
 						Confirm Password
 					</Label>
@@ -557,16 +557,16 @@ function ModernSignup({ onSuccess }) {
 							required
 							className={`h-14 pl-4 pr-12 rounded-2xl border-2 transition-all duration-300 text-base ${
 								confirmPassword && password !== confirmPassword
-									? "border-red-500 focus:border-red-500 bg-red-50/50 dark:bg-red-900/10"
+									? "border-red-500 focus:border-red-500 bg-red-50/50"
 									: confirmPassword && password === confirmPassword
-									? "border-emerald-500 focus:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10"
-									: "border-gray-200 dark:border-gray-700 focus:border-amber-500 dark:focus:border-amber-400 bg-white dark:bg-gray-800"
+									? "border-emerald-500 focus:border-emerald-500 bg-emerald-50/50"
+									: "border-gray-200 focus:border-amber-500 bg-white"
 							} focus:ring-4 focus:ring-amber-500/10 shadow-lg`}
 						/>
 						<button
 							type="button"
 							onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-							className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+							className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
 							disabled={isLoading || isGoogleLoading}
 						>
 							<div className="w-6 h-6 flex items-center justify-center">
@@ -579,7 +579,7 @@ function ModernSignup({ onSuccess }) {
 						</button>
 					</div>
 					{confirmPassword && password !== confirmPassword && (
-						<p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2 mt-2">
+						<p className="text-sm text-red-600 flex items-center gap-2 mt-2">
 							<XCircle className="h-4 w-4" />
 							Passwords do not match
 						</p>
@@ -588,7 +588,7 @@ function ModernSignup({ onSuccess }) {
 
 				{/* Terms and Conditions */}
 				<div className="space-y-4">
-					<div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border border-amber-200 dark:border-amber-700">
+					<div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200">
 						<input
 							type="checkbox"
 							id="terms"
@@ -600,14 +600,14 @@ function ModernSignup({ onSuccess }) {
 						<div className="flex-1">
 							<Label
 								htmlFor="terms"
-								className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed cursor-pointer block"
+								className="text-sm text-gray-700 leading-relaxed cursor-pointer block"
 							>
 								I agree to DuoBook's{" "}
 								<a
 									href="/terms"
 									target="_blank"
 									rel="noopener noreferrer"
-									className="text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 underline font-semibold transition-colors"
+									className="text-amber-700 hover:text-amber-800 underline font-semibold transition-colors"
 									onClick={(e) => e.stopPropagation()}
 								>
 									Terms of Service
@@ -617,7 +617,7 @@ function ModernSignup({ onSuccess }) {
 									href="/privacy"
 									target="_blank"
 									rel="noopener noreferrer"
-									className="text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 underline font-semibold transition-colors"
+									className="text-amber-700 hover:text-amber-800 underline font-semibold transition-colors"
 									onClick={(e) => e.stopPropagation()}
 								>
 									Privacy Policy
@@ -628,8 +628,8 @@ function ModernSignup({ onSuccess }) {
 
 					{/* Error Message */}
 					{error && (
-						<div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl">
-							<p className="text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
+						<div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
+							<p className="text-sm text-red-700 flex items-center gap-2">
 								<XCircle className="h-4 w-4" />
 								{error}
 							</p>
@@ -670,10 +670,10 @@ function ModernSignup({ onSuccess }) {
 			{/* Divider */}
 			<div className="relative my-4">
 				<div className="absolute inset-0 flex items-center">
-					<div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
+					<div className="w-full border-t border-gray-200"></div>
 				</div>
 				<div className="relative flex justify-center text-sm">
-					<span className="bg-white dark:bg-gray-900 px-4 text-gray-500 dark:text-gray-400 font-medium">
+					<span className="bg-white px-4 text-gray-500 font-medium">
 						or continue with
 					</span>
 				</div>
@@ -683,7 +683,7 @@ function ModernSignup({ onSuccess }) {
 			<Button
 				type="button"
 				variant="outline"
-				className="w-full h-14 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
+				className="w-full h-14 border-2 border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
 				onClick={handleGoogleSignup}
 				disabled={isLoading || isGoogleLoading}
 			>
