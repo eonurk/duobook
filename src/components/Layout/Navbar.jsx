@@ -280,27 +280,30 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 							</>
 						) : (
 							<>
+								{/* Enhanced navigation for non-logged-in users */}
 								<Button
-									variant="outline"
+									variant="link"
 									size="sm"
-									onClick={() => {
-										setActiveTab("login");
-										setShowAuthDialog(true);
-									}}
-									className="px-5 py-2 rounded-md text-sm border border-amber-500 text-amber-600 hover:bg-amber-100 transition-colors"
+									asChild
+									className="px-0 text-foreground/70 hover:text-foreground"
 								>
-									Login
+									<Link to="/explore-stories">Explore Stories</Link>
+								</Button>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => handleAuthClick("login")}
+									className="px-3 py-2 text-sm text-foreground/70 hover:text-foreground hover:bg-accent/50 transition-all duration-200"
+								>
+									Sign In
 								</Button>
 								<Button
 									variant="default"
 									size="sm"
-									onClick={() => {
-										setActiveTab("signup");
-										setShowAuthDialog(true);
-									}}
-									className="px-5 py-2 rounded-md text-sm bg-amber-500 text-white hover:bg-amber-600 transition-colors"
+									onClick={() => handleAuthClick("signup")}
+									className="px-4 py-2 text-sm bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
 								>
-									Sign Up
+									Get Started
 								</Button>
 							</>
 						)}
@@ -325,8 +328,8 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 
 				{/* Mobile Menu Dropdown/Overlay */}
 				{isMobileMenuOpen && (
-					<div className="absolute top-16 left-0 right-0 z-40 bg-white shadow-md md:hidden border-t border-border/40">
-						<nav className="flex flex-col items-start gap-2 p-4">
+					<div className="absolute top-16 left-0 right-0 z-40 bg-white dark:bg-gray-900 shadow-lg md:hidden border-t border-border/40">
+						<nav className="flex flex-col items-start gap-1 p-6 max-h-[calc(100vh-4rem)] overflow-y-auto">
 							{currentUser ? (
 								<>
 									{/* Mobile User Progress */}
@@ -498,20 +501,36 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 								</>
 							) : (
 								<>
-									<Button
-										variant="outline"
-										onClick={() => handleAuthClick("login")}
-										className="w-full justify-start"
-									>
-										Login
-									</Button>
-									<Button
-										variant="default"
-										onClick={() => handleAuthClick("signup")}
-										className="w-full justify-start"
-									>
-										Sign Up
-									</Button>
+									{/* Enhanced mobile navigation for non-logged-in users */}
+									<div className="w-full space-y-2">
+										<Button
+											variant="ghost"
+											asChild
+											className="w-full justify-start h-11 text-base font-medium hover:bg-accent/50"
+										>
+											<Link to="/explore-stories" onClick={closeMobileMenu}>
+												Explore Stories
+											</Link>
+										</Button>
+									</div>
+
+									{/* Auth buttons section */}
+									<div className="border-t border-border/40 pt-4 mt-4 w-full space-y-3">
+										<Button
+											variant="default"
+											onClick={() => handleAuthClick("login")}
+											className="w-full h-11 text-base bg-transparent border-1"
+										>
+											Sign In
+										</Button>
+										<Button
+											variant="default"
+											onClick={() => handleAuthClick("signup")}
+											className="w-full h-11 text-base bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+										>
+											Get Started
+										</Button>
+									</div>
 								</>
 							)}
 						</nav>
@@ -520,31 +539,25 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 			</header>
 
 			<Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-				<DialogContent className="sm:max-w-[425px] p-0 border-none">
+				<DialogContent className="sm:max-w-[450px] p-0 border-none">
 					<Card className="border-none shadow-none bg-white">
-						<CardHeader className="text-center pb-2">
-							<CardTitle>Sign in to DuoBook</CardTitle>
-							<CardDescription>
-								Access your stories and track your progress
-							</CardDescription>
-						</CardHeader>
 						<CardContent>
-							<div className="flex border-b mb-4">
+							<div className="flex mb-6 mt-4">
 								<button
-									className={`px-4 py-2 text-sm font-medium ${
+									className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
 										activeTab === "login"
-											? "border-b-2 border-amber-500 text-amber-800"
-											: "text-gray-500 hover:text-gray-700"
+											? "text-white bg-blue-600 rounded-sm"
+											: "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
 									}`}
 									onClick={() => setActiveTab("login")}
 								>
 									Login
 								</button>
 								<button
-									className={`px-4 py-2 text-sm font-medium ${
+									className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
 										activeTab === "signup"
-											? "border-b-2 border-amber-500 text-amber-800"
-											: "text-gray-500 hover:text-gray-700"
+											? "text-white bg-amber-500 rounded-sm"
+											: "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
 									}`}
 									onClick={() => setActiveTab("signup")}
 								>

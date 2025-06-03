@@ -6,21 +6,32 @@ import {
 	signInWithRedirect,
 	getRedirectResult,
 } from "firebase/auth";
-import { auth, googleProvider } from "@/firebaseConfig"; // Import googleProvider
-import { Button } from "@/components/ui/button"; // Use alias
-import { Input } from "@/components/ui/input"; // Use alias
-import { Label } from "@/components/ui/label"; // Use alias
-import { trackAuth } from "@/lib/analytics"; // Import analytics tracking
+import { auth, googleProvider } from "@/firebaseConfig";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { trackAuth } from "@/lib/analytics";
+import {
+	Eye,
+	EyeOff,
+	Mail,
+	Shield,
+	ArrowRight,
+	CheckCircle,
+	XCircle,
+	Key,
+} from "lucide-react";
 
-function Login({ onSuccess }) {
+function ModernLogin({ onSuccess }) {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState(null);
-	const [isLoading, setIsLoading] = useState(false); // Add loading state
-	const [isResetting, setIsResetting] = useState(false); // State for password reset loading
-	const [resetMessage, setResetMessage] = useState(""); // State for success/error messages for reset
-	const [resetError, setResetError] = useState(""); // State for reset error message specifically
-	const [isGoogleLoading, setIsGoogleLoading] = useState(false); // Add loading state for Google
+	const [isLoading, setIsLoading] = useState(false);
+	const [isResetting, setIsResetting] = useState(false);
+	const [resetMessage, setResetMessage] = useState("");
+	const [resetError, setResetError] = useState("");
+	const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
 
 	// Check for redirect result on component mount
 	useEffect(() => {
@@ -28,7 +39,6 @@ function Login({ onSuccess }) {
 			try {
 				const result = await getRedirectResult(auth);
 				if (result) {
-					// User successfully authenticated via redirect
 					trackAuth("login", "google");
 					if (onSuccess) {
 						onSuccess();
@@ -43,22 +53,18 @@ function Login({ onSuccess }) {
 				}
 			}
 		}
-
 		checkRedirectResult();
 	}, [onSuccess]);
 
 	const handleLogin = async (e) => {
 		e.preventDefault();
 		setError(null);
-		setIsLoading(true); // Set loading
+		setIsLoading(true);
 		try {
 			await signInWithEmailAndPassword(auth, email, password);
-			// Track successful login
 			trackAuth("login", "email");
-
-			// Login successful, AuthProvider handles state change & App.jsx handles redirect
 			if (onSuccess) {
-				onSuccess(); // Call the success callback if provided
+				onSuccess();
 			}
 		} catch (err) {
 			console.error("Login Error:", err);
@@ -75,34 +81,27 @@ function Login({ onSuccess }) {
 				setError("An unexpected error occurred. Please try again.");
 			}
 		} finally {
-			setIsLoading(false); // Unset loading
+			setIsLoading(false);
 		}
 	};
 
 	const handleGoogleLogin = async () => {
 		setError(null);
-		setIsGoogleLoading(true); // Set Google loading state
+		setIsGoogleLoading(true);
 		try {
-			// Try popup first
 			await signInWithPopup(auth, googleProvider);
-			// Track successful login with Google
 			trackAuth("login", "google");
-
 			if (onSuccess) {
-				onSuccess(); // Call the success callback if provided
+				onSuccess();
 			}
 		} catch (err) {
 			console.error("Google Login Error:", err);
-
-			// If popup is blocked or domain unauthorized, try redirect
 			if (
 				err.code === "auth/popup-blocked" ||
 				err.code === "auth/unauthorized-domain"
 			) {
 				try {
-					// Use redirect method instead
 					await signInWithRedirect(auth, googleProvider);
-					// Note: We won't reach this point until the user returns from the redirect
 				} catch (redirectErr) {
 					console.error("Redirect auth error:", redirectErr);
 					setError(
@@ -117,17 +116,17 @@ function Login({ onSuccess }) {
 				);
 			}
 		} finally {
-			setIsGoogleLoading(false); // Unset Google loading
+			setIsGoogleLoading(false);
 		}
 	};
 
 	const handlePasswordReset = async () => {
 		if (!email) {
 			setResetError("Please enter your email address first.");
-			setResetMessage(""); // Clear any previous success message
+			setResetMessage("");
 			return;
 		}
-		setError(null); // Clear login errors
+		setError(null);
 		setResetError("");
 		setResetMessage("");
 		setIsResetting(true);
@@ -152,99 +151,165 @@ function Login({ onSuccess }) {
 	};
 
 	return (
-		<div className="grid gap-3">
-			<form onSubmit={handleLogin}>
-				<div className="grid gap-3">
-					<div className="grid gap-1">
-						<Label htmlFor="email" className="text-sm">
-							Email
-						</Label>
+		<div className="w-full max-w-md mx-auto">
+			{/* Modern Header */}
+			<div className="text-center mb-4">
+				<h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent mb-3">
+					Welcome Back
+				</h1>
+				<p className="text-gray-600 dark:text-gray-400 text-sm">
+					Continue your language learning journey
+				</p>
+			</div>
+
+			<form onSubmit={handleLogin} className="space-y-6">
+				{/* Email Input */}
+				<div className="space-y-2">
+					<Label
+						htmlFor="email"
+						className="text-sm font-semibold text-gray-700 dark:text-gray-300"
+					>
+						Email Address
+					</Label>
+					<div className="relative">
 						<Input
 							id="email"
 							type="email"
-							placeholder="your@example.com"
+							placeholder="you@example.com"
 							autoCapitalize="none"
 							autoComplete="email"
 							autoCorrect="off"
-							disabled={isLoading || isResetting}
+							disabled={isLoading || isResetting || isGoogleLoading}
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
 							required
-							className="h-9 text-sm"
+							className="h-14 pl-4 pr-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800 focus:ring-4 focus:ring-blue-500/10 shadow-lg transition-all duration-300 text-base"
 						/>
 					</div>
-					<div className="grid gap-1">
-						<div className="flex justify-between items-center">
-							<Label htmlFor="password" className="text-sm">
-								Password
-							</Label>
-							<button
-								type="button"
-								onClick={handlePasswordReset}
-								disabled={isResetting || isLoading}
-								className="text-xs text-amber-600 hover:text-amber-500 disabled:text-gray-400 disabled:no-underline"
-							>
-								{isResetting ? "Sending..." : "Forgot Password?"}
-							</button>
-						</div>
+				</div>
+
+				{/* Password Input */}
+				<div className="space-y-2">
+					<div className="flex justify-between items-center">
+						<Label
+							htmlFor="password"
+							className="text-sm font-semibold text-gray-700 dark:text-gray-300"
+						>
+							Password
+						</Label>
+						<button
+							type="button"
+							onClick={handlePasswordReset}
+							disabled={isResetting || isLoading || isGoogleLoading}
+							className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:text-gray-400 disabled:cursor-not-allowed font-medium transition-colors"
+						>
+							{isResetting ? "Sending..." : "Forgot Password?"}
+						</button>
+					</div>
+					<div className="relative">
 						<Input
 							id="password"
-							type="password"
-							disabled={isLoading || isResetting}
+							type={showPassword ? "text" : "password"}
+							placeholder="Enter your password"
+							disabled={isLoading || isResetting || isGoogleLoading}
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							required
-							className="h-9"
+							className="h-14 pl-4 pr-12 rounded-2xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800 focus:ring-4 focus:ring-blue-500/10 shadow-lg transition-all duration-300 text-base"
 						/>
+						<button
+							type="button"
+							onClick={() => setShowPassword(!showPassword)}
+							className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+							disabled={isLoading || isResetting || isGoogleLoading}
+						>
+							<div className="w-6 h-6 flex items-center justify-center">
+								{showPassword ? (
+									<EyeOff className="h-4 w-4" />
+								) : (
+									<Eye className="h-4 w-4" />
+								)}
+							</div>
+						</button>
 					</div>
-					{/* Combined error messages area */}
-					<div className="min-h-[1.5rem]">
-						{resetMessage && (
-							<p className="text-xs text-green-600 dark:text-green-400">
+				</div>
+
+				{/* Messages */}
+				<div className="space-y-3">
+					{resetMessage && (
+						<div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-2xl">
+							<p className="text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+								<CheckCircle className="h-4 w-4" />
 								{resetMessage}
 							</p>
-						)}
-						{resetError && (
-							<p className="text-xs text-red-600 dark:text-red-400">
+						</div>
+					)}
+					{resetError && (
+						<div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl">
+							<p className="text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
+								<XCircle className="h-4 w-4" />
 								{resetError}
 							</p>
-						)}
-						{error && (
-							<p className="text-xs text-red-600 dark:text-red-400">{error}</p>
-						)}
-					</div>
-					<Button
-						type="submit"
-						className="w-full h-9 sm:h-10 py-2 px-4 border border-transparent rounded shadow-sm text-sm sm:text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50"
-						disabled={isLoading || isResetting || isGoogleLoading}
-					>
-						{isLoading ? "Logging in..." : "Login"}
-					</Button>
+						</div>
+					)}
+					{error && (
+						<div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl">
+							<p className="text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
+								<XCircle className="h-4 w-4" />
+								{error}
+							</p>
+						</div>
+					)}
 				</div>
+
+				{/* Submit Button */}
+				<Button
+					type="submit"
+					className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
+					disabled={isLoading || isResetting || isGoogleLoading}
+				>
+					{isLoading ? (
+						<div className="flex items-center gap-2">
+							<div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+							Logging in...
+						</div>
+					) : (
+						<div className="flex items-center justify-center gap-2">
+							Login
+							<ArrowRight className="h-5 w-5" />
+						</div>
+					)}
+				</Button>
 			</form>
 
-			{/* Google Sign-in Button */}
-			<div className="relative my-1">
+			{/* Divider */}
+			<div className="relative my-4">
 				<div className="absolute inset-0 flex items-center">
-					<span className="w-full border-t"></span>
+					<div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
 				</div>
-				<div className="relative flex justify-center text-xs uppercase">
-					<span className="bg-white px-2 text-slate-500">or</span>
+				<div className="relative flex justify-center text-sm">
+					<span className="bg-white dark:bg-gray-900 px-4 text-gray-500 dark:text-gray-400 font-medium">
+						or continue with
+					</span>
 				</div>
 			</div>
 
+			{/* Google Sign-in Button */}
 			<Button
 				type="button"
 				variant="outline"
-				className="w-full h-9 sm:h-10 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm sm:text-sm font-medium text-gray-700  bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 flex items-center justify-center"
+				className="w-full h-14 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
 				onClick={handleGoogleLogin}
 				disabled={isLoading || isResetting || isGoogleLoading}
 			>
 				{isGoogleLoading ? (
-					"Signing in..."
+					<div className="flex items-center gap-3">
+						<div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+						Signing in...
+					</div>
 				) : (
-					<>
-						<svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+					<div className="flex items-center justify-center gap-3">
+						<svg className="w-5 h-5" viewBox="0 0 24 24">
 							<path
 								d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0353 3.12C17.9503 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
 								fill="#EA4335"
@@ -263,11 +328,11 @@ function Login({ onSuccess }) {
 							/>
 						</svg>
 						Sign in with Google
-					</>
+					</div>
 				)}
 			</Button>
 		</div>
 	);
 }
 
-export default Login;
+export default ModernLogin;

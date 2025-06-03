@@ -80,7 +80,9 @@ const PostStoryGuidance = ({ isOpen, onClose, isFirstStory = false }) => {
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="w-[95vw] max-w-md mx-auto bg-white p-4 sm:p-6">
 				<DialogHeader className="text-center">
-					<div className="flex justify-center mb-3 sm:mb-4">{currentStepData.icon}</div>
+					<div className="flex justify-center mb-3 sm:mb-4">
+						{currentStepData.icon}
+					</div>
 					<DialogTitle className="text-lg sm:text-xl font-bold px-2">
 						{currentStepData.title}
 					</DialogTitle>
@@ -113,7 +115,9 @@ const PostStoryGuidance = ({ isOpen, onClose, isFirstStory = false }) => {
 								<div className="flex items-start sm:items-center space-x-2 sm:space-x-3">
 									<BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0 mt-0.5 sm:mt-0" />
 									<div>
-										<p className="font-medium text-blue-900 text-sm sm:text-base">Quick Tip:</p>
+										<p className="font-medium text-blue-900 text-sm sm:text-base">
+											Quick Tip:
+										</p>
 										<p className="text-xs sm:text-sm text-blue-700 leading-relaxed">
 											Your stories stay private unless you choose to share them
 											with the community.
@@ -130,7 +134,9 @@ const PostStoryGuidance = ({ isOpen, onClose, isFirstStory = false }) => {
 								<div className="flex items-start sm:items-center space-x-2 sm:space-x-3">
 									<Star className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5 sm:mt-0" />
 									<div>
-										<p className="font-medium text-green-900 text-sm sm:text-base">Pro Tip:</p>
+										<p className="font-medium text-green-900 text-sm sm:text-base">
+											Pro Tip:
+										</p>
 										<p className="text-xs sm:text-sm text-green-700 leading-relaxed">
 											Practice vocabulary right after reading for the best
 											learning results!
@@ -158,7 +164,9 @@ const PostStoryGuidance = ({ isOpen, onClose, isFirstStory = false }) => {
 									onClick={currentStepData.action.onClick}
 									className="flex items-center justify-center space-x-1 text-sm px-3 py-2"
 								>
-									<span className="truncate">{currentStepData.action.label}</span>
+									<span className="truncate">
+										{currentStepData.action.label}
+									</span>
 									<ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
 								</Button>
 							)}
