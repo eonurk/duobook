@@ -152,22 +152,12 @@ function ModernLogin({ onSuccess }) {
 
 	return (
 		<div className="w-full max-w-md mx-auto">
-			{/* Modern Header */}
-			<div className="text-center mb-4">
-				<h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-3">
-					Welcome Back
-				</h1>
-				<p className="text-gray-600 text-sm">
-					Continue your language learning journey
-				</p>
-			</div>
-
 			<form onSubmit={handleLogin} className="space-y-6">
 				{/* Email Input */}
 				<div className="space-y-2">
 					<Label
 						htmlFor="email"
-						className="text-sm font-semibold text-gray-700"
+						className="text-sm font-semibold text-gray-700 dark:text-gray-300"
 					>
 						Email Address
 					</Label>
@@ -183,7 +173,7 @@ function ModernLogin({ onSuccess }) {
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
 							required
-							className="h-14 pl-4 pr-4 rounded-2xl border-2 border-gray-200 focus:border-blue-500 bg-white focus:ring-4 focus:ring-blue-500/10 shadow-lg transition-all duration-300 text-base"
+							className="h-14 pl-4 pr-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800 focus:ring-4 focus:ring-blue-500/10 shadow-lg transition-all duration-300 text-base"
 						/>
 					</div>
 				</div>
@@ -193,7 +183,7 @@ function ModernLogin({ onSuccess }) {
 					<div className="flex justify-between items-center">
 						<Label
 							htmlFor="password"
-							className="text-sm font-semibold text-gray-700"
+							className="text-sm font-semibold text-gray-700 dark:text-gray-300"
 						>
 							Password
 						</Label>
@@ -201,7 +191,7 @@ function ModernLogin({ onSuccess }) {
 							type="button"
 							onClick={handlePasswordReset}
 							disabled={isResetting || isLoading || isGoogleLoading}
-							className="text-sm text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed font-medium transition-colors"
+							className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:text-gray-400 disabled:cursor-not-allowed font-medium transition-colors"
 						>
 							{isResetting ? "Sending..." : "Forgot Password?"}
 						</button>
@@ -215,12 +205,12 @@ function ModernLogin({ onSuccess }) {
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							required
-							className="h-14 pl-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-blue-500 bg-white focus:ring-4 focus:ring-blue-500/10 shadow-lg transition-all duration-300 text-base"
+							className="h-14 pl-4 pr-12 rounded-2xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800 focus:ring-4 focus:ring-blue-500/10 shadow-lg transition-all duration-300 text-base"
 						/>
 						<button
 							type="button"
 							onClick={() => setShowPassword(!showPassword)}
-							className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+							className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
 							disabled={isLoading || isResetting || isGoogleLoading}
 						>
 							<div className="w-6 h-6 flex items-center justify-center">
@@ -237,24 +227,24 @@ function ModernLogin({ onSuccess }) {
 				{/* Messages */}
 				<div className="space-y-3">
 					{resetMessage && (
-						<div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
-							<p className="text-sm text-emerald-700 flex items-center gap-2">
+						<div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-2xl">
+							<p className="text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
 								<CheckCircle className="h-4 w-4" />
 								{resetMessage}
 							</p>
 						</div>
 					)}
 					{resetError && (
-						<div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
-							<p className="text-sm text-red-700 flex items-center gap-2">
+						<div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl">
+							<p className="text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
 								<XCircle className="h-4 w-4" />
 								{resetError}
 							</p>
 						</div>
 					)}
 					{error && (
-						<div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
-							<p className="text-sm text-red-700 flex items-center gap-2">
+						<div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl">
+							<p className="text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
 								<XCircle className="h-4 w-4" />
 								{error}
 							</p>
@@ -285,10 +275,10 @@ function ModernLogin({ onSuccess }) {
 			{/* Divider */}
 			<div className="relative my-4">
 				<div className="absolute inset-0 flex items-center">
-					<div className="w-full border-t border-gray-200"></div>
+					<div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
 				</div>
 				<div className="relative flex justify-center text-sm">
-					<span className="bg-white px-4 text-gray-500 font-medium">
+					<span className="bg-white dark:bg-gray-900 px-4 text-gray-500 dark:text-gray-400 font-medium">
 						or continue with
 					</span>
 				</div>
@@ -298,7 +288,7 @@ function ModernLogin({ onSuccess }) {
 			<Button
 				type="button"
 				variant="outline"
-				className="w-full h-14 border-2 border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
+				className="w-full h-14 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
 				onClick={handleGoogleLogin}
 				disabled={isLoading || isResetting || isGoogleLoading}
 			>

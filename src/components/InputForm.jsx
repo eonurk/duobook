@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react"; // Added useMemo
 import { useAuth } from "@/context/AuthContext"; // Import useAuth
-import Login from "@/components/Auth/Login"; // Import Login
-import Signup from "@/components/Auth/Signup"; // Import Signup
+import AuthDialog from "@/components/Auth/AuthDialog"; // Import unified AuthDialog
 import {
 	BookText,
 	Heart,
@@ -14,21 +13,6 @@ import {
 	Target,
 	BookOpen,
 } from "lucide-react"; // Replace existing icons with cuter alternatives & ADDED Lightbulb, Shuffle, Eye, EyeOff, Settings2, Sparkles, Target, BookOpen
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogDescription, // Added DialogDescription
-} from "@/components/ui/dialog"; // Import Dialog components
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card"; // Import Card components
 import duobookImg from "../assets/duobook.jpg";
 import toast, { Toaster } from "react-hot-toast"; // Added for moderation feedback
 import { Switch } from "@/components/ui/switch"; // Import Switch
@@ -1246,48 +1230,11 @@ function InputForm({
 			</form>
 
 			{/* Login/Signup Dialog */}
-			<Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-				<DialogContent className="sm:max-w-[425px] p-0">
-					<Card className="border-none shadow-none bg-amber-50">
-						<CardHeader className="text-center pb-2">
-							<CardTitle>Sign in to DuoBook</CardTitle>
-							<CardDescription>
-								Create and save personalized stories
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div className="flex border-b mb-4">
-								<button
-									className={`px-4 py-2 text-sm font-medium ${
-										activeTab === "login"
-											? "border-b-2 border-amber-500 text-amber-800"
-											: "text-gray-500 hover:text-gray-700"
-									}`}
-									onClick={() => setActiveTab("login")}
-								>
-									Login
-								</button>
-								<button
-									className={`px-4 py-2 text-sm font-medium ${
-										activeTab === "signup"
-											? "border-b-2 border-amber-500 text-amber-800"
-											: "text-gray-500 hover:text-gray-700"
-									}`}
-									onClick={() => setActiveTab("signup")}
-								>
-									Sign Up
-								</button>
-							</div>
-
-							{activeTab === "login" ? (
-								<Login onSuccess={() => setShowAuthDialog(false)} />
-							) : (
-								<Signup onSuccess={() => setShowAuthDialog(false)} />
-							)}
-						</CardContent>
-					</Card>
-				</DialogContent>
-			</Dialog>
+			<AuthDialog 
+				open={showAuthDialog}
+				onOpenChange={setShowAuthDialog}
+				initialTab={activeTab}
+			/>
 		</>
 	);
 }

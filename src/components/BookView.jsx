@@ -1542,7 +1542,7 @@ function BookView({
 					<button
 						onClick={() => setCurrentPageIndex(currentPageIndex - 1)} // Simpler navigation
 						disabled={currentPageIndex === 0}
-						className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150 text-sm"
+						className="px-3 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150 text-sm"
 					>
 						<ChevronLeft size={18} className="mr-1" /> Prev
 					</button>
@@ -1561,7 +1561,7 @@ function BookView({
 										className={`px-3 py-2 rounded-md transition-colors duration-150 text-sm font-medium ${
 											currentPageIndex === pageNumber
 												? "bg-amber-500 text-white cursor-default"
-												: "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+												: "bg-gray-200 text-gray-800 hover:bg-gray-300"
 										}`}
 									>
 										{pageNumber + 1}
@@ -1579,7 +1579,7 @@ function BookView({
 									className={`px-3 py-2 rounded-md transition-colors duration-150 text-sm font-medium ${
 										currentPageIndex === pageNumber
 											? "bg-amber-500 text-white cursor-default"
-											: "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+											: "bg-gray-200 text-gray-800 hover:bg-gray-300"
 									}`}
 								>
 									{pageNumber + 1}
@@ -1592,7 +1592,7 @@ function BookView({
 					<button
 						onClick={() => setCurrentPageIndex(currentPageIndex + 1)} // Simpler navigation
 						disabled={currentPageIndex === totalPages - 1}
-						className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150 text-sm"
+						className="px-3 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150 text-sm"
 					>
 						Next <ChevronRight size={18} className="ml-1" />
 					</button>

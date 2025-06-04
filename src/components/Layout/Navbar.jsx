@@ -4,24 +4,8 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/firebaseConfig"; // Use alias
 import { useAuth } from "@/context/AuthContext"; // Use alias
 import { Button } from "@/components/ui/button"; // Import shadcn Button
-import Login from "@/components/Auth/Login";
-import Signup from "@/components/Auth/Signup";
+import AuthDialog from "@/components/Auth/AuthDialog";
 import { Flame, Star, Sparkles, Menu, X, BookOpen, Trophy } from "lucide-react"; // Added BookOpen icon and Trophy icon
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogDescription,
-} from "@/components/ui/dialog";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card"; // Import Card components
 import { getStoryGenerationLimit } from "@/lib/api"; // Import the API function
 import { trackAuth } from "@/lib/analytics"; // Import analytics tracking
 
@@ -328,7 +312,7 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 
 				{/* Mobile Menu Dropdown/Overlay */}
 				{isMobileMenuOpen && (
-					<div className="absolute top-16 left-0 right-0 z-40 bg-white dark:bg-gray-900 shadow-lg md:hidden border-t border-border/40">
+					<div className="absolute top-16 left-0 right-0 z-40 bg-white shadow-lg md:hidden border-t border-border/40">
 						<nav className="flex flex-col items-start gap-1 p-6 max-h-[calc(100vh-4rem)] overflow-y-auto">
 							{currentUser ? (
 								<>
@@ -494,7 +478,7 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 									<Button
 										variant="ghost"
 										onClick={handleLogout}
-										className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50"
+										className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
 									>
 										Logout
 									</Button>
@@ -538,42 +522,11 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 				)}
 			</header>
 
-			<Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-				<DialogContent className="sm:max-w-[450px] p-0 border-none">
-					<Card className="border-none shadow-none bg-white">
-						<CardContent>
-							<div className="flex mb-6 mt-4">
-								<button
-									className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-										activeTab === "login"
-											? "text-white bg-blue-600 rounded-sm"
-											: "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-									}`}
-									onClick={() => setActiveTab("login")}
-								>
-									Login
-								</button>
-								<button
-									className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-										activeTab === "signup"
-											? "text-white bg-amber-500 rounded-sm"
-											: "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-									}`}
-									onClick={() => setActiveTab("signup")}
-								>
-									Sign Up
-								</button>
-							</div>
-
-							{activeTab === "login" ? (
-								<Login onSuccess={() => setShowAuthDialog(false)} />
-							) : (
-								<Signup onSuccess={() => setShowAuthDialog(false)} />
-							)}
-						</CardContent>
-					</Card>
-				</DialogContent>
-			</Dialog>
+			<AuthDialog 
+				open={showAuthDialog}
+				onOpenChange={setShowAuthDialog}
+				initialTab={activeTab}
+			/>
 		</>
 	);
 });

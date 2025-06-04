@@ -390,7 +390,7 @@ function UserProfilePage() {
 								<div className="flex items-center mt-1">
 									{storyLimit.subscriptionTier === "PRO" ? (
 										<>
-											<div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+											<div className="w-full bg-gray-200 rounded-full h-2.5">
 												<div
 													className="bg-purple-600 h-2.5 rounded-full"
 													style={{
@@ -411,7 +411,7 @@ function UserProfilePage() {
 										</p>
 									) : (
 										<>
-											<div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+											<div className="w-full bg-gray-200 rounded-full h-2.5">
 												<div
 													className="bg-blue-600 h-2.5 rounded-full"
 													style={{
@@ -467,7 +467,7 @@ function UserProfilePage() {
 											<span className="text-sm text-muted-foreground mr-3">
 												{count} {count === 1 ? "story" : "stories"}
 											</span>
-											<div className="w-24 bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+											<div className="w-24 bg-gray-200 rounded-full h-1.5">
 												<div
 													className="bg-green-500 h-1.5 rounded-full"
 													style={{
@@ -609,10 +609,10 @@ function UserProfilePage() {
 							/>
 						</div>
 						{error && (
-							<p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+							<p className="text-sm text-red-600">{error}</p>
 						)}
 						{successMessage && (
-							<p className="text-sm text-green-600 dark:text-green-400">
+							<p className="text-sm text-green-600">
 								{successMessage}
 							</p>
 						)}

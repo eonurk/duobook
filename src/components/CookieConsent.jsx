@@ -109,15 +109,15 @@ function CookieConsent() {
 	if (!isVisible) return null;
 
 	return (
-		<div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-xl z-50 border-t-2 border-amber-400">
+		<div className="fixed bottom-0 left-0 right-0 bg-white shadow-xl z-50 border-t-2 border-amber-400">
 			<div className="container mx-auto p-4 md:p-6">
 				<div className="flex flex-col">
 					<div className="flex flex-col md:flex-row md:items-center md:justify-between">
 						<div className="mb-4 md:mb-0 md:mr-4 max-w-2xl">
-							<h3 className="text-base md:text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">
+							<h3 className="text-base md:text-lg font-semibold mb-2 text-gray-800">
 								🍪 Cookie Preferences
 							</h3>
-							<p className="text-sm text-gray-700 dark:text-gray-300">
+							<p className="text-sm text-gray-700">
 								We use cookies to enhance your experience, analyze our traffic,
 								and for security. You can customize your preferences or accept
 								all cookies.
@@ -154,7 +154,7 @@ function CookieConsent() {
 						<div className="mt-6 border-t pt-4 space-y-4">
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								{/* Essential Cookies */}
-								<div className="flex items-center justify-between border rounded-lg p-3 bg-gray-50 dark:bg-gray-700">
+								<div className="flex items-center justify-between border rounded-lg p-3 bg-gray-50">
 									<div className="max-w-[70%]">
 										<Label
 											htmlFor="essential-cookies"
@@ -162,7 +162,7 @@ function CookieConsent() {
 										>
 											Essential Cookies
 										</Label>
-										<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+										<p className="text-xs text-gray-500 mt-1">
 											Required for basic functionality
 										</p>
 									</div>
@@ -185,7 +185,7 @@ function CookieConsent() {
 								</div>
 
 								{/* Analytics Cookies */}
-								<div className="flex items-center justify-between border rounded-lg p-3 bg-gray-50 dark:bg-gray-700">
+								<div className="flex items-center justify-between border rounded-lg p-3 bg-gray-50">
 									<div className="max-w-[70%]">
 										<Label
 											htmlFor="analytics-cookies"
@@ -193,7 +193,7 @@ function CookieConsent() {
 										>
 											Analytics Cookies
 										</Label>
-										<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+										<p className="text-xs text-gray-500 mt-1">
 											Help us improve our app
 										</p>
 									</div>
@@ -220,7 +220,7 @@ function CookieConsent() {
 								</div>
 
 								{/* Preference Cookies */}
-								<div className="flex items-center justify-between border rounded-lg p-3 bg-gray-50 dark:bg-gray-700 md:col-span-2">
+								<div className="flex items-center justify-between border rounded-lg p-3 bg-gray-50 md:col-span-2">
 									<div className="max-w-[70%]">
 										<Label
 											htmlFor="preference-cookies"
@@ -228,7 +228,7 @@ function CookieConsent() {
 										>
 											Preference Cookies
 										</Label>
-										<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+										<p className="text-xs text-gray-500 mt-1">
 											Remember your settings
 										</p>
 									</div>
@@ -266,10 +266,10 @@ function CookieConsent() {
 						</div>
 					)}
 
-					<div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+					<div className="mt-3 text-xs text-gray-500">
 						<a
 							href="/privacy"
-							className="text-amber-600 dark:text-amber-400 hover:underline"
+							className="text-amber-600 hover:underline"
 						>
 							Privacy Policy
 						</a>

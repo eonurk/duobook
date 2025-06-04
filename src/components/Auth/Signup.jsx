@@ -407,16 +407,6 @@ function ModernSignup({ onSuccess }) {
 
 	return (
 		<div className="w-full max-w-md mx-auto">
-			{/* Modern Header with animated gradient */}
-			<div className="text-center mb-4">
-				<h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-3">
-					Join DuoBook
-				</h1>
-				<p className="text-gray-600 text-sm">
-					Start your language learning journey today
-				</p>
-			</div>
-
 			{/* Email verification success banner */}
 			{emailSent && (
 				<div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl">
@@ -683,7 +673,7 @@ function ModernSignup({ onSuccess }) {
 			<Button
 				type="button"
 				variant="outline"
-				className="w-full h-14 border-2 border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
+				className="w-full h-14 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
 				onClick={handleGoogleSignup}
 				disabled={isLoading || isGoogleLoading}
 			>
