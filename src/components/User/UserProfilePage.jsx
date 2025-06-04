@@ -608,13 +608,9 @@ function UserProfilePage() {
 								disabled={isLoading}
 							/>
 						</div>
-						{error && (
-							<p className="text-sm text-red-600">{error}</p>
-						)}
+						{error && <p className="text-sm text-red-600">{error}</p>}
 						{successMessage && (
-							<p className="text-sm text-green-600">
-								{successMessage}
-							</p>
+							<p className="text-sm text-green-600">{successMessage}</p>
 						)}
 						<Button type="submit" className="w-full" disabled={isLoading}>
 							{isLoading ? "Changing Password..." : "Change Password"}

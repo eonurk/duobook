@@ -669,20 +669,20 @@ function VocabularyPracticePage() {
 		setAnimateTrigger(0);
 		setShowHint(false);
 		setTypedAnswer("");
-		
+
 		// Always reset flashcard to front side for new questions
 		setIsFlashcardFlipped(false);
 
 		// Reset and start timer if enabled
 		if (isTimerEnabled) {
 			setTimeLeft(TIMER_DURATION);
-			
+
 			// Clear any existing timer first
-			setTimerInterval(prevInterval => {
+			setTimerInterval((prevInterval) => {
 				if (prevInterval) clearInterval(prevInterval);
 				return null;
 			});
-			
+
 			// Start a new timer
 			startTimer();
 		}
@@ -704,7 +704,7 @@ function VocabularyPracticePage() {
 	// --- Timer Functions ---
 
 	const clearTimer = React.useCallback(() => {
-		setTimerInterval(prevInterval => {
+		setTimerInterval((prevInterval) => {
 			if (prevInterval) {
 				clearInterval(prevInterval);
 			}
@@ -717,11 +717,11 @@ function VocabularyPracticePage() {
 		if (!isAnswered) return;
 
 		// Clear timer safely
-		setTimerInterval(prevInterval => {
+		setTimerInterval((prevInterval) => {
 			if (prevInterval) clearInterval(prevInterval);
 			return null;
 		});
-		
+
 		const nextIndex = currentQuestionIndex + 1;
 
 		if (nextIndex < shuffledList.length) {
@@ -806,11 +806,11 @@ function VocabularyPracticePage() {
 		if (isAnswered) return;
 
 		// Clear the timer when time is up
-		setTimerInterval(prevInterval => {
+		setTimerInterval((prevInterval) => {
 			if (prevInterval) clearInterval(prevInterval);
 			return null;
 		});
-		
+
 		setIsAnswered(true);
 		setFeedback("Time's up! ⏰");
 		setCorrectStreak(0);
@@ -861,11 +861,11 @@ function VocabularyPracticePage() {
 
 	const startTimer = React.useCallback(() => {
 		// First clear any existing interval using functional update to avoid dependencies
-		setTimerInterval(prevInterval => {
+		setTimerInterval((prevInterval) => {
 			if (prevInterval) {
 				clearInterval(prevInterval);
 			}
-			
+
 			// Create new interval
 			const interval = setInterval(() => {
 				setTimeLeft((prev) => {
@@ -877,7 +877,7 @@ function VocabularyPracticePage() {
 					return prev - 1;
 				});
 			}, 1000);
-			
+
 			return interval;
 		});
 	}, []);
@@ -925,13 +925,13 @@ function VocabularyPracticePage() {
 		if (isQuizActive && !quizCompleted && isTimerEnabled) {
 			// Reset timeLeft value
 			setTimeLeft(TIMER_DURATION);
-			
+
 			// Clear any existing timer first
-			setTimerInterval(prevInterval => {
+			setTimerInterval((prevInterval) => {
 				if (prevInterval) clearInterval(prevInterval);
 				return null;
 			});
-			
+
 			// Start new timer if not answered
 			if (!isAnswered) {
 				startTimer();
@@ -965,9 +965,9 @@ function VocabularyPracticePage() {
 		setIsAnswered(false);
 		// Make sure flashcards start with front side showing
 		setIsFlashcardFlipped(false);
-		
+
 		// Clear timer safely
-		setTimerInterval(prevInterval => {
+		setTimerInterval((prevInterval) => {
 			if (prevInterval) clearInterval(prevInterval);
 			return null;
 		});
@@ -1000,7 +1000,7 @@ function VocabularyPracticePage() {
 		if (isAnswered) return;
 
 		// Clear timer if running
-		setTimerInterval(prevInterval => {
+		setTimerInterval((prevInterval) => {
 			if (prevInterval) clearInterval(prevInterval);
 			return null;
 		});
@@ -1117,7 +1117,7 @@ function VocabularyPracticePage() {
 		if (isAnswered || !typedAnswer.trim()) return;
 
 		// Clear timer if running
-		setTimerInterval(prevInterval => {
+		setTimerInterval((prevInterval) => {
 			if (prevInterval) clearInterval(prevInterval);
 			return null;
 		});
@@ -1239,7 +1239,7 @@ function VocabularyPracticePage() {
 		if (isAnswered) return;
 
 		// Clear timer if running
-		setTimerInterval(prevInterval => {
+		setTimerInterval((prevInterval) => {
 			if (prevInterval) clearInterval(prevInterval);
 			return null;
 		});
@@ -1347,7 +1347,7 @@ function VocabularyPracticePage() {
 	// Cleanup the timer when component unmounts
 	useEffect(() => {
 		return () => {
-			setTimerInterval(prev => {
+			setTimerInterval((prev) => {
 				if (prev) clearInterval(prev);
 				return null;
 			});
@@ -1382,7 +1382,7 @@ function VocabularyPracticePage() {
 			startTimer();
 		} else {
 			// Clear timer when conditions are not met or component unmounts
-			setTimerInterval(prevInterval => {
+			setTimerInterval((prevInterval) => {
 				if (prevInterval) clearInterval(prevInterval);
 				return null;
 			});
@@ -2157,7 +2157,7 @@ function VocabularyPracticePage() {
 						</div>
 						<Progress
 							value={progressPercent}
-							className="h-6 bg-gray-200 dark:bg-gray-700 transition-all duration-300 shadow-sm"
+							className="h-6 bg-gray-200  transition-all duration-300 shadow-sm"
 						/>
 						{isTimerEnabled && (
 							<div className="mt-1">

@@ -379,15 +379,13 @@ export function AchievementPopup({ achievements }) {
 			{achievements.map((achievement, index) => (
 				<div
 					key={achievement.id}
-					className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-2 flex items-center animate-slide-up"
+					className="bg-white  rounded-lg shadow-lg p-4 mb-2 flex items-center animate-slide-up"
 					style={{ animationDelay: `${index * 200}ms` }}
 				>
 					<div className="text-3xl mr-3">{achievement.icon}</div>
 					<div>
 						<h3 className="font-bold">{achievement.name}</h3>
-						<p className="text-sm text-gray-600 dark:text-gray-300">
-							{achievement.description}
-						</p>
+						<p className="text-sm text-gray-600 ">{achievement.description}</p>
 						{achievement.xpReward && (
 							<p className="text-xs text-blue-500 mt-1">
 								+{achievement.xpReward} XP

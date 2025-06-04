@@ -522,7 +522,7 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 				)}
 			</header>
 
-			<AuthDialog 
+			<AuthDialog
 				open={showAuthDialog}
 				onOpenChange={setShowAuthDialog}
 				initialTab={activeTab}

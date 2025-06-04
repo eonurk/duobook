@@ -1230,7 +1230,7 @@ function InputForm({
 			</form>
 
 			{/* Login/Signup Dialog */}
-			<AuthDialog 
+			<AuthDialog
 				open={showAuthDialog}
 				onOpenChange={setShowAuthDialog}
 				initialTab={activeTab}

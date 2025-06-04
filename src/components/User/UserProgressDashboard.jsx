@@ -161,7 +161,7 @@ function UserProgressDashboard() {
 				</CardHeader>
 				<CardContent className="pb-2">
 					{/* Super visible progress bar with img fallback */}
-					<div className="relative w-full h-5 bg-gray-200 dark:bg-gray-800 rounded-md mb-4 overflow-hidden">
+					<div className="relative w-full h-5 bg-gray-200  rounded-md mb-4 overflow-hidden">
 						{/* Gradient background for the progress */}
 						<div
 							className="absolute left-0 top-0 bottom-0 flex items-center rounded-l-md"
@@ -184,7 +184,7 @@ function UserProgressDashboard() {
 						</div>
 
 						{/* Border to ensure visibility */}
-						<div className="absolute inset-0 border border-gray-300 dark:border-gray-600 rounded-md pointer-events-none"></div>
+						<div className="absolute inset-0 border border-gray-300 rounded-md pointer-events-none"></div>
 					</div>
 
 					<div className="flex flex-col sm:flex-row sm:justify-between gap-2 text-sm font-medium">
@@ -193,7 +193,7 @@ function UserProgressDashboard() {
 							<span>{progressInfo.pointsInCurrentLevel} XP earned</span>
 						</div>
 						<div className="flex items-center gap-1">
-							<div className="w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+							<div className="w-3 h-3 bg-gray-300 rounded-full"></div>
 							<span>
 								{progressInfo.pointsNeededForNextLevel -
 									progressInfo.pointsInCurrentLevel}{" "}
@@ -371,7 +371,7 @@ function UserProgressDashboard() {
 																<span className="text-xs text-muted-foreground mr-3">
 																	{count} {count === 1 ? "story" : "stories"}
 																</span>
-																<div className="w-24 bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+																<div className="w-24 bg-gray-200 rounded-full h-1.5 ">
 																	<div
 																		className={`h-1.5 rounded-full ${
 																			difficulty === "Beginner"
@@ -453,7 +453,7 @@ function UserProgressDashboard() {
 																{day}
 															</div>
 															<div className="flex-1 mx-2">
-																<div className="bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+																<div className="bg-gray-200 rounded-full h-2 ">
 																	<div
 																		className="bg-blue-600 h-2 rounded-full"
 																		style={{
@@ -576,7 +576,7 @@ function UserProgressDashboard() {
 												<span>C1</span>
 												<span>C2</span>
 											</div>
-											<div className="bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+											<div className="bg-gray-200 rounded-full h-2">
 												<div
 													className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full"
 													style={{

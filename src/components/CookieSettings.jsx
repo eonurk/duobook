@@ -142,9 +142,9 @@ function CookieSettings() {
 	};
 
 	return (
-		<div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+		<div className="bg-white  rounded-lg shadow p-6">
 			<h2 className="text-xl font-semibold mb-4">Cookie Settings</h2>
-			<p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+			<p className="text-sm text-gray-600  mb-6">
 				Manage how DuoBook uses cookies to enhance your experience.
 			</p>
 
@@ -158,7 +158,7 @@ function CookieSettings() {
 						>
 							Essential Cookies
 						</Label>
-						<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+						<p className="text-sm text-gray-500 mt-1">
 							Required for basic functionality and cannot be disabled
 						</p>
 					</div>
@@ -189,7 +189,7 @@ function CookieSettings() {
 						>
 							Analytics Cookies
 						</Label>
-						<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+						<p className="text-sm text-gray-500  mt-1">
 							Help us improve by collecting anonymous usage data
 						</p>
 					</div>
@@ -225,7 +225,7 @@ function CookieSettings() {
 						>
 							Preference Cookies
 						</Label>
-						<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+						<p className="text-sm text-gray-500  mt-1">
 							Remember your settings and preferences
 						</p>
 					</div>
