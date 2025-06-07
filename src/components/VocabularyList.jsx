@@ -165,11 +165,9 @@ function VocabularyList({
 						{vocabulary.map((item, index) => (
 							<li key={index} className="vocabulary-item-subtle">
 								<div className="vocab-content">
-									<span className="vocab-word-subtle">{item.word}</span>
+									<span className="vocab-word-subtle">{item.translation}</span>
 									<span className="vocab-separator">→</span>
-									<span className="vocab-translation-subtle">
-										{item.translation}
-									</span>
+									<span className="vocab-translation-subtle">{item.word}</span>
 								</div>
 								<div className="vocab-actions">
 									{ttsReady && (
@@ -179,10 +177,10 @@ function VocabularyList({
 											}`}
 											onClick={(e) => {
 												e.stopPropagation();
-												handleSpeak(item.word, targetLanguage, index);
+												handleSpeak(item.translation, targetLanguage, index);
 											}}
-											title={`Speak "${item.word}" in ${targetLanguage}`}
-											aria-label={`Speak "${item.word}" in ${targetLanguage}`}
+											title={`Speak "${item.translation}" in ${targetLanguage}`}
+											aria-label={`Speak "${item.translation}" in ${targetLanguage}`}
 										>
 											<Volume2 size={14} />
 										</button>
