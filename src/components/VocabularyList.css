@@ -1,3 +1,4 @@
+/* Legacy styles (keeping for compatibility) */
 .vocabulary-section {
 	margin: 2.5rem auto 1rem;
 	padding: 1.5rem 2rem;
@@ -47,5 +48,175 @@
 @media (max-width: 600px) {
 	.vocabulary-list {
 		columns: 1; /* Single column on smaller screens */
+	}
+}
+
+/* New subtle collapsible design */
+.vocabulary-section-subtle {
+	margin: 1rem auto 0.5rem;
+	max-width: 800px;
+}
+
+.vocabulary-header-button {
+	width: 100%;
+	background-color: #f8f9fa;
+	background: none;
+	border: none;
+	padding: 0.75rem 1rem;
+	cursor: pointer;
+	border-radius: 6px;
+	transition: all 0.2s ease;
+	border: 1px solid transparent;
+}
+
+.vocabulary-header-button:hover {
+	background-color: #f8f9fa;
+	border-color: #e9ecef;
+}
+
+.vocabulary-header-content {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+}
+
+.vocabulary-title-subtle {
+	color: #6c757d;
+	font-size: 0.95rem;
+	font-weight: 500;
+	margin: 0;
+	text-align: left;
+}
+
+.vocabulary-toggle-icon {
+	color: #adb5bd;
+	display: flex;
+	align-items: center;
+	transition: transform 0.2s ease;
+}
+
+.vocabulary-header-button:hover .vocabulary-toggle-icon {
+	color: #6c757d;
+}
+
+.vocabulary-list-container {
+	padding: 0.5rem 1rem 1rem;
+	border-left: 2px solid #f1f3f4;
+	margin-left: 1rem;
+	margin-top: 0.5rem;
+}
+
+.vocabulary-list-subtle {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 0.5rem;
+}
+
+.vocabulary-item-subtle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.5rem 0.75rem;
+	background-color: #fafafa;
+	border-radius: 4px;
+	border: 1px solid #f0f0f0;
+	transition: all 0.15s ease;
+	font-size: 0.9rem;
+}
+
+.vocabulary-item-subtle:hover {
+	background-color: #f5f5f5;
+	border-color: #e0e0e0;
+}
+
+.vocab-content {
+	display: flex;
+	align-items: center;
+	flex: 1;
+	min-width: 0;
+}
+
+.vocab-word-subtle {
+	font-weight: 600;
+	color: #495057;
+	margin-right: 0.5rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.vocab-separator {
+	color: #adb5bd;
+	margin: 0 0.5rem;
+	font-size: 0.8rem;
+}
+
+.vocab-translation-subtle {
+	color: #6c757d;
+	flex: 1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.vocab-actions {
+	display: flex;
+	align-items: center;
+	margin-left: 0.5rem;
+}
+
+.vocab-speak-button {
+	background: none;
+	border: none;
+	padding: 0.25rem;
+	cursor: pointer;
+	border-radius: 3px;
+	color: #adb5bd;
+	transition: all 0.15s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.vocab-speak-button:hover {
+	color: #495057;
+	background-color: #e9ecef;
+}
+
+.vocab-speak-button.speaking {
+	color: #007bff;
+	background-color: #e7f3ff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.vocabulary-list-subtle {
+		grid-template-columns: 1fr;
+	}
+
+	.vocab-word-subtle,
+	.vocab-translation-subtle {
+		max-width: 120px;
+	}
+}
+
+@media (max-width: 480px) {
+	.vocabulary-list-container {
+		padding: 0.5rem 0.5rem 1rem;
+		margin-left: 0.5rem;
+	}
+
+	.vocabulary-item-subtle {
+		padding: 0.4rem 0.6rem;
+		font-size: 0.85rem;
+	}
+
+	.vocab-word-subtle,
+	.vocab-translation-subtle {
+		max-width: 100px;
 	}
 }

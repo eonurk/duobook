@@ -142,15 +142,7 @@
 	background-color: white; /* Default background */
 }
 
-/* Ensure active sentence has highlight */
-.mobile-target-sentence.sentence-active {
-	background-color: rgba(
-		255,
-		243,
-		205,
-		0.8
-	); /* Use same highlight color as desktop */
-}
+/* Background color for active sentences is handled by React inline styles for dynamic highlighting */
 
 /* Source sentence - translation */
 .mobile-source-sentence {
@@ -555,12 +547,6 @@
 
 .tts-setting input[type="checkbox"] {
 	margin-right: 8px;
-}
-
-/* Speaking animation */
-.speak-button.speaking {
-	animation: pulse 1.5s infinite;
-	background-color: #ff9800;
 }
 
 @keyframes pulse {

@@ -332,8 +332,10 @@ function BookView({
 	const [isFinished, setIsFinished] = useState(false); // State for completion
 	// Default showAllSource state to false (hide translations by default)
 	const [showAllSource, setShowAllSource] = useState(false); // State for toggling source visibility
-	// Add state for vocabulary expansion
-	const [isVocabExpanded, setIsVocabExpanded] = useState(false);
+	// Add state for vocabulary expansion - default to expanded on desktop
+	const [isVocabExpanded, setIsVocabExpanded] = useState(
+		typeof window !== "undefined" && window.innerWidth >= 768
+	);
 
 	// --- Download State ---
 	const [isDownloading, setIsDownloading] = useState(false);
@@ -854,13 +856,23 @@ function BookView({
 
 		setIsNavigating(true);
 
-		// Only allow clicking the active or past sentences
+		// Allow clicking any sentence for free navigation
 		if (index === activeSentenceIndex && !isFinished) {
 			handleNextSentence();
-		} else if (index < activeSentenceIndex) {
+		} else {
+			// Jump to any sentence (past, current, or future)
 			setActiveSentenceIndex(index);
 			setIsFinished(false);
 			if (synth?.speaking) synth.cancel();
+
+			// When jumping to any sentence, reveal all sentences from 0 up to (but not including) the target sentence
+			// This maintains logical progression where everything before the current position is accessible
+			const newRevealedIndices = new Set(revealedSourceIndices);
+			// Add all sentences from 0 up to (but not including) the target sentence
+			for (let i = 0; i < index; i++) {
+				newRevealedIndices.add(i);
+			}
+			setRevealedSourceIndices(newRevealedIndices);
 		}
 
 		// Reset navigation lock after a short delay
@@ -1125,17 +1137,14 @@ function BookView({
 										style={{
 											cursor: "pointer",
 											backgroundColor:
-												index === activeSentenceIndex
-													? hoveredSentenceIndex === index
-														? hoverHighlightColor
-														: activeHighlightColor
+												hoveredSentenceIndex === index
+													? hoverHighlightColor
+													: index === activeSentenceIndex
+													? activeHighlightColor
 													: "transparent",
 											transition: "background-color 0.3s ease",
 										}}
-										onMouseEnter={() =>
-											index === activeSentenceIndex &&
-											setHoveredSentenceIndex(index)
-										}
+										onMouseEnter={() => setHoveredSentenceIndex(index)}
 										onMouseLeave={() => setHoveredSentenceIndex(null)}
 									>
 										{canSpeak && (
@@ -1182,7 +1191,6 @@ function BookView({
 											transition: "background-color 0.3s ease",
 										}}
 										onMouseEnter={() =>
-											index === activeSentenceIndex &&
 											(isRevealed || showAllSource) &&
 											setHoveredSentenceIndex(index)
 										}
@@ -1238,14 +1246,13 @@ function BookView({
 												key={`target-${pair.id}-${index}`}
 												className={`sentence target-sentence ${sentenceClass}`}
 												onClick={() => handleSentenceClick(index)}
-												// Allow clicking active or past sentences (for example reveal too)
 												style={{
 													cursor: "pointer",
 													backgroundColor:
-														index === activeSentenceIndex
-															? hoveredSentenceIndex === index
-																? hoverHighlightColor
-																: activeHighlightColor
+														hoveredSentenceIndex === index
+															? hoverHighlightColor
+															: index === activeSentenceIndex
+															? activeHighlightColor
 															: "transparent",
 													transition: "background-color 0.3s ease",
 													boxShadow:
@@ -1253,10 +1260,7 @@ function BookView({
 															? "0 0 3px rgba(0,0,0,0.1)"
 															: "none",
 												}}
-												onMouseEnter={() =>
-													index === activeSentenceIndex &&
-													setHoveredSentenceIndex(index)
-												}
+												onMouseEnter={() => setHoveredSentenceIndex(index)}
 												onMouseLeave={() => setHoveredSentenceIndex(null)}
 											>
 												{canSpeak && (
@@ -1308,24 +1312,23 @@ function BookView({
 												} ${finishedClass}`}
 												style={{
 													backgroundColor:
-														(index === activeSentenceIndex &&
-															(isRevealed || showAllSource)) ||
-														(hoveredSentenceIndex === index &&
-															(isRevealed || showAllSource))
-															? hoveredSentenceIndex === index
-																? hoverHighlightColor
-																: activeHighlightColor
+														hoveredSentenceIndex === index
+															? hoverHighlightColor
+															: index === activeSentenceIndex
+															? activeHighlightColor
+															: isRevealed || showAllSource
+															? "transparent"
 															: "transparent",
 													transition: "background-color 0.3s ease",
 													boxShadow:
-														index === activeSentenceIndex &&
-														(isRevealed || showAllSource)
+														index === activeSentenceIndex
 															? "0 0 3px rgba(0,0,0,0.1)"
 															: "none",
 												}}
 												onMouseEnter={() =>
-													index === activeSentenceIndex &&
-													(isRevealed || showAllSource) &&
+													(isRevealed ||
+														showAllSource ||
+														index === activeSentenceIndex) &&
 													setHoveredSentenceIndex(index)
 												}
 												onMouseLeave={() => setHoveredSentenceIndex(null)}
@@ -1699,38 +1702,18 @@ function BookView({
 			)}
 
 			{/* Render Vocabulary List (Show for examples too) */}
-			{isMobileView ? (
-				<div className="vocabulary-container mobile-vocabulary">
-					<div
-						className="vocabulary-header"
-						onClick={() => setIsVocabExpanded(!isVocabExpanded)}
-					>
-						<h3>Key Vocabulary ({currentVocabulary?.length || 0})</h3>
-						<span className="expand-icon">{isVocabExpanded ? "▼" : "▶"}</span>
-					</div>
-					{isVocabExpanded && (
-						<div className="vocabulary-list">
-							{currentVocabulary && currentVocabulary.length > 0 ? (
-								<ul className="simple-vocab-list">
-									{currentVocabulary.map((item, index) => (
-										<li key={`vocab-${index}`}>
-											<strong>{item.word}</strong>: {item.translation}
-										</li>
-									))}
-								</ul>
-							) : (
-								<p>No vocabulary items available.</p>
-							)}
-						</div>
-					)}
-				</div>
-			) : (
-				<VocabularyList
-					vocabulary={currentVocabulary}
-					isExpanded={isVocabExpanded}
-					setIsExpanded={setIsVocabExpanded}
-				/>
-			)}
+			<VocabularyList
+				vocabulary={currentVocabulary}
+				isExpanded={isVocabExpanded}
+				setIsExpanded={setIsVocabExpanded}
+				targetLanguage={targetLanguage}
+				sourceLanguage={sourceLanguage}
+				voices={voices}
+				ttsReady={ttsReady}
+				selectedVoiceURI={selectedVoiceURI}
+				speechRate={speechRate}
+				speechPitch={speechPitch}
+			/>
 
 			{/* Action Buttons - Show always */}
 			<div

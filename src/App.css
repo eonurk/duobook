@@ -253,14 +253,14 @@
 	opacity: 0.7; /* Fade out past sentences slightly */
 }
 .target-sentence.sentence-active {
-	background-color: #e7f3ff; /* New: Light blue highlight */
+	/* Background color is handled by React inline styles for dynamic highlighting */
 	padding: 0.1em 0.2em;
 	margin: -0.1em -0.2em; /* Prevent layout shift */
 	font-weight: 550;
 }
 .target-sentence.sentence-future {
-	opacity: 0.3; /* Hide future sentences */
-	pointer-events: none; /* Prevent interaction */
+	opacity: 0.6; /* Slightly dimmed but still clearly visible */
+	/* Removed pointer-events: none to allow clicking */
 }
 
 /* Source Sentence Styling */
