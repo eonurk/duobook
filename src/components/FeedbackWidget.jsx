@@ -67,7 +67,7 @@ const FeedbackWidget = () => {
 				throw new Error("Failed to send feedback");
 			}
 
-			toast.success("Thanks for your feedback! We appreciate it 🙏");
+			toast.success("Thanks for your feedback! We appreciate it 🧡");
 			setMessage("");
 			setIsOpen(false);
 		} catch (error) {
