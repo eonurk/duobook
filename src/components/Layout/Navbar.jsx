@@ -5,7 +5,16 @@ import { auth } from "@/firebaseConfig"; // Use alias
 import { useAuth } from "@/context/AuthContext"; // Use alias
 import { Button } from "@/components/ui/button"; // Import shadcn Button
 import AuthDialog from "@/components/Auth/AuthDialog";
-import { Flame, Star, Sparkles, Menu, X, BookOpen, Trophy } from "lucide-react"; // Added BookOpen icon and Trophy icon
+import {
+	Flame,
+	Star,
+	Sparkles,
+	Menu,
+	X,
+	BookOpen,
+	Trophy,
+	MessageSquare,
+} from "lucide-react"; // Added MessageSquare icon
 import { getStoryGenerationLimit } from "@/lib/api"; // Import the API function
 import { trackAuth } from "@/lib/analytics"; // Import analytics tracking
 
@@ -462,6 +471,18 @@ const Navbar = forwardRef(function Navbar(props, ref) {
 										onClick={closeMobileMenu}
 									>
 										<Link to="/leaderboard">Leaderboard</Link>
+									</Button>
+									<Button
+										variant="ghost"
+										asChild
+										className={`w-full justify-start ${
+											location.pathname === "/contact"
+												? "text-primary font-semibold bg-accent"
+												: ""
+										}`}
+										onClick={closeMobileMenu}
+									>
+										<Link to="/contact">Contact</Link>
 									</Button>
 									<Button
 										variant="ghost"

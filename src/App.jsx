@@ -30,6 +30,7 @@ import elonJpeg from "@/assets/elon.jpeg";
 import jeffJpeg from "@/assets/jeff.jpeg";
 import leonardoJpeg from "@/assets/leonardo.jpeg"; // Placeholder for Leonardo da Vinci image
 import FsrsEffectivenessCharts from "@/components/Gamification/FsrsEffectivenessCharts"; // ADDED: Import FSRS Charts
+import FeedbackWidget from "@/components/FeedbackWidget"; // Import Feedback Widget
 
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
@@ -1494,6 +1495,7 @@ function App() {
 			</Suspense>
 			<SiteFooter />
 			<CookieConsent />
+			<FeedbackWidget />
 		</div>
 	);
 }
