@@ -41,6 +41,8 @@ const serviceAccount = JSON.parse(serviceAccountRaw) as {
 // --- START OPENAI CLIENT SETUP ---
 const openai = new OpenAI({
 	apiKey: process.env.OPENAI_API_KEY, // Use backend environment variable
+	timeout: 120000, // 60 second timeout
+	maxRetries: 3, // Retry up to 3 times on network errors
 });
 // --- END OPENAI CLIENT SETUP ---
 
@@ -694,13 +696,45 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 			console.log(
 				`Using model: ${isProStoryRequest ? "gpt-4.1-mini" : "gpt-4.1-mini"}`
 			); // Log which model is being used
-			const completion = await openai.chat.completions.create({
-				model: isProStoryRequest ? "gpt-4.1-mini" : "gpt-4.1-mini",
-				messages: [{ role: "user", content: prompt }],
-				response_format: { type: "json_object" }, // Enforce JSON output
-			});
 
-			const storyContent = completion.choices[0]?.message?.content;
+			// Add retry logic for network errors
+			let completion;
+			let retries = 0;
+			const maxRetries = 3;
+
+			while (retries < maxRetries) {
+				try {
+					completion = await openai.chat.completions.create({
+						model: isProStoryRequest ? "gpt-4.1-mini" : "gpt-4.1-mini",
+						messages: [{ role: "user", content: prompt }],
+						response_format: { type: "json_object" }, // Enforce JSON output
+					});
+					break; // Success, exit retry loop
+				} catch (apiError: any) {
+					retries++;
+					console.error(`OpenAI API attempt ${retries} failed:`, apiError);
+
+					// Check if it's a network error that might be retryable
+					if (
+						(apiError.code === "ECONNRESET" ||
+							apiError.code === "ECONNABORTED" ||
+							apiError.type === "system" ||
+							apiError.message?.includes("socket hang up")) &&
+						retries < maxRetries
+					) {
+						console.log(
+							`Retrying in 2 seconds... (attempt ${retries + 1}/${maxRetries})`
+						);
+						await new Promise((resolve) => setTimeout(resolve, 2000));
+						continue;
+					}
+
+					// If not retryable or max retries reached, throw the error
+					throw apiError;
+				}
+			}
+
+			const storyContent = completion?.choices[0]?.message?.content;
 
 			if (!storyContent) {
 				throw new Error("OpenAI did not return story content.");
@@ -827,11 +861,30 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 				console.error("Raw OpenAI response:", storyContent);
 				throw new Error("Failed to parse story JSON from OpenAI.");
 			}
-		} catch (error) {
+		} catch (error: any) {
 			console.error("Error calling OpenAI API:", error);
-			// Forward a generic error or specific OpenAI error if needed
-			const err = new Error("Failed to generate story via OpenAI.");
-			(err as any).status = 502; // Bad Gateway or appropriate error
+
+			// Provide more specific error messages based on error type
+			let errorMessage = "Failed to generate story via OpenAI.";
+			let statusCode = 502;
+
+			if (error.code === "ECONNRESET" || error.code === "ECONNABORTED") {
+				errorMessage = "Network connection error. Please try again.";
+				statusCode = 503; // Service Unavailable
+			} else if (error.status === 429) {
+				errorMessage = "OpenAI rate limit exceeded. Please try again later.";
+				statusCode = 429;
+			} else if (error.status === 401) {
+				errorMessage = "OpenAI API authentication failed.";
+				statusCode = 500; // Internal server error (don't expose API key issues)
+			} else if (error.message?.includes("socket hang up")) {
+				errorMessage = "Connection timeout. Please try again.";
+				statusCode = 503;
+			}
+
+			// Forward a more specific error
+			const err = new Error(errorMessage);
+			(err as any).status = statusCode;
 			next(err);
 		}
 	})
