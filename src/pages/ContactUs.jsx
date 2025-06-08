@@ -184,8 +184,8 @@ function ContactUs() {
 											name="message"
 											value={formData.message}
 											onChange={handleChange}
-											placeholder="How can we help you? Be as detailed as you'd like..."
-											className="min-h-[150px] border-gray-200 focus:border-amber-500 focus:ring-amber-500 rounded-xl resize-none"
+											placeholder="Tell us what you think..."
+											className="min-h-[150px] border-gray-200 focus:border-amber-500 focus:ring-amber-500 rounded-xl resize-none text-base md:text-sm"
 											required
 											disabled={isSubmitting}
 										/>
