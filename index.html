@@ -21,7 +21,10 @@
     <meta name="og:locale" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://duobook.co/logo.png">
+    <link rel="canonical" href="https://duobook.co/" />
+  
     <style>
+      /* Inline critical spinner CSS for above-the-fold loading */
       .spinner {
         border: 4px solid rgba(0, 0, 0, 0.1); /* Track color */
         width: 36px;
@@ -30,8 +33,6 @@
         border-left-color: #ba4100; /* Accent color for the spinning part */
         animation: coolSpinnerAnimation 1.8s linear infinite; /* Using the new animation */
       }
-
-      /* Removed the old @keyframes spin as it's replaced by coolSpinnerAnimation */
 
       @keyframes coolSpinnerAnimation { /* New keyframes for a cooler animation */
         0% {

@@ -583,10 +583,10 @@ function InputForm({
 				{/* Value Proposition Section for Non-Authenticated Users */}
 
 				<p
+					className="text-slate-600"
 					style={{
 						textAlign: "center",
 						fontSize: "1rem",
-						color: "#0f172a",
 						marginBottom: "0.5rem",
 					}}
 				>

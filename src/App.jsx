@@ -583,16 +583,22 @@ function MainAppView({ generateStory }) {
 			<main className="flex-1 container mx-auto px-4 py-8">
 				{!isGenerating && (
 					<>
-						<img
-							src="logo.png"
-							alt="DuoBook Logo"
-							className="w-52 h-52 mx-auto object-contain"
-							style={{
-								objectPosition: "center",
-								marginBottom: "-1.5rem",
-								marginTop: "-2rem",
-							}}
-						/>
+						<picture>
+							<source srcSet="/public/logo.png" type="image/png" />
+							<img
+								src="/public/logo.png"
+								alt="DuoBook Logo"
+								className="w-40 h-40 mx-auto mb-4"
+								loading="lazy"
+								width="120"
+								height="auto"
+								style={{
+									objectPosition: "center",
+									marginBottom: "-1.5rem",
+									marginTop: "-2rem",
+								}}
+							/>
+						</picture>
 						<p className="text-center text-muted-foreground mb-4">
 							Generate bilingual stories to learn any language
 						</p>
