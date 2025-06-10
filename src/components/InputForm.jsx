@@ -253,7 +253,7 @@ const storyExamples = [
 	"A girl who can talk to rainbows.",
 	"A boy who finds a magic coin that brings good luck.",
 	"A family who moves to a town where it never stops snowing.",
-	"A detective who solves mysteries with the help of a magical notebook.",
+	"A detective who solves mysteries with the help of a time-traveling cat.",
 	"A baker who bakes bread that makes people tell their secrets.",
 	"A scientist who invents a machine to shrink objects.",
 	"A child who finds a magic whistle that calls mythical creatures.",
@@ -353,6 +353,11 @@ function InputForm({
 			content: "Pick the language you know and the one you want to learn. 🧠",
 		},
 		{
+			target: "#story-settings-section",
+			title: "🎯 Set the Difficulty Level!",
+			content: "Pick how challenging and long you want your story to be. 📖",
+		},
+		{
 			target: "#signup-cta",
 			title: "🎉 Sign Up to Create!",
 			content: "Sign up for free to create and save your magical story! 🏆",
@@ -360,8 +365,7 @@ function InputForm({
 		{
 			target: "#input-form-button",
 			title: "✨ You're Ready!",
-			content:
-				"Hit 'Create Book' and watch your story come to life. Have fun exploring!",
+			content: "Press 'Create Book' and let your story magically appear! 📚",
 			placement: "center",
 		},
 	];
@@ -828,7 +832,7 @@ function InputForm({
 					</div>
 				</fieldset>
 				{/* Section 3: Story Settings */}
-				<fieldset className="form-section mt-6">
+				<fieldset className="form-section mt-6" id="story-settings-section">
 					<legend className="form-section-title">Story Settings</legend>
 					<div className="space-y-6">
 						<div className={`px-1 ${isMobile ? "py-2" : ""}`}>
