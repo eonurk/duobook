@@ -25,6 +25,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"; // Import Select components
+import Joyride from "react-joyride";
 
 // Common languages for selection
 const languages = [
@@ -329,6 +330,60 @@ function InputForm({
 	const [selectedGenre, setSelectedGenre] = useState(""); // State for selected genre
 	const [selectedGrammarFocus, setSelectedGrammarFocus] = useState([]); // State for selected grammar focus (can be multiple)
 
+	// Joyride (guided tour) state
+	const [runTour, setRunTour] = useState(false);
+	const tourSteps = [
+		{
+			target: "body", // Welcome step overlays the whole page
+			title: "👋 Welcome to DuoBook!",
+			content:
+				"Let's go on a quick adventure to create your first storybook! 🚀",
+			disableBeacon: true,
+			placement: "center",
+		},
+		{
+			target: "#story-input-area",
+			title: "📝 Describe Your Story!",
+			content:
+				"Type your wildest story idea here, or pick a fun example below! Need inspiration? Click the 🎲 Random Idea button!",
+		},
+		{
+			target: "#language-select-area",
+			title: "🌍 Choose Your Languages!",
+			content: "Pick the language you know and the one you want to learn. 🧠",
+		},
+		{
+			target: "#signup-cta",
+			title: "🎉 Sign Up to Create!",
+			content: "Sign up for free to create and save your magical story! 🏆",
+		},
+		{
+			target: "#input-form-button",
+			title: "✨ You're Ready!",
+			content:
+				"Hit 'Create Book' and watch your story come to life. Have fun exploring!",
+			placement: "center",
+		},
+	];
+
+	// Show tour for first-time users
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			const seen = localStorage.getItem("bookedly_tour_seen");
+			if (!seen) setRunTour(true);
+		}
+	}, []);
+
+	const handleTourCallback = (data) => {
+		const { status } = data;
+		if (status === "finished" || status === "skipped") {
+			setRunTour(false);
+			if (typeof window !== "undefined") {
+				localStorage.setItem("bookedly_tour_seen", "1");
+			}
+		}
+	};
+
 	// Dynamically define lengthMap based on subscription tier, memoized
 	const lengthMap = useMemo(() => {
 		const baseLengthMap = ["Short", "Medium", "Long"];
@@ -456,6 +511,70 @@ function InputForm({
 
 	return (
 		<>
+			<Joyride
+				run={runTour}
+				steps={tourSteps}
+				continuous
+				showSkipButton
+				showProgress
+				styles={{
+					options: {
+						zIndex: 10000,
+						primaryColor: "#fbbf24", // Brand accent
+						textColor: "#1e293b", // Slate-800
+						arrowColor: "#fff",
+						backgroundColor: "#fff",
+						borderRadius: 14,
+						overlayColor: "rgba(30,41,59,0.45)", // Slate-800, 45% opacity
+						width:
+							typeof window !== "undefined" && window.innerWidth < 500
+								? "95vw"
+								: 350,
+						boxShadow: "0 8px 32px rgba(30,41,59,0.12)",
+						padding: 0,
+					},
+					header: {
+						borderRadius: 10,
+						fontWeight: 700,
+						fontSize: 19,
+						color: "#1e293b",
+						marginBottom: 0,
+					},
+					tooltipContainer: {
+						padding: "1.5rem 2rem",
+					},
+					tooltip: {
+						borderRadius: 10,
+						padding: 12,
+						fontSize: 16,
+						color: "#334155",
+					},
+					buttonNext: {
+						backgroundColor: "#fbbf24",
+						padding: 12,
+						color: "#fff",
+						borderRadius: 8,
+						fontWeight: 600,
+						fontSize: 15,
+						boxShadow: "0 2px 8px rgba(251,191,36,0.10)",
+					},
+					buttonBack: {
+						color: "#64748b", // Slate-400
+						fontWeight: 500,
+						fontSize: 15,
+					},
+					buttonSkip: {
+						color: "#64748b",
+						fontWeight: 500,
+						fontSize: 15,
+					},
+					buttonClose: {
+						color: "#fbbf24",
+						fontSize: 18,
+					},
+				}}
+				callback={handleTourCallback}
+			/>
 			{/* Site Stats and Badge Section */}
 
 			<style>{`
@@ -603,7 +722,7 @@ function InputForm({
 					}}
 				/>
 				{/* Section 1: Story Idea */}
-				<fieldset className="form-section mb-0">
+				<fieldset className="form-section mb-0" id="story-input-area">
 					<legend className="form-section-title">Story Idea</legend>
 					<label
 						htmlFor="storyDescription"
@@ -654,7 +773,7 @@ function InputForm({
 					</div>
 				</fieldset>
 				{/* Section 2: Languages */}
-				<fieldset className="form-section">
+				<fieldset className="form-section" id="language-select-area">
 					<legend className="form-section-title">Languages</legend>
 					<div className="md:flex md:space-x-4 space-y-4 md:space-y-0">
 						<div className="flex-1">
@@ -1012,7 +1131,7 @@ function InputForm({
 
 				{/* Enhanced mobile authentication prompt */}
 				{!currentUser && (
-					<div className={`text-center mt-6 mb-4`}>
+					<div className={`text-center mt-6 mb-4`} id="signup-cta">
 						<div
 							className={`bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl ${
 								isMobile ? "p-4" : "p-6"
@@ -1075,82 +1194,82 @@ function InputForm({
 						</div>
 					</div>
 				)}
-
-				<button
-					type="submit"
-					disabled={
-						// Updated disabled logic
-						isLoading ||
-						!description.trim() ||
-						sourceLang === targetLang ||
-						!currentUser
-					}
-					className={`button button-primary submit-button py-3 px-6 rounded-lg shadow-md transition-all duration-300 relative group ${
-						// Updated className logic
-						isLoading ||
-						!description.trim() ||
-						sourceLang === targetLang ||
-						!currentUser
-							? "bg-gray-100 text-gray-400 border border-gray-300 cursor-not-allowed"
-							: "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-amber-900 font-medium"
-					}`}
-					aria-label={
-						!description.trim()
-							? "Please enter a story description"
-							: !currentUser
-							? "Please log in to create a book"
-							: sourceLang === targetLang
-							? "Please select different languages"
-							: "Create Book"
-					}
-				>
-					{isLoading ? (
-						<span className="flex items-center justify-center">
-							<svg
-								className="animate-spin -ml-1 mr-2 h-4 w-4 text-amber-700"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<circle
-									className="opacity-25"
-									cx="12"
-									cy="12"
-									r="10"
-									stroke="currentColor"
-									strokeWidth="4"
-								></circle>
-								<path
-									className="opacity-75"
-									fill="currentColor"
-									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-								></path>
-							</svg>
-							Generating...
-						</span>
-					) : (
-						<>
+				<fieldset id="input-form-button">
+					<button
+						type="submit"
+						disabled={
+							// Updated disabled logic
+							isLoading ||
+							!description.trim() ||
+							sourceLang === targetLang ||
+							!currentUser
+						}
+						className={`button button-primary submit-button py-3 px-6 rounded-lg shadow-md transition-all duration-300 relative group ${
+							// Updated className logic
+							isLoading ||
+							!description.trim() ||
+							sourceLang === targetLang ||
+							!currentUser
+								? "bg-gray-100 text-gray-400 border border-gray-300 cursor-not-allowed"
+								: "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-amber-900 font-medium"
+						}`}
+						aria-label={
+							!description.trim()
+								? "Please enter a story description"
+								: !currentUser
+								? "Please log in to create a book"
+								: sourceLang === targetLang
+								? "Please select different languages"
+								: "Create Book"
+						}
+					>
+						{isLoading ? (
 							<span className="flex items-center justify-center">
-								{(!description.trim() || !currentUser) && (
-									<span className="relative w-5 h-5 mr-2 inline-flex">
-										{!description.trim() ? (
-											<BookText className="w-5 h-5 text-amber-600 opacity-70" />
-										) : !currentUser ? (
-											<Heart className="w-5 h-5 text-amber-600 opacity-70" />
-										) : null}
-										<span
-											className={`absolute inset-0 rounded-full ${
-												!description.trim() ? "bg-amber-200" : "bg-pink-200"
-											} animate-ping opacity-30`}
-										></span>
-									</span>
-								)}
-								Create Book
+								<svg
+									className="animate-spin -ml-1 mr-2 h-4 w-4 text-amber-700"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+								>
+									<circle
+										className="opacity-25"
+										cx="12"
+										cy="12"
+										r="10"
+										stroke="currentColor"
+										strokeWidth="4"
+									></circle>
+									<path
+										className="opacity-75"
+										fill="currentColor"
+										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+									></path>
+								</svg>
+								Generating...
 							</span>
+						) : (
+							<>
+								<span className="flex items-center justify-center">
+									{(!description.trim() || !currentUser) && (
+										<span className="relative w-5 h-5 mr-2 inline-flex">
+											{!description.trim() ? (
+												<BookText className="w-5 h-5 text-amber-600 opacity-70" />
+											) : !currentUser ? (
+												<Heart className="w-5 h-5 text-amber-600 opacity-70" />
+											) : null}
+											<span
+												className={`absolute inset-0 rounded-full ${
+													!description.trim() ? "bg-amber-200" : "bg-pink-200"
+												} animate-ping opacity-30`}
+											></span>
+										</span>
+									)}
+									Create Book
+								</span>
 
-							{!isMobile && (
-								<div
-									className={`
+								{!isMobile && (
+									<div
+										className={`
 										absolute left-0 right-0 mx-auto w-max max-w-[90%] px-3 py-1.5
 										-top-10 sm:-top-9
 										rounded-full text-xs font-medium leading-tight
@@ -1159,42 +1278,42 @@ function InputForm({
 										opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100
 										group-focus:opacity-100 group-focus:scale-100
 										transition-all duration-200 pointer-events-none
-										flex items-center justify-center
 										${description.trim() && currentUser ? "hidden" : ""}
 									`}
-								>
-									{!description.trim() ? (
-										<>
-											<BookText className="inline w-3.5 h-3.5 mr-1 text-amber-500" />
-											Add a story idea first
-										</>
-									) : !currentUser ? (
-										<>
-											<Heart className="inline w-3.5 h-3.5 mr-1 text-amber-500" />
-											Sign in to create
-										</>
-									) : null}
-									<svg
-										className="absolute -bottom-2 h-2 w-4 text-amber-50"
-										fill="currentColor"
-										viewBox="0 0 24 8"
 									>
-										<path d="M0,0 L12,8 L24,0"></path>
-									</svg>
-									<svg
-										className="absolute -bottom-2 h-2 w-4 text-amber-200"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="1"
-										viewBox="0 0 24 8"
-									>
-										<path d="M0,0 L12,8 L24,0"></path>
-									</svg>
-								</div>
-							)}
-						</>
-					)}
-				</button>
+										{!description.trim() ? (
+											<>
+												<BookText className="inline w-3.5 h-3.5 mr-1 text-amber-500" />
+												Add a story idea first
+											</>
+										) : !currentUser ? (
+											<>
+												<Heart className="inline w-3.5 h-3.5 mr-1 text-amber-500" />
+												Sign in to create
+											</>
+										) : null}
+										<svg
+											className="absolute -bottom-2 h-2 w-4 text-amber-50"
+											fill="currentColor"
+											viewBox="0 0 24 8"
+										>
+											<path d="M0,0 L12,8 L24,0"></path>
+										</svg>
+										<svg
+											className="absolute -bottom-2 h-2 w-4 text-amber-200"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="1"
+											viewBox="0 0 24 8"
+										>
+											<path d="M0,0 L12,8 L24,0"></path>
+										</svg>
+									</div>
+								)}
+							</>
+						)}
+					</button>
+				</fieldset>
 				{/* Subtle call-to-action to view a sample DuoBook */}
 				{!currentUser && (
 					<div className="flex justify-center mt-1.5">
