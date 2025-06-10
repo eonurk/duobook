@@ -16,7 +16,7 @@ const FeedbackWidget = () => {
 	const feedbackTypes = [
 		{
 			id: "general",
-			label: "General Feedback",
+			label: "Feedback",
 			icon: MessageSquare,
 			color: "text-blue-500",
 		},
@@ -85,10 +85,10 @@ const FeedbackWidget = () => {
 				{!isOpen && (
 					<Button
 						onClick={() => setIsOpen(true)}
-						className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 rounded-full h-12 w-12 p-0"
+						className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 rounded-full h-16 w-16 p-0"
 						title="Send us feedback"
 					>
-						<MessageSquare className="h-5 w-5" />
+						<MessageSquare className="h-6 w-6" />
 					</Button>
 				)}
 			</div>
