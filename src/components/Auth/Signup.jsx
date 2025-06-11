@@ -406,7 +406,7 @@ function ModernSignup({ onSuccess }) {
 	};
 
 	return (
-		<div className="w-full max-w-md mx-auto">
+		<div className="w-full max-w-xs sm:max-w-sm md:max-w-md px-2 sm:px-0 mx-auto max-h-screen overflow-y-auto">
 			{/* Email verification success banner */}
 			{emailSent && (
 				<div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl">
