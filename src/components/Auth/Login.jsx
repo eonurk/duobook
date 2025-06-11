@@ -32,6 +32,7 @@ function ModernLogin({ onSuccess }) {
 	const [resetError, setResetError] = useState("");
 	const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
+	const [isMobile, setIsMobile] = useState(false);
 
 	// Check for redirect result on component mount
 	useEffect(() => {
@@ -55,6 +56,17 @@ function ModernLogin({ onSuccess }) {
 		}
 		checkRedirectResult();
 	}, [onSuccess]);
+
+	// Add useEffect for mobile detection
+	useEffect(() => {
+		const checkMobile = () => {
+			setIsMobile(window.innerWidth < 640);
+		};
+
+		checkMobile();
+		window.addEventListener("resize", checkMobile);
+		return () => window.removeEventListener("resize", checkMobile);
+	}, []);
 
 	const handleLogin = async (e) => {
 		e.preventDefault();
@@ -152,12 +164,12 @@ function ModernLogin({ onSuccess }) {
 
 	return (
 		<div className="w-full max-w-md mx-auto">
-			<form onSubmit={handleLogin} className="space-y-6">
+			<form onSubmit={handleLogin} className={`space-y-${isMobile ? "4" : "6"}`}>
 				{/* Email Input */}
 				<div className="space-y-2">
 					<Label
 						htmlFor="email"
-						className="text-sm font-semibold text-gray-700"
+						className={`${isMobile ? "text-sm" : "text-base"} font-semibold text-gray-700`}
 					>
 						Email Address
 					</Label>
@@ -173,7 +185,7 @@ function ModernLogin({ onSuccess }) {
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
 							required
-							className="h-14 pl-4 pr-4 rounded-2xl border-2 border-gray-200  focus:border-blue-500 bg-white focus:ring-4 focus:ring-blue-500/10 shadow-lg transition-all duration-300 text-base"
+							className={`${isMobile ? "h-12 text-sm" : "h-14 text-base"} pl-4 pr-4 rounded-2xl border-2 border-gray-200 focus:border-blue-500 bg-white focus:ring-4 focus:ring-blue-500/10 shadow-lg transition-all duration-300`}
 						/>
 					</div>
 				</div>
@@ -183,7 +195,7 @@ function ModernLogin({ onSuccess }) {
 					<div className="flex justify-between items-center">
 						<Label
 							htmlFor="password"
-							className="text-sm font-semibold text-gray-700 "
+							className={`${isMobile ? "text-sm" : "text-base"} font-semibold text-gray-700`}
 						>
 							Password
 						</Label>
@@ -191,7 +203,7 @@ function ModernLogin({ onSuccess }) {
 							type="button"
 							onClick={handlePasswordReset}
 							disabled={isResetting || isLoading || isGoogleLoading}
-							className="text-sm text-blue-600  hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed font-medium transition-colors"
+							className={`${isMobile ? "text-xs" : "text-sm"} text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed font-medium transition-colors`}
 						>
 							{isResetting ? "Sending..." : "Forgot Password?"}
 						</button>
@@ -205,7 +217,7 @@ function ModernLogin({ onSuccess }) {
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							required
-							className="h-14 pl-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-blue-500  bg-white  focus:ring-4 focus:ring-blue-500/10 shadow-lg transition-all duration-300 text-base"
+							className={`${isMobile ? "h-12 text-sm" : "h-14 text-base"} pl-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-blue-500 bg-white focus:ring-4 focus:ring-blue-500/10 shadow-lg transition-all duration-300`}
 						/>
 						<button
 							type="button"
@@ -224,12 +236,12 @@ function ModernLogin({ onSuccess }) {
 					</div>
 				</div>
 
-				{/* Messages */}
+				{/* Messages with adjusted padding */}
 				<div className="space-y-3">
 					{resetMessage && (
-						<div className="p-4 bg-emerald-50  border border-emerald-200  rounded-2xl">
-							<p className="text-sm text-emerald-700  flex items-center gap-2">
-								<CheckCircle className="h-4 w-4" />
+						<div className={`p-${isMobile ? "3" : "4"} bg-emerald-50 border border-emerald-200 rounded-2xl`}>
+							<p className={`${isMobile ? "text-xs" : "text-sm"} text-emerald-700 flex items-center gap-2`}>
+								<CheckCircle className={`${isMobile ? "h-3 w-3" : "h-4 w-4"}`} />
 								{resetMessage}
 							</p>
 						</div>
@@ -255,7 +267,7 @@ function ModernLogin({ onSuccess }) {
 				{/* Submit Button */}
 				<Button
 					type="submit"
-					className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
+					className={`w-full ${isMobile ? "h-12 text-sm" : "h-14 text-base"} bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
 					disabled={isLoading || isResetting || isGoogleLoading}
 				>
 					{isLoading ? (
@@ -272,8 +284,8 @@ function ModernLogin({ onSuccess }) {
 				</Button>
 			</form>
 
-			{/* Divider */}
-			<div className="relative my-4">
+			{/* Divider with adjusted margins */}
+			<div className={`relative ${isMobile ? "my-3" : "my-4"}`}>
 				<div className="absolute inset-0 flex items-center">
 					<div className="w-full border-t border-gray-200 "></div>
 				</div>
@@ -288,7 +300,7 @@ function ModernLogin({ onSuccess }) {
 			<Button
 				type="button"
 				variant="outline"
-				className="w-full h-14 border-2 border-gray-200  hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
+				className={`w-full ${isMobile ? "h-12 text-sm" : "h-14 text-base"} border-2 border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
 				onClick={handleGoogleLogin}
 				disabled={isLoading || isResetting || isGoogleLoading}
 			>

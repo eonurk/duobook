@@ -405,20 +405,45 @@ function ModernSignup({ onSuccess }) {
 		}
 	};
 
+	// 1. Reduce input field heights on mobile
+	const isMobile = window.innerWidth < 640;
+	// Update input className to include mobile text size for placeholders
+	const inputClassName = `pl-4 pr-12 rounded-2xl border-2 transition-all duration-300 ${
+		isMobile
+			? "h-12 text-sm placeholder:text-sm"
+			: "h-14 text-base placeholder:text-base"
+	}`;
+
 	return (
-		<div className="w-full max-w-xs sm:max-w-sm md:max-w-md px-2 sm:px-0 mx-auto max-h-screen overflow-y-auto">
+		<div className="w-full max-w-md mx-auto">
 			{/* Email verification success banner */}
 			{emailSent && (
-				<div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl">
+				<div
+					className={`mb-${isMobile ? "4" : "6"} p-${
+						isMobile ? "3" : "4"
+					} bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl`}
+				>
 					<div className="flex items-start gap-3">
-						<div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-							<Mail className="h-5 w-5 text-blue-600" />
+						<div
+							className={`${
+								isMobile ? "w-8 h-8" : "w-10 h-10"
+							} bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0`}
+						>
+							<Mail
+								className={`${isMobile ? "h-4 w-4" : "h-5 w-5"} text-blue-600`}
+							/>
 						</div>
 						<div>
-							<h4 className="font-semibold text-blue-900 mb-1">
+							<h4
+								className={`font-semibold text-blue-900 mb-1 ${
+									isMobile ? "text-sm" : "text-base"
+								}`}
+							>
 								Verification Email Sent!
 							</h4>
-							<p className="text-sm text-blue-700">
+							<p
+								className={`${isMobile ? "text-xs" : "text-sm"} text-blue-700`}
+							>
 								We've sent a verification link to{" "}
 								<span className="font-medium">{email}</span>. Please check your
 								inbox and click the link to verify your account.
@@ -428,7 +453,10 @@ function ModernSignup({ onSuccess }) {
 				</div>
 			)}
 
-			<form onSubmit={handleSignup} className="space-y-6">
+			<form
+				onSubmit={handleSignup}
+				className={`space-y-${isMobile ? "4" : "6"}`}
+			>
 				{/* Email Input */}
 				<div className="space-y-2">
 					<Label
@@ -449,7 +477,7 @@ function ModernSignup({ onSuccess }) {
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
 							required
-							className={`h-14 pl-4 pr-12 rounded-2xl border-2 transition-all duration-300 text-base ${
+							className={`${inputClassName} ${
 								!emailValidation.isValid && email
 									? "border-red-500 focus:border-red-500 bg-red-50/50 shadow-red-100"
 									: emailValidation.isValid && email
@@ -497,7 +525,7 @@ function ModernSignup({ onSuccess }) {
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							required
-							className={`h-14 pl-4 pr-12 rounded-2xl border-2 transition-all duration-300 text-base ${
+							className={`${inputClassName} ${
 								!passwordValidation.isValid && password
 									? "border-red-500 focus:border-red-500 bg-red-50/50"
 									: passwordValidation.isValid && password
@@ -545,7 +573,7 @@ function ModernSignup({ onSuccess }) {
 							value={confirmPassword}
 							onChange={(e) => setConfirmPassword(e.target.value)}
 							required
-							className={`h-14 pl-4 pr-12 rounded-2xl border-2 transition-all duration-300 text-base ${
+							className={`${inputClassName} ${
 								confirmPassword && password !== confirmPassword
 									? "border-red-500 focus:border-red-500 bg-red-50/50"
 									: confirmPassword && password === confirmPassword
@@ -578,42 +606,47 @@ function ModernSignup({ onSuccess }) {
 
 				{/* Terms and Conditions */}
 				<div className="space-y-4">
-					<div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200">
+					<div
+						className={`flex items-start space-x-3 ${
+							isMobile ? "p-3" : "p-4"
+						} bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200`}
+					>
 						<input
 							type="checkbox"
 							id="terms"
 							checked={agreedToTerms}
 							onChange={(e) => setAgreedToTerms(e.target.checked)}
-							className="mt-1 h-5 w-5 text-amber-600 focus:ring-amber-500 border-gray-300 rounded-lg flex-shrink-0 cursor-pointer"
+							className={`mt-1 ${
+								isMobile ? "h-4 w-4" : "h-5 w-5"
+							} text-amber-600 focus:ring-amber-500 border-gray-300 rounded-lg flex-shrink-0 cursor-pointer`}
 							disabled={isLoading || isGoogleLoading}
 						/>
-						<div className="flex-1">
-							<Label
-								htmlFor="terms"
-								className="text-sm text-gray-700 leading-relaxed cursor-pointer block"
+						<Label
+							className={`${
+								isMobile ? "text-xs" : "text-sm"
+							} text-gray-700 inline-flex flex-wrap items-center gap-1`}
+						>
+							I agree to
+							<a
+								href="/terms"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-amber-700 hover:text-amber-800 underline font-semibold transition-colors"
+								onClick={(e) => e.stopPropagation()}
 							>
-								I agree to DuoBook's{" "}
-								<a
-									href="/terms"
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-amber-700 hover:text-amber-800 underline font-semibold transition-colors"
-									onClick={(e) => e.stopPropagation()}
-								>
-									Terms of Service
-								</a>{" "}
-								and{" "}
-								<a
-									href="/privacy"
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-amber-700 hover:text-amber-800 underline font-semibold transition-colors"
-									onClick={(e) => e.stopPropagation()}
-								>
-									Privacy Policy
-								</a>
-							</Label>
-						</div>
+								Terms of Service
+							</a>
+							and
+							<a
+								href="/privacy"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-amber-700 hover:text-amber-800 underline font-semibold transition-colors"
+								onClick={(e) => e.stopPropagation()}
+							>
+								Privacy Policy
+							</a>
+						</Label>
 					</div>
 
 					{/* Error Message */}
@@ -629,7 +662,9 @@ function ModernSignup({ onSuccess }) {
 					{/* Submit Button */}
 					<Button
 						type="submit"
-						className="w-full h-14 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
+						className={`w-full ${
+							isMobile ? "h-12 text-sm" : "h-14 text-base"
+						} bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
 						disabled={
 							isLoading ||
 							isGoogleLoading ||
@@ -658,7 +693,7 @@ function ModernSignup({ onSuccess }) {
 			</form>
 
 			{/* Divider */}
-			<div className="relative my-4">
+			<div className={`relative ${isMobile ? "my-3" : "my-4"}`}>
 				<div className="absolute inset-0 flex items-center">
 					<div className="w-full border-t border-gray-200"></div>
 				</div>
@@ -673,7 +708,9 @@ function ModernSignup({ onSuccess }) {
 			<Button
 				type="button"
 				variant="outline"
-				className="w-full h-14 border-2 border-gray-200  hover:border-gray-300 bg-white  hover:bg-gray-50  text-gray-700  font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-base"
+				className={`w-full ${
+					isMobile ? "h-12 text-sm" : "h-14 text-base"
+				} border-2 border-gray-200  hover:border-gray-300 bg-white  hover:bg-gray-50  text-gray-700  font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
 				onClick={handleGoogleSignup}
 				disabled={isLoading || isGoogleLoading}
 			>
