@@ -398,58 +398,188 @@ app.post(
 	})
 );
 
-// GET latest stories from all users (with pagination) - NOW PUBLIC
+// --- START GET LATEST STORIES (PUBLIC or AUTH) ---
 app.get(
 	"/api/stories/latest",
-	optionalAuthenticateTokenMiddleware, // Use optional auth
-	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-		const userId = req.userId; // userId will be populated if token was valid, otherwise undefined
+	optionalAuthenticateTokenMiddleware,
+	asyncHandler(async (req: Request, res: Response) => {
 		const page = parseInt(req.query.page as string) || 1;
-		const limit = parseInt(req.query.limit as string) || 10;
+		const limit = parseInt(req.query.limit as string) || 12;
 		const excludeCurrentUser = req.query.excludeCurrentUser === "true";
+		const sourceLanguage = req.query.sourceLanguage as string;
+		const targetLanguage = req.query.targetLanguage as string;
+		const sortBy = (req.query.sort as string) || "createdAt_desc";
 
-		if (page < 1) {
-			return res
-				.status(400)
-				.json({ error: "Page number must be 1 or greater." });
+		const where: Prisma.StoryWhereInput = {
+			isPublic: true,
+		};
+
+		if (excludeCurrentUser && req.userId) {
+			where.userId = { not: req.userId };
 		}
-		if (limit < 1 || limit > 50) {
-			return res.status(400).json({ error: "Limit must be between 1 and 50." });
+		if (sourceLanguage) {
+			where.sourceLanguage = sourceLanguage;
+		}
+		if (targetLanguage) {
+			where.targetLanguage = targetLanguage;
 		}
 
-		const skip = (page - 1) * limit;
+		let orderBy: Prisma.StoryOrderByWithRelationInput = {};
+		if (sortBy === "createdAt_desc") {
+			orderBy = { createdAt: "desc" };
+		} else if (sortBy === "createdAt_asc") {
+			orderBy = { createdAt: "asc" };
+		} else if (sortBy === "length_desc") {
+			orderBy = { length: "desc" };
+		} else if (sortBy === "length_asc") {
+			orderBy = { length: "asc" };
+		}
+
+		// Initial query to get available languages
+		const distinctLanguages = await prisma.story.findMany({
+			where: { isPublic: true },
+			select: {
+				sourceLanguage: true,
+				targetLanguage: true,
+			},
+			distinct: ["sourceLanguage", "targetLanguage"],
+		});
+
+		const availableLanguages = {
+			source: [
+				...new Set(
+					distinctLanguages
+						.map((s) => s.sourceLanguage)
+						.filter(Boolean) as string[]
+				),
+			],
+			target: [
+				...new Set(
+					distinctLanguages
+						.map((s) => s.targetLanguage)
+						.filter(Boolean) as string[]
+				),
+			],
+		};
+
+		const totalStories = await prisma.story.count({ where });
+		const totalPages = Math.ceil(totalStories / limit);
+		const offset = (page - 1) * limit;
+
+		const stories = await prisma.story.findMany({
+			where,
+			orderBy,
+			take: limit,
+			skip: offset,
+			select: {
+				id: true,
+				shareId: true,
+				description: true,
+				story: true, // Add this line
+				sourceLanguage: true,
+				targetLanguage: true,
+				difficulty: true,
+				length: true,
+				createdAt: true,
+			},
+		});
+
+		res.json({
+			stories,
+			currentPage: page,
+			totalPages,
+			availableLanguages,
+		});
+	})
+);
+// --- END GET LATEST STORIES ---
+
+// GET a single story by its *shareId* (publicly accessible)
+app.get(
+	"/api/stories/:shareId",
+	optionalAuthenticateTokenMiddleware,
+	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+		const { shareId } = req.params; // Use shareId directly as a string
+		const userId = req.userId;
 
 		try {
-			const conditions: Prisma.StoryWhereInput[] = [{ isPublic: true }];
+			const story = await prisma.story.findUnique({
+				where: { shareId },
+			});
 
-			if (excludeCurrentUser && userId) {
-				conditions.push({ userId: { not: userId } });
+			if (!story) {
+				return res.status(404).json({ error: "Story not found." });
 			}
 
-			const whereClause: Prisma.StoryWhereInput = { AND: conditions };
+			let userHasLiked = false;
+			if (userId) {
+				const storyLike = await prisma.storyLike.findUnique({
+					where: {
+						storyId_userId: {
+							storyId: story.id,
+							userId,
+						},
+					},
+				});
+				userHasLiked = !!storyLike;
+			}
 
-			const storiesFromDb = await prisma.story.findMany({
-				where: whereClause,
-				orderBy: { createdAt: "desc" },
-				skip: skip,
-				take: limit,
-			});
-
-			const actualTotalMatchingStories = await prisma.story.count({
-				where: whereClause,
-			});
-			const displayableTotalStories = Math.min(actualTotalMatchingStories, 50);
-			const totalPages = Math.ceil(displayableTotalStories / limit);
-
-			res.status(200).json({
-				stories: storiesFromDb, // Send original stories, no author names
-				currentPage: page,
-				totalPages,
-				totalStories: displayableTotalStories, // Report the capped total for pagination purposes
-			});
+			res.status(200).json({ ...story, userHasLiked });
 		} catch (error) {
 			next(error);
 		}
+	})
+);
+
+// --- Like/Unlike a story ---
+app.post(
+	"/api/stories/:storyId/like",
+	authenticateTokenMiddleware,
+	asyncHandler(async (req: Request, res: Response) => {
+		const storyId = parseInt(req.params.storyId);
+		const userId = req.userId as string;
+
+		// Use a transaction to ensure data consistency
+		const [, story] = await prisma.$transaction([
+			prisma.storyLike.create({
+				data: {
+					storyId,
+					userId,
+				},
+			}),
+			prisma.story.update({
+				where: { id: storyId },
+				data: { likes: { increment: 1 } },
+			}),
+		]);
+
+		res.status(200).json(story);
+	})
+);
+
+app.delete(
+	"/api/stories/:storyId/unlike",
+	authenticateTokenMiddleware,
+	asyncHandler(async (req: Request, res: Response) => {
+		const storyId = parseInt(req.params.storyId);
+		const userId = req.userId as string;
+
+		const [, story] = await prisma.$transaction([
+			prisma.storyLike.delete({
+				where: {
+					storyId_userId: {
+						storyId,
+						userId,
+					},
+				},
+			}),
+			prisma.story.update({
+				where: { id: storyId },
+				data: { likes: { decrement: 1 } },
+			}),
+		]);
+
+		res.status(200).json(story);
 	})
 );
 
@@ -470,34 +600,6 @@ app.get(
 		const totalUsers = await prisma.userProgress.count(); // Assuming userProgress table tracks all users
 		res.json({ totalUsers });
 		// try-catch removed for brevity as asyncHandler handles it
-	})
-);
-
-// NEW: PUBLIC ROUTE to GET a specific story by its shareId
-app.get(
-	"/api/stories/:shareId", // Changed from :id to :shareId
-	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-		const { shareId } = req.params; // Use shareId directly as a string
-
-		// Log headers for debugging
-
-		try {
-			// No need to parseInt, shareId is a CUID string
-			// Use findUnique as shareId is marked @unique in the schema
-			const story = await prisma.story.findUnique({
-				where: { shareId: shareId }, // Query by shareId
-			});
-
-			if (!story) {
-				return res.status(404).json({ error: "Story not found" });
-			}
-
-			// Publicly return the story
-			res.json(story);
-		} catch (error) {
-			console.error(`Failed to fetch story with shareId ${shareId}:`, error);
-			next(error); // Pass to centralized error handler
-		}
 	})
 );
 

@@ -152,18 +152,23 @@ export const generateStoryViaBackend = (generationParams) => {
 	return authenticatedFetch("/generate-story", {
 		method: "POST",
 		body: JSON.stringify(generationParams), // e.g., { description, sourceLanguage, targetLanguage, difficulty, length }
-	}).then(result => {
-		console.log("Story generation successful, response size:", JSON.stringify(result).length);
-		return result;
-	}).catch(error => {
-		console.error("Story generation failed:", error);
-		console.error("Error details:", {
-			message: error.message,
-			status: error.status,
-			data: error.data
+	})
+		.then((result) => {
+			console.log(
+				"Story generation successful, response size:",
+				JSON.stringify(result).length
+			);
+			return result;
+		})
+		.catch((error) => {
+			console.error("Story generation failed:", error);
+			console.error("Error details:", {
+				message: error.message,
+				status: error.status,
+				data: error.data,
+			});
+			throw error;
 		});
-		throw error;
-	});
 };
 
 // Get remaining story generation limit
@@ -250,46 +255,52 @@ export const getLatestStories = async (
 	idToken, // Can be null or undefined for public requests
 	page = 1,
 	limit = 10,
-	excludeCurrentUser = true
+	excludeCurrentUser = true,
+	sourceLanguage = "",
+	targetLanguage = "",
+	sortBy = "createdAt_desc"
 ) => {
-	// if (!idToken) { // REMOVED: Allow calls without idToken for public access
-	// 	throw new Error("Authentication token is required.");
-	// }
+	// Build the query string conditionally
+	const params = new URLSearchParams({
+		page: page.toString(),
+		limit: limit.toString(),
+		excludeCurrentUser: String(excludeCurrentUser),
+	});
+	if (sourceLanguage) {
+		params.append("sourceLanguage", sourceLanguage);
+	}
+	if (targetLanguage) {
+		params.append("targetLanguage", targetLanguage);
+	}
+	if (sortBy) {
+		params.append("sort", sortBy);
+	}
+
+	const endpoint = `/stories/latest?${params.toString()}`;
+
+	// Use a different fetcher based on whether the user is logged in
+	const fetcher = idToken ? authenticatedFetch : publicGetFetch;
+
 	try {
-		const queryParams = new URLSearchParams({
-			page: page.toString(),
-			limit: limit.toString(),
-			excludeCurrentUser: excludeCurrentUser.toString(),
-		});
-
-		const headers = {
-			"Content-Type": "application/json",
-		};
-		if (idToken) {
-			// Conditionally add Authorization header
-			headers.Authorization = `Bearer ${idToken}`;
-		}
-
-		const response = await fetch(
-			`/api/stories/latest?${queryParams.toString()}`,
-			{
-				method: "GET",
-				headers: headers,
-			}
-		);
-
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({})); // Try to parse error, default to empty obj
-			throw new Error(
-				errorData.error || `HTTP error! status: ${response.status}`
-			);
-		}
-		return await response.json();
+		// No need to pass the full idToken to publicGetFetch, it doesn't use it
+		const data = await fetcher(endpoint);
+		return data; // Assuming the backend returns { stories, currentPage, totalPages }
 	} catch (error) {
 		console.error("Error fetching latest stories:", error);
-		throw error; // Re-throw to be caught by the calling component
+		// In case of error, return a default structure to prevent UI crashes
+		return { stories: [], currentPage: 1, totalPages: 1 };
 	}
 };
+
+export const likeStory = (storyId) =>
+	authenticatedFetch(`/stories/${storyId}/like`, { method: "POST" });
+
+export const unlikeStory = (storyId) =>
+	authenticatedFetch(`/stories/${storyId}/unlike`, { method: "DELETE" });
+
+// Vocabulary API
+export const getVocabularyForStory = (storyId) =>
+	authenticatedFetch(`/stories/${storyId}/vocabulary`);
 
 // Statistics
 export const getTotalStoriesCount = () =>

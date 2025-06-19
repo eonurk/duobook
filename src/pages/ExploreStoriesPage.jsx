@@ -17,6 +17,13 @@ const ExploreStoriesPage = () => {
 	);
 	const [totalPages, setTotalPages] = useState(1);
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+	const [sourceLanguage, setSourceLanguage] = useState("");
+	const [targetLanguage, setTargetLanguage] = useState("");
+	const [sortBy, setSortBy] = useState("createdAt_desc");
+	const [availableLanguages, setAvailableLanguages] = useState({
+		source: [],
+		target: [],
+	});
 
 	// Function to trigger login - placeholder for now
 	// In a real app, this might call a function passed from AuthContext or App.jsx
@@ -29,7 +36,7 @@ const ExploreStoriesPage = () => {
 	};
 
 	const fetchStoriesCallback = useCallback(
-		async (pageToFetch) => {
+		async (pageToFetch, sourceLang, targetLang, sort) => {
 			if (!idToken && pageToFetch > 1) {
 				setShowLoginPrompt(true);
 				setIsLoading(false); // Ensure loading is off if we don't fetch
@@ -42,15 +49,31 @@ const ExploreStoriesPage = () => {
 			setIsLoading(true);
 			setError(null);
 			try {
-				const response = await getLatestStories(idToken, pageToFetch, 12, true);
+				const response = await getLatestStories(
+					idToken,
+					pageToFetch,
+					12,
+					true,
+					sourceLang,
+					targetLang,
+					sort
+				);
 				setStories(response.stories || []);
 				setCurrentPage(response.currentPage || 1); // Update currentPage from response
 				setTotalPages(response.totalPages || 1);
+				if (
+					!availableLanguages.source.length &&
+					!availableLanguages.target.length &&
+					response.availableLanguages
+				) {
+					setAvailableLanguages(response.availableLanguages);
+				}
 				if (pageToFetch !== response.currentPage && response.currentPage) {
-					setSearchParams(
-						{ page: response.currentPage.toString() },
-						{ replace: true }
-					);
+					const newParams = { page: response.currentPage.toString() };
+					if (sourceLang) newParams.source = sourceLang;
+					if (targetLang) newParams.target = targetLang;
+					if (sort) newParams.sort = sort;
+					setSearchParams(newParams, { replace: true });
 				}
 			} catch (err) {
 				console.error(
@@ -65,16 +88,44 @@ const ExploreStoriesPage = () => {
 				setIsLoading(false);
 			}
 		},
-		[idToken, setSearchParams]
-	); // Added setSearchParams to dependency array
+		[
+			idToken,
+			setSearchParams,
+			availableLanguages.source.length,
+			availableLanguages.target.length,
+		]
+	);
 
 	useEffect(() => {
 		const pageFromUrl = parseInt(searchParams.get("page")) || 1;
-		if (pageFromUrl !== currentPage) {
+		const sourceLangFromUrl = searchParams.get("source") || "";
+		const targetLangFromUrl = searchParams.get("target") || "";
+		const sortFromUrl = searchParams.get("sort") || "createdAt_desc";
+		if (
+			pageFromUrl !== currentPage ||
+			sourceLangFromUrl !== sourceLanguage ||
+			targetLangFromUrl !== targetLanguage ||
+			sortFromUrl !== sortBy
+		) {
 			setCurrentPage(pageFromUrl); // Sync state with URL on initial load or back/forward
+			setSourceLanguage(sourceLangFromUrl);
+			setTargetLanguage(targetLangFromUrl);
+			setSortBy(sortFromUrl);
 		}
-		fetchStoriesCallback(pageFromUrl);
-	}, [fetchStoriesCallback, searchParams, currentPage]); // Add currentPage to ensure re-fetch if internal state changes via other means
+		fetchStoriesCallback(
+			pageFromUrl,
+			sourceLangFromUrl,
+			targetLangFromUrl,
+			sortFromUrl
+		);
+	}, [
+		fetchStoriesCallback,
+		searchParams,
+		currentPage,
+		sourceLanguage,
+		targetLanguage,
+		sortBy,
+	]);
 
 	const handlePageChange = (newPage) => {
 		if (newPage < 1 || (newPage > totalPages && totalPages > 0)) return;
@@ -86,8 +137,44 @@ const ExploreStoriesPage = () => {
 		}
 		setShowLoginPrompt(false);
 		setCurrentPage(newPage);
-		setSearchParams({ page: newPage.toString() }, { replace: true });
-		// The useEffect will now pick up the change in searchParams/currentPage and call fetchStoriesCallback
+		setSearchParams(
+			{
+				page: newPage.toString(),
+				source: sourceLanguage,
+				target: targetLanguage,
+				sort: sortBy,
+			},
+			{ replace: true }
+		);
+	};
+
+	const handleLanguageFilterChange = (source, target) => {
+		setSourceLanguage(source);
+		setTargetLanguage(target);
+		setCurrentPage(1); // Reset to first page
+		setSearchParams(
+			{
+				page: "1",
+				source: source,
+				target: target,
+				sort: sortBy,
+			},
+			{ replace: true }
+		);
+	};
+
+	const handleSortChange = (newSortBy) => {
+		setSortBy(newSortBy);
+		setCurrentPage(1); // Reset to first page
+		setSearchParams(
+			{
+				page: "1",
+				source: sourceLanguage,
+				target: targetLanguage,
+				sort: newSortBy,
+			},
+			{ replace: true }
+		);
 	};
 
 	if (isLoading && stories.length === 0) {
@@ -107,6 +194,75 @@ const ExploreStoriesPage = () => {
 			<h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
 				Explore Stories from the Community
 			</h1>
+
+			<div className="flex justify-center items-end gap-4 mb-8">
+				<div>
+					<label
+						htmlFor="source-language"
+						className="block text-sm font-medium text-gray-700"
+					>
+						Source Language
+					</label>
+					<select
+						id="source-language"
+						value={sourceLanguage}
+						onChange={(e) =>
+							handleLanguageFilterChange(e.target.value, targetLanguage)
+						}
+						className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+					>
+						<option value="">Any</option>
+						{availableLanguages.source.map((lang) => (
+							<option key={lang} value={lang}>
+								{lang}
+							</option>
+						))}
+					</select>
+				</div>
+				<div>
+					<label
+						htmlFor="target-language"
+						className="block text-sm font-medium text-gray-700"
+					>
+						Target Language
+					</label>
+					<select
+						id="target-language"
+						value={targetLanguage}
+						onChange={(e) =>
+							handleLanguageFilterChange(sourceLanguage, e.target.value)
+						}
+						className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+					>
+						<option value="">Any</option>
+						{availableLanguages.target.map((lang) => (
+							<option key={lang} value={lang}>
+								{lang}
+							</option>
+						))}
+					</select>
+				</div>
+				<div>
+					<label
+						htmlFor="sort-by"
+						className="block text-sm font-medium text-gray-700"
+					>
+						Sort By
+					</label>
+					<select
+						id="sort-by"
+						value={sortBy}
+						onChange={(e) => handleSortChange(e.target.value)}
+						className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+					>
+						<option value="createdAt_desc">Newest</option>
+						<option value="createdAt_asc">Oldest</option>
+						<option value="likes_desc">Most Popular</option>
+						<option value="length_desc">Longest</option>
+						<option value="length_asc">Shortest</option>
+					</select>
+				</div>
+			</div>
 
 			{showLoginPrompt && (
 				<div

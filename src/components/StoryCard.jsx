@@ -3,15 +3,21 @@ import { Link } from "react-router-dom";
 import {
 	Languages,
 	BarChart3, // Or SignalLow, SignalMedium, SignalHigh based on difficulty value
+	SignalLow,
+	SignalMedium,
+	SignalHigh,
 	CalendarDays,
 	ArrowRight,
 	Share2,
 	Copy,
 	MessageCircle,
 	Instagram,
+	Heart,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import { likeStory, unlikeStory } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 const formatTimeAgo = (dateString) => {
 	const date = new Date(dateString);
@@ -40,15 +46,82 @@ const formatTimeAgo = (dateString) => {
 	});
 };
 
+const DifficultyIndicator = ({ difficulty }) => {
+	const difficultyLevel = difficulty ? difficulty.toLowerCase() : "n/a";
+
+	let Icon = BarChart3;
+	let color = "text-slate-500";
+	let text = "N/A";
+
+	switch (difficultyLevel) {
+		case "beginner":
+			Icon = SignalLow;
+			color = "text-green-500";
+			text = "Beginner";
+			break;
+		case "intermediate":
+			Icon = SignalMedium;
+			color = "text-amber-500";
+			text = "Intermediate";
+			break;
+		case "advanced":
+			Icon = SignalHigh;
+			color = "text-red-500";
+			text = "Advanced";
+			break;
+		default:
+			text = difficulty
+				? difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
+				: "N/A";
+			break;
+	}
+
+	return (
+		<div className="flex items-center">
+			<Icon className={`w-4 h-4 mr-2 ${color} flex-shrink-0`} />
+			<span className={`${color}`}>{text}</span>
+		</div>
+	);
+};
+
 const StoryCard = ({ story }) => {
 	const [showShareOptions, setShowShareOptions] = React.useState(false);
-	const storyTitle = story.description || "A User-Generated Story";
-	const difficultyText = story.difficulty
-		? story.difficulty.charAt(0).toUpperCase() + story.difficulty.slice(1)
-		: "N/A";
+	const { currentUser } = useAuth();
+	const [isLiked, setIsLiked] = React.useState(story.userHasLiked || false);
+	const [likeCount, setLikeCount] = React.useState(story.likes || 0);
+	const storyTitle =
+		story.description ||
+		story.story?.split(" ").slice(0, 10).join(" ") + "..." ||
+		"A User-Generated Story";
 	const timeAgo = story.createdAt
 		? formatTimeAgo(story.createdAt)
 		: "Some time ago";
+	const wordCount = story.story ? story.story.split(/\s+/).length : 0;
+
+	const handleLike = async (e) => {
+		e.stopPropagation();
+		if (!currentUser) {
+			toast.error("You must be logged in to like a story.");
+			return;
+		}
+
+		try {
+			if (isLiked) {
+				await unlikeStory(story.id);
+				setLikeCount((prev) => prev - 1);
+				setIsLiked(false);
+				toast.success("Unliked story");
+			} else {
+				await likeStory(story.id);
+				setLikeCount((prev) => prev + 1);
+				setIsLiked(true);
+				toast.success("Liked story!");
+			}
+		} catch (error) {
+			console.error("Failed to like/unlike story:", error);
+			toast.error("Failed to update like status.");
+		}
+	};
 
 	const handleShare = async (event) => {
 		event.stopPropagation();
@@ -164,10 +237,13 @@ const StoryCard = ({ story }) => {
 							{story.targetLanguage || "Target Lang"}
 						</span>
 					</div>
-					<div className="flex items-center">
-						<BarChart3 className="w-4 h-4 mr-2 text-amber-500 flex-shrink-0" />
-						<span>Difficulty: {difficultyText}</span>
-					</div>
+					<DifficultyIndicator difficulty={story.difficulty} />
+					{wordCount > 0 && (
+						<div className="flex items-center">
+							<MessageCircle className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" />
+							<span>{wordCount} words</span>
+						</div>
+					)}
 					<div className="flex items-center">
 						<CalendarDays className="w-4 h-4 mr-2 text-slate-400 flex-shrink-0" />
 						<span>{timeAgo}</span>
@@ -182,65 +258,81 @@ const StoryCard = ({ story }) => {
 				>
 					Read Story <ArrowRight className="w-4 h-4 ml-2" />
 				</Link>
-				<div className="relative">
-					<button
-						onClick={handleShare}
-						className="inline-flex items-center justify-center p-2 border border-transparent text-sm font-medium rounded-md text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-						title="Share Story"
+				<div className="flex items-center gap-2">
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={handleLike}
+						className="flex items-center gap-1 text-slate-600 hover:text-red-500"
 					>
-						<Share2 className="w-5 h-5" />
-					</button>
-					{showShareOptions && (
-						<div className="absolute right-0 bottom-full mb-2 w-48 bg-white border rounded-md shadow-lg z-20 p-2 space-y-1">
-							<Button
-								variant="ghost"
-								className="w-full flex items-center justify-start text-sm p-2 hover:bg-slate-100"
-								onClick={(e) =>
-									handleCopyLink(
-										e,
-										`${window.location.origin}/story/${story.shareId}`,
-										storyTitle
-									)
-								}
-							>
-								<Copy className="h-4 w-4 mr-2" /> Copy Link
-							</Button>
-							<a
-								href={`whatsapp://send?text=${encodeURIComponent(
-									`Read "${storyTitle}" on DuoBook! ${window.location.origin}/story/${story.shareId}`
-								)}`}
-								data-action="share/whatsapp/share"
-								target="_blank"
-								rel="noopener noreferrer"
-								className="w-full flex items-center justify-start text-sm p-2 hover:bg-slate-100 rounded-md"
-								onClick={(e) => {
-									e.stopPropagation();
-									setShowShareOptions(false);
-								}}
-							>
-								<MessageCircle className="h-4 w-4 mr-2" /> WhatsApp
-							</a>
-							<Button
-								variant="ghost"
-								className="w-full flex items-center justify-start text-sm p-2 hover:bg-slate-100"
-								onClick={(e) => {
-									e.stopPropagation();
-									handleCopyLink(
-										e,
-										`${window.location.origin}/story/${story.shareId}`,
-										storyTitle
-									);
-									toast(
-										"Link copied. Paste it in your Instagram story sticker!",
-										{ icon: "📸" }
-									);
-									setShowShareOptions(false);
-								}}
-							>
-								<Instagram className="h-4 w-4 mr-2" /> Instagram Story
-							</Button>
-						</div>
-					)}
+						<Heart
+							className={`w-5 h-5 ${
+								isLiked ? "text-red-500 fill-current" : ""
+							}`}
+						/>
+						<span className="text-sm font-medium">{likeCount}</span>
+					</Button>
+
+					<div className="relative">
+						<button
+							onClick={handleShare}
+							className="inline-flex items-center justify-center p-2 border border-transparent text-sm font-medium rounded-md text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+							title="Share Story"
+						>
+							<Share2 className="w-5 h-5" />
+						</button>
+						{showShareOptions && (
+							<div className="absolute right-0 bottom-full mb-2 w-48 bg-white border rounded-md shadow-lg z-20 p-2 space-y-1">
+								<Button
+									variant="ghost"
+									className="w-full flex items-center justify-start text-sm p-2 hover:bg-slate-100"
+									onClick={(e) =>
+										handleCopyLink(
+											e,
+											`${window.location.origin}/story/${story.shareId}`,
+											storyTitle
+										)
+									}
+								>
+									<Copy className="h-4 w-4 mr-2" /> Copy Link
+								</Button>
+								<a
+									href={`whatsapp://send?text=${encodeURIComponent(
+										`Read "${storyTitle}" on DuoBook! ${window.location.origin}/story/${story.shareId}`
+									)}`}
+									data-action="share/whatsapp/share"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="w-full flex items-center justify-start text-sm p-2 hover:bg-slate-100 rounded-md"
+									onClick={(e) => {
+										e.stopPropagation();
+										setShowShareOptions(false);
+									}}
+								>
+									<MessageCircle className="h-4 w-4 mr-2" /> WhatsApp
+								</a>
+								<Button
+									variant="ghost"
+									className="w-full flex items-center justify-start text-sm p-2 hover:bg-slate-100"
+									onClick={(e) => {
+										e.stopPropagation();
+										handleCopyLink(
+											e,
+											`${window.location.origin}/story/${story.shareId}`,
+											storyTitle
+										);
+										toast(
+											"Link copied. Paste it in your Instagram story sticker!",
+											{ icon: "📸" }
+										);
+										setShowShareOptions(false);
+									}}
+								>
+									<Instagram className="h-4 w-4 mr-2" /> Instagram Story
+								</Button>
+							</div>
+						)}
+					</div>
 				</div>
 			</div>
 		</div>

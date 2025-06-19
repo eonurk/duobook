@@ -36,8 +36,19 @@ model Story {
   length         String?
   shareId        String   @unique @default(cuid())
   isPublic       Boolean  @default(true)
+  likes          Int      @default(0)
+  storyLikes     StoryLike[]
 
   @@index([userId])
+}
+
+model StoryLike {
+  id      Int    @id @default(autoincrement())
+  storyId Int
+  userId  String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, userId])
 }
 
 model Achievement {
