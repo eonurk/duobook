@@ -92,6 +92,8 @@ import {
 	generateStoryViaBackend,
 	getStoryGenerationLimit, // Ensure getStoryGenerationLimit is imported from the correct path
 	getStoryById, // Make sure this is imported for StoryViewPage
+	likeStory,
+	unlikeStory,
 } from "./lib/api"; // Import API functions
 import toast, { Toaster } from "react-hot-toast"; // Keep Toaster if used
 import StoryCard from "@/components/StoryCard"; // ADDED: Import StoryCard
@@ -225,6 +227,7 @@ function StoryViewPage() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const { shareId } = useParams(); // Get shareId from URL
+	const { currentUser } = useAuth();
 
 	// Try to get initial data from location state (if navigated from creation)
 	const initialStoryData = location.state?.storyData;
@@ -234,6 +237,9 @@ function StoryViewPage() {
 	const [paramsForBookView, setParamsForBookView] = useState(initialParams);
 	const [isLoading, setIsLoading] = useState(true); // Start with loading true
 	const [error, setError] = useState(null);
+	const [likeCount, setLikeCount] = useState(0);
+	const [isLiked, setIsLiked] = useState(false);
+	const [storyId, setStoryId] = useState(null);
 
 	useEffect(() => {
 		const loadStory = async () => {
@@ -249,57 +255,60 @@ function StoryViewPage() {
 						// Add shareId to the story content so BookView can access it
 						parsedStory.shareId = initialStoryData.shareId;
 						setStoryContent(parsedStory);
-						// Ensure paramsForBookView is set correctly from initialStoryData if available
-						setParamsForBookView({
-							target: initialStoryData.targetLanguage,
-							source: initialStoryData.sourceLanguage,
-							title: initialStoryData.title,
-							// any other params needed by BookView
-						});
+						setLikeCount(initialStoryData.likes || 0);
+						setIsLiked(initialStoryData.userHasLiked || false);
+						setStoryId(initialStoryData.id);
 					} catch (e) {
-						console.error("Failed to parse story JSON from state:", e);
-						setError("Failed to load story content from navigation state.");
+						console.error("Failed to parse story from state:", e);
+						setError("The story data is in an invalid format.");
 					}
-				} else if (initialStoryData.pages || initialStoryData.sentencePairs) {
-					// Story data is already in the correct object format
-					// Add shareId to the story content so BookView can access it
-					initialStoryData.shareId = initialStoryData.shareId || shareId;
-					setStoryContent(initialStoryData);
-					setParamsForBookView({
-						target: initialStoryData.targetLanguage,
-						source: initialStoryData.sourceLanguage,
-						title: initialStoryData.title,
-					});
 				} else {
-					console.warn(
-						"StoryViewPage: initialStoryData provided but not in expected format."
-					);
-					setError("Story data is in an unexpected format.");
+					setStoryContent(initialStoryData.story); // It's already an object
+					setLikeCount(initialStoryData.likes || 0);
+					setIsLiked(initialStoryData.userHasLiked || false);
+					setStoryId(initialStoryData.id);
+				}
+				// Set params for book view from initial data if available
+				if (initialParams) {
+					setParamsForBookView(initialParams);
+				} else if (initialStoryData) {
+					setParamsForBookView({
+						sourceLanguage: initialStoryData.sourceLanguage,
+						targetLanguage: initialStoryData.targetLanguage,
+					});
 				}
 				setIsLoading(false);
 			} else if (shareId) {
 				// No valid state data, or shareId mismatch, fetch from API using shareId
 				console.log(`StoryViewPage: Fetching story with shareId: ${shareId}`);
 				try {
-					const fetchedStory = await getStoryById(shareId); // Assuming getStoryById fetches all necessary data
-					let parsedStoryContent;
+					const fetchedStory = await getStoryById(shareId);
 					if (typeof fetchedStory.story === "string") {
-						parsedStoryContent = JSON.parse(fetchedStory.story);
+						const parsedStory = JSON.parse(fetchedStory.story);
+						parsedStory.shareId = fetchedStory.shareId;
+						setStoryContent(parsedStory);
 					} else {
-						parsedStoryContent = fetchedStory.story; // Assuming story is already an object
+						setStoryContent(fetchedStory.story); // Assuming it's already an object
 					}
-					// Add shareId to the story content so BookView can access it
-					parsedStoryContent.shareId = fetchedStory.shareId;
-					setStoryContent(parsedStoryContent);
-					setParamsForBookView({
-						target: fetchedStory.targetLanguage,
-						source: fetchedStory.sourceLanguage,
-						title: fetchedStory.title,
-						// any other params needed by BookView based on fetchedStory
-					});
+					// Set params for book view from initial data if available
+					if (initialParams) {
+						setParamsForBookView(initialParams);
+					} else if (fetchedStory) {
+						setParamsForBookView({
+							sourceLanguage: fetchedStory.sourceLanguage,
+							targetLanguage: fetchedStory.targetLanguage,
+						});
+					}
+					setLikeCount(fetchedStory.likes || 0);
+					setIsLiked(fetchedStory.userHasLiked || false);
+					setStoryId(fetchedStory.id);
 				} catch (err) {
-					console.error(`Error fetching story ${shareId}:`, err);
-					setError(err.message || `Could not load story with ID: ${shareId}.`);
+					console.error("Failed to fetch story by ID:", err);
+					setError(
+						err.status === 404
+							? "This story could not be found."
+							: "Failed to load the story. Please try again."
+					);
 				}
 				setIsLoading(false);
 			} else {
@@ -311,7 +320,31 @@ function StoryViewPage() {
 		};
 
 		loadStory();
-	}, [shareId, initialStoryData, initialParams]); // Re-run if shareId or initial data changes
+	}, [shareId, initialStoryData]);
+
+	const handleLike = async () => {
+		if (!currentUser) {
+			toast.error("You must be logged in to like a story.");
+			return;
+		}
+
+		try {
+			if (isLiked) {
+				await unlikeStory(storyId);
+				setLikeCount((prev) => prev - 1);
+				setIsLiked(false);
+				toast.success("Unliked story");
+			} else {
+				await likeStory(storyId);
+				setLikeCount((prev) => prev + 1);
+				setIsLiked(true);
+				toast.success("Liked story!");
+			}
+		} catch (err) {
+			console.error("Failed to update like status:", err);
+			toast.error("Failed to update like status.");
+		}
+	};
 
 	const handleGoBackToForm = () => {
 		navigate("/"); // Navigate back to the InputForm page
@@ -349,10 +382,34 @@ function StoryViewPage() {
 
 	return (
 		<main className="flex-1 container mx-auto px-4 py-8">
+			<div className="flex justify-between items-center mb-4">
+				<button
+					onClick={handleGoBackToForm}
+					className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900"
+				>
+					<ChevronLeft className="w-5 h-5 mr-1" />
+					Back
+				</button>
+				<div className="flex items-center gap-4">
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={handleLike}
+						className="flex items-center gap-1 text-slate-600 hover:text-red-500"
+					>
+						<Heart
+							className={`w-5 h-5 ${
+								isLiked ? "text-red-500 fill-current" : ""
+							}`}
+						/>
+						<span className="text-sm font-medium">{likeCount}</span>
+					</Button>
+				</div>
+			</div>
 			<BookView
 				storyContent={storyContent} // Pass processed story content
-				targetLanguage={paramsForBookView.target}
-				sourceLanguage={paramsForBookView.source}
+				targetLanguage={paramsForBookView.targetLanguage}
+				sourceLanguage={paramsForBookView.sourceLanguage}
 				onGoBack={handleGoBackToForm}
 				isExample={false} // MODIFIED: Always false now for internal stories
 				// title={paramsForBookView.title} // Pass title if BookView uses it
@@ -900,7 +957,7 @@ function MainAppView({ generateStory }) {
 										>
 											<path
 												fillRule="evenodd"
-												d="M7 2a1 1 0 011 1v1h3a1 1 0 110 2H9.578a18.87 18.87 0 01-1.724 4.78c.29.354.596.696.914 1.026a1 1 0 11-1.44 1.389c-.188-.196-.373-.396-.554-.6a19.098 19.098 0 01-3.107 3.567 1 1 0 01-1.334-1.49 17.087 17.087 0 003.13-3.733 18.992 18.992 0 01-1.487-2.494 1 1 0 111.79-.89c.234.47.489.928.764 1.372.417-.934.752-1.913.997-2.927H3a1 1 0 110-2h3V3a1 1 0 011-1zm6 6a1 1 0 01.894.553l2.991 5.982a.869.869 0 01.02.037l.99 1.98a1 1 0 11-1.79.895L15.383 16h-4.764l-.724 1.447a1 1 0 11-1.788-.894l.99-1.98.019-.038 2.99-5.982A1 1 0 0113 8zm-1.382 6h2.764L13 12.236 11.618 14z"
+												d="M7 2a1 1 0 011 1v1h3a1 1 0 110 2H9.578a18.87 18.87 0 01-1.724 4.78c.29.354.596.696.914 1.026a1 1 0 11-1.44 1.389c-.188-.196-.373-.396-.554-.6a19.098 19.098 0 01-3.107 3.567 1 1 0 01-1.334-1.49 17.087 17.087 0 003.13-3.733 18.992 18.992 0 01-1.487 2.494 1 1 0 111.79-.89c.234.47.489.928.764 1.372.417-.934.752-1.913.997-2.927H3a1 1 0 110-2h3V3a1 1 0 011-1zm6 6a1 1 0 01.894.553l2.991 5.982a.869.869 0 01.02.037l.99 1.98a1 1 0 11-1.79.895L15.383 16h-4.764l-.724 1.447a1 1 0 11-1.788-.894l.99-1.98.019-.038 2.99-5.982A1 1 0 0113 8zm-1.382 6h2.764L13 12.236 11.618 14z"
 												clipRule="evenodd"
 											/>
 										</svg>
