@@ -4,6 +4,15 @@ import { useAuth } from "@/context/AuthContext"; // Assuming you have AuthContex
 import { getLatestStories } from "@/lib/api"; // We'll need to add this API function
 import toast, { Toaster } from "react-hot-toast";
 import StoryCard from "@/components/StoryCard";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { Filter } from "lucide-react";
 
 const ExploreStoriesPage = () => {
 	const { idToken } = useAuth();
@@ -195,7 +204,93 @@ const ExploreStoriesPage = () => {
 				Explore Stories from the Community
 			</h1>
 
-			<div className="flex justify-center items-end gap-4 mb-8">
+			{/* Mobile Filter Button */}
+			<div className="md:hidden mb-6 flex justify-center">
+				<Dialog>
+					<DialogTrigger asChild>
+						<Button variant="outline">
+							<Filter className="w-4 h-4 mr-2" />
+							Filter & Sort
+						</Button>
+					</DialogTrigger>
+					<DialogContent className="bg-white">
+						<DialogHeader>
+							<DialogTitle>Filter & Sort</DialogTitle>
+						</DialogHeader>
+						<div className="space-y-4">
+							<div>
+								<label
+									htmlFor="source-language-mobile"
+									className="block text-sm font-medium text-gray-700"
+								>
+									Source Language
+								</label>
+								<select
+									id="source-language-mobile"
+									value={sourceLanguage}
+									onChange={(e) =>
+										handleLanguageFilterChange(e.target.value, targetLanguage)
+									}
+									className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+								>
+									<option value="">Any</option>
+									{availableLanguages.source.map((lang) => (
+										<option key={lang} value={lang}>
+											{lang}
+										</option>
+									))}
+								</select>
+							</div>
+							<div>
+								<label
+									htmlFor="target-language-mobile"
+									className="block text-sm font-medium text-gray-700"
+								>
+									Target Language
+								</label>
+								<select
+									id="target-language-mobile"
+									value={targetLanguage}
+									onChange={(e) =>
+										handleLanguageFilterChange(sourceLanguage, e.target.value)
+									}
+									className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+								>
+									<option value="">Any</option>
+									{availableLanguages.target.map((lang) => (
+										<option key={lang} value={lang}>
+											{lang}
+										</option>
+									))}
+								</select>
+							</div>
+							<div>
+								<label
+									htmlFor="sort-by-mobile"
+									className="block text-sm font-medium text-gray-700"
+								>
+									Sort By
+								</label>
+								<select
+									id="sort-by-mobile"
+									value={sortBy}
+									onChange={(e) => handleSortChange(e.target.value)}
+									className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+								>
+									<option value="createdAt_desc">Newest</option>
+									<option value="createdAt_asc">Oldest</option>
+									<option value="likes_desc">Most Popular</option>
+									<option value="length_desc">Longest</option>
+									<option value="length_asc">Shortest</option>
+								</select>
+							</div>
+						</div>
+					</DialogContent>
+				</Dialog>
+			</div>
+
+			{/* Desktop Filters */}
+			<div className="hidden md:flex justify-center items-end gap-4 mb-8">
 				<div>
 					<label
 						htmlFor="source-language"
