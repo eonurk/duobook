@@ -481,11 +481,33 @@ app.get(
 				difficulty: true,
 				length: true,
 				createdAt: true,
+				likes: true,
 			},
 		});
 
+		let storiesWithLikes = stories;
+		const userId = req.userId;
+
+		if (userId) {
+			const storyIds = stories.map((s) => s.id);
+			const userLikes = await prisma.storyLike.findMany({
+				where: {
+					storyId: { in: storyIds },
+					userId: userId,
+				},
+				select: {
+					storyId: true,
+				},
+			});
+			const likedStoryIds = new Set(userLikes.map((like) => like.storyId));
+			storiesWithLikes = stories.map((story) => ({
+				...story,
+				userHasLiked: likedStoryIds.has(story.id),
+			}));
+		}
+
 		res.json({
-			stories,
+			stories: storiesWithLikes,
 			currentPage: page,
 			totalPages,
 			availableLanguages,
@@ -539,6 +561,16 @@ app.post(
 		const storyId = parseInt(req.params.storyId);
 		const userId = req.userId as string;
 
+		// Check if the user has already liked the story
+		const existingLike = await prisma.storyLike.findUnique({
+			where: { storyId_userId: { storyId, userId } },
+		});
+
+		if (existingLike) {
+			const story = await prisma.story.findUnique({ where: { id: storyId } });
+			return res.status(200).json(story);
+		}
+
 		// Use a transaction to ensure data consistency
 		const [, story] = await prisma.$transaction([
 			prisma.storyLike.create({
@@ -563,6 +595,16 @@ app.delete(
 	asyncHandler(async (req: Request, res: Response) => {
 		const storyId = parseInt(req.params.storyId);
 		const userId = req.userId as string;
+
+		// Check if the like exists before trying to delete
+		const existingLike = await prisma.storyLike.findUnique({
+			where: { storyId_userId: { storyId, userId } },
+		});
+
+		if (!existingLike) {
+			const story = await prisma.story.findUnique({ where: { id: storyId } });
+			return res.status(200).json(story);
+		}
 
 		const [, story] = await prisma.$transaction([
 			prisma.storyLike.delete({
