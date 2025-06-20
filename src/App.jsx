@@ -810,6 +810,17 @@ function MainAppView({ generateStory }) {
 								</Button>
 							)}
 						</div>
+
+						{/* Explore Community Stories */}
+						<div className="flex justify-center mt-12">
+							<a
+								href="/explore-stories"
+								className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-orange-400 to-amber-500 text-white font-semibold text-lg shadow-lg hover:from-orange-500 hover:to-amber-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
+								aria-label="Explore Community Stories"
+							>
+								Explore Community Stories
+							</a>
+						</div>
 					</div>
 				)}
 
