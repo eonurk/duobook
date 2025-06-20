@@ -206,9 +206,9 @@ const StoryCard = ({ story }) => {
 				target="_blank"
 				rel="noopener noreferrer"
 				title={story.title} // For hover tooltip showing the book title
-				className="relative block w-60 sm:w-72 md:w-72 lg:w-80 snap-center flex-shrink-0 bg-white shadow-xl rounded-lg hover:shadow-2xl transition-all duration-300 ease-in-out border border-slate-300 border-l-[8px] border-l-slate-400 overflow-hidden group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 aspect-[2/3] hover:-rotate-1 perspective"
+				className="relative block w-full max-w-xs snap-center flex-shrink-0 bg-white shadow-xl rounded-lg hover:shadow-2xl transition-all duration-300 ease-in-out border border-slate-300 border-l-[8px] border-l-slate-400 overflow-hidden group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 aspect-[2/3] hover:-rotate-1 perspective"
 				// MODIFIED:
-				// - Adjusted widths: 'w-60 sm:w-72 md:w-72 lg:w-80' to provide consistent card sizes across breakpoints for scrolling.
+				// - Adjusted widths to prevent overflow on mobile and better control size.
 				// - Removed 'md:max-w-xs md:mx-auto' as it's not needed for a flex scroll layout.
 				// - Kept 'snap-center flex-shrink-0 perspective' and other styling.
 			>

@@ -179,7 +179,7 @@ const ExploreStoriesPage = () => {
 							Filter & Sort
 						</Button>
 					</DialogTrigger>
-					<DialogContent className="bg-white">
+					<DialogContent className="bg-white max-w-[95%] sm:max-w-md mx-auto">
 						<DialogHeader>
 							<DialogTitle>Filter & Sort</DialogTitle>
 						</DialogHeader>

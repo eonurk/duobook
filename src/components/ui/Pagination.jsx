@@ -48,11 +48,13 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 	}
 
 	return (
-		<div className="flex justify-center items-center space-x-2">
+		<div className="flex justify-center items-center gap-1 sm:gap-2 overflow-x-auto py-2">
 			<Button
 				variant="outline"
 				onClick={() => onPageChange(currentPage - 1)}
 				disabled={currentPage === 1}
+				size="sm"
+				className="flex-shrink-0"
 			>
 				Previous
 			</Button>
@@ -62,11 +64,16 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 						key={index}
 						variant={currentPage === page ? "default" : "outline"}
 						onClick={() => onPageChange(page)}
+						size="sm"
+						className="flex-shrink-0"
 					>
 						{page}
 					</Button>
 				) : (
-					<span key={index} className="px-4 py-2">
+					<span
+						key={index}
+						className="px-2 py-2 text-sm text-gray-700 flex-shrink-0"
+					>
 						{page}
 					</span>
 				)
@@ -75,6 +82,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 				variant="outline"
 				onClick={() => onPageChange(currentPage + 1)}
 				disabled={currentPage === totalPages}
+				size="sm"
+				className="flex-shrink-0"
 			>
 				Next
 			</Button>
