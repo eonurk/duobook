@@ -424,17 +424,6 @@ app.get(
 			where.targetLanguage = targetLanguage;
 		}
 
-		let orderBy: Prisma.StoryOrderByWithRelationInput = {};
-		if (sortBy === "createdAt_desc") {
-			orderBy = { createdAt: "desc" };
-		} else if (sortBy === "createdAt_asc") {
-			orderBy = { createdAt: "asc" };
-		} else if (sortBy === "length_desc") {
-			orderBy = { length: "desc" };
-		} else if (sortBy === "length_asc") {
-			orderBy = { length: "asc" };
-		}
-
 		// Initial query to get available languages
 		const distinctLanguages = await prisma.story.findMany({
 			where: { isPublic: true },
@@ -461,6 +450,97 @@ app.get(
 				),
 			],
 		};
+
+		let orderBy: Prisma.StoryOrderByWithRelationInput = {};
+		if (sortBy === "createdAt_desc") {
+			orderBy = { createdAt: "desc" };
+		} else if (sortBy === "createdAt_asc") {
+			orderBy = { createdAt: "asc" };
+		} else if (sortBy === "likes_desc") {
+			orderBy = {
+				storyLikes: {
+					_count: "desc",
+				},
+			};
+		}
+
+		// Handle length sorting with a raw query if needed, otherwise use Prisma's orderBy
+		if (sortBy === "length_desc" || sortBy === "length_asc") {
+			const sortDirection = sortBy === "length_desc" ? "DESC" : "ASC";
+
+			// Base part of the query
+			let query = `
+				SELECT 
+					s.id, s."shareId", s.description, s.story, s."sourceLanguage", s."targetLanguage", 
+					s.difficulty, s.length, s."createdAt", s.likes
+				FROM "Story" s
+				WHERE s."isPublic" = true
+			`;
+
+			const queryParams: any[] = [];
+
+			if (excludeCurrentUser && req.userId) {
+				queryParams.push(req.userId);
+				query += ` AND s."userId" != $${queryParams.length}`;
+			}
+			if (sourceLanguage) {
+				queryParams.push(sourceLanguage);
+				query += ` AND s."sourceLanguage" = $${queryParams.length}`;
+			}
+			if (targetLanguage) {
+				queryParams.push(targetLanguage);
+				query += ` AND s."targetLanguage" = $${queryParams.length}`;
+			}
+
+			// Add sorting by word count
+			query += ` ORDER BY array_length(regexp_split_to_array(s.story, '\\s+'), 1) ${sortDirection}`;
+
+			// Add pagination
+			const offset = (page - 1) * limit;
+			queryParams.push(limit);
+			query += ` LIMIT $${queryParams.length}`;
+			queryParams.push(offset);
+			query += ` OFFSET $${queryParams.length}`;
+
+			const storiesFromRaw = await prisma.$queryRawUnsafe(
+				query,
+				...queryParams
+			);
+
+			// Since raw queries return plain objects, we process them further down
+			// We skip the standard Prisma findMany call for this case
+
+			const totalStories = await prisma.story.count({ where });
+			const totalPages = Math.ceil(totalStories / limit);
+
+			let storiesWithLikes = storiesFromRaw as any[]; // Start with raw query result
+			const userId = req.userId;
+
+			if (userId && storiesWithLikes.length > 0) {
+				const storyIds = storiesWithLikes.map((s: any) => s.id);
+				const userLikes = await prisma.storyLike.findMany({
+					where: {
+						storyId: { in: storyIds },
+						userId: userId,
+					},
+					select: {
+						storyId: true,
+					},
+				});
+				const likedStoryIds = new Set(userLikes.map((like) => like.storyId));
+				storiesWithLikes = storiesWithLikes.map((story: any) => ({
+					...story,
+					userHasLiked: likedStoryIds.has(story.id),
+				}));
+			}
+
+			return res.json({
+				stories: storiesWithLikes,
+				currentPage: page,
+				totalPages,
+				availableLanguages,
+			});
+		}
 
 		const totalStories = await prisma.story.count({ where });
 		const totalPages = Math.ceil(totalStories / limit);

@@ -4,7 +4,9 @@ import { useAuth } from "@/context/AuthContext"; // Assuming you have AuthContex
 import { getLatestStories } from "@/lib/api"; // We'll need to add this API function
 import toast, { Toaster } from "react-hot-toast";
 import StoryCard from "@/components/StoryCard";
+import FilterControls from "@/components/FilterControls";
 import { Button } from "@/components/ui/button";
+import Pagination from "@/components/ui/Pagination";
 import {
 	Dialog,
 	DialogContent,
@@ -21,14 +23,13 @@ const ExploreStoriesPage = () => {
 	const [error, setError] = useState(null);
 
 	const [searchParams, setSearchParams] = useSearchParams();
-	const [currentPage, setCurrentPage] = useState(
-		() => parseInt(searchParams.get("page")) || 1
-	);
+	const currentPage = parseInt(searchParams.get("page")) || 1;
+	const sourceLanguage = searchParams.get("source") || "";
+	const targetLanguage = searchParams.get("target") || "";
+	const sortBy = searchParams.get("sort") || "createdAt_desc";
+
 	const [totalPages, setTotalPages] = useState(1);
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-	const [sourceLanguage, setSourceLanguage] = useState("");
-	const [targetLanguage, setTargetLanguage] = useState("");
-	const [sortBy, setSortBy] = useState("createdAt_desc");
 	const [availableLanguages, setAvailableLanguages] = useState({
 		source: [],
 		target: [],
@@ -68,7 +69,6 @@ const ExploreStoriesPage = () => {
 					sort
 				);
 				setStories(response.stories || []);
-				setCurrentPage(response.currentPage || 1); // Update currentPage from response
 				setTotalPages(response.totalPages || 1);
 				if (
 					!availableLanguages.source.length &&
@@ -78,10 +78,8 @@ const ExploreStoriesPage = () => {
 					setAvailableLanguages(response.availableLanguages);
 				}
 				if (pageToFetch !== response.currentPage && response.currentPage) {
-					const newParams = { page: response.currentPage.toString() };
-					if (sourceLang) newParams.source = sourceLang;
-					if (targetLang) newParams.target = targetLang;
-					if (sort) newParams.sort = sort;
+					const newParams = new URLSearchParams(searchParams);
+					newParams.set("page", response.currentPage.toString());
 					setSearchParams(newParams, { replace: true });
 				}
 			} catch (err) {
@@ -102,34 +100,14 @@ const ExploreStoriesPage = () => {
 			setSearchParams,
 			availableLanguages.source.length,
 			availableLanguages.target.length,
+			searchParams,
 		]
 	);
 
 	useEffect(() => {
-		const pageFromUrl = parseInt(searchParams.get("page")) || 1;
-		const sourceLangFromUrl = searchParams.get("source") || "";
-		const targetLangFromUrl = searchParams.get("target") || "";
-		const sortFromUrl = searchParams.get("sort") || "createdAt_desc";
-		if (
-			pageFromUrl !== currentPage ||
-			sourceLangFromUrl !== sourceLanguage ||
-			targetLangFromUrl !== targetLanguage ||
-			sortFromUrl !== sortBy
-		) {
-			setCurrentPage(pageFromUrl); // Sync state with URL on initial load or back/forward
-			setSourceLanguage(sourceLangFromUrl);
-			setTargetLanguage(targetLangFromUrl);
-			setSortBy(sortFromUrl);
-		}
-		fetchStoriesCallback(
-			pageFromUrl,
-			sourceLangFromUrl,
-			targetLangFromUrl,
-			sortFromUrl
-		);
+		fetchStoriesCallback(currentPage, sourceLanguage, targetLanguage, sortBy);
 	}, [
 		fetchStoriesCallback,
-		searchParams,
 		currentPage,
 		sourceLanguage,
 		targetLanguage,
@@ -145,45 +123,33 @@ const ExploreStoriesPage = () => {
 			return;
 		}
 		setShowLoginPrompt(false);
-		setCurrentPage(newPage);
-		setSearchParams(
-			{
-				page: newPage.toString(),
-				source: sourceLanguage,
-				target: targetLanguage,
-				sort: sortBy,
-			},
-			{ replace: true }
-		);
+
+		const newParams = new URLSearchParams(searchParams);
+		newParams.set("page", newPage.toString());
+		setSearchParams(newParams, { replace: true });
 	};
 
 	const handleLanguageFilterChange = (source, target) => {
-		setSourceLanguage(source);
-		setTargetLanguage(target);
-		setCurrentPage(1); // Reset to first page
-		setSearchParams(
-			{
-				page: "1",
-				source: source,
-				target: target,
-				sort: sortBy,
-			},
-			{ replace: true }
-		);
+		const newParams = new URLSearchParams(searchParams);
+		newParams.set("page", "1");
+		if (source) {
+			newParams.set("source", source);
+		} else {
+			newParams.delete("source");
+		}
+		if (target) {
+			newParams.set("target", target);
+		} else {
+			newParams.delete("target");
+		}
+		setSearchParams(newParams, { replace: true });
 	};
 
 	const handleSortChange = (newSortBy) => {
-		setSortBy(newSortBy);
-		setCurrentPage(1); // Reset to first page
-		setSearchParams(
-			{
-				page: "1",
-				source: sourceLanguage,
-				target: targetLanguage,
-				sort: newSortBy,
-			},
-			{ replace: true }
-		);
+		const newParams = new URLSearchParams(searchParams);
+		newParams.set("page", "1");
+		newParams.set("sort", newSortBy);
+		setSearchParams(newParams, { replace: true });
 	};
 
 	if (isLoading && stories.length === 0) {
@@ -218,72 +184,15 @@ const ExploreStoriesPage = () => {
 							<DialogTitle>Filter & Sort</DialogTitle>
 						</DialogHeader>
 						<div className="space-y-4">
-							<div>
-								<label
-									htmlFor="source-language-mobile"
-									className="block text-sm font-medium text-gray-700"
-								>
-									Source Language
-								</label>
-								<select
-									id="source-language-mobile"
-									value={sourceLanguage}
-									onChange={(e) =>
-										handleLanguageFilterChange(e.target.value, targetLanguage)
-									}
-									className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-								>
-									<option value="">Any</option>
-									{availableLanguages.source.map((lang) => (
-										<option key={lang} value={lang}>
-											{lang}
-										</option>
-									))}
-								</select>
-							</div>
-							<div>
-								<label
-									htmlFor="target-language-mobile"
-									className="block text-sm font-medium text-gray-700"
-								>
-									Target Language
-								</label>
-								<select
-									id="target-language-mobile"
-									value={targetLanguage}
-									onChange={(e) =>
-										handleLanguageFilterChange(sourceLanguage, e.target.value)
-									}
-									className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-								>
-									<option value="">Any</option>
-									{availableLanguages.target.map((lang) => (
-										<option key={lang} value={lang}>
-											{lang}
-										</option>
-									))}
-								</select>
-							</div>
-							<div>
-								<label
-									htmlFor="sort-by-mobile"
-									className="block text-sm font-medium text-gray-700"
-								>
-									Sort By
-								</label>
-								<select
-									id="sort-by-mobile"
-									value={sortBy}
-									onChange={(e) => handleSortChange(e.target.value)}
-									className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-								>
-									<option value="createdAt_desc">Newest</option>
-									<option value="createdAt_asc">Oldest</option>
-									<option value="likes_desc">Most Popular</option>
-									<option value="length_desc">Longest</option>
-									<option value="length_asc">Shortest</option>
-								</select>
-							</div>
+							<FilterControls
+								idPrefix="mobile-"
+								sourceLanguage={sourceLanguage}
+								targetLanguage={targetLanguage}
+								sortBy={sortBy}
+								availableLanguages={availableLanguages}
+								onLanguageFilterChange={handleLanguageFilterChange}
+								onSortChange={handleSortChange}
+							/>
 						</div>
 					</DialogContent>
 				</Dialog>
@@ -291,72 +200,14 @@ const ExploreStoriesPage = () => {
 
 			{/* Desktop Filters */}
 			<div className="hidden md:flex justify-center items-end gap-4 mb-8">
-				<div>
-					<label
-						htmlFor="source-language"
-						className="block text-sm font-medium text-gray-700"
-					>
-						Source Language
-					</label>
-					<select
-						id="source-language"
-						value={sourceLanguage}
-						onChange={(e) =>
-							handleLanguageFilterChange(e.target.value, targetLanguage)
-						}
-						className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-					>
-						<option value="">Any</option>
-						{availableLanguages.source.map((lang) => (
-							<option key={lang} value={lang}>
-								{lang}
-							</option>
-						))}
-					</select>
-				</div>
-				<div>
-					<label
-						htmlFor="target-language"
-						className="block text-sm font-medium text-gray-700"
-					>
-						Target Language
-					</label>
-					<select
-						id="target-language"
-						value={targetLanguage}
-						onChange={(e) =>
-							handleLanguageFilterChange(sourceLanguage, e.target.value)
-						}
-						className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-					>
-						<option value="">Any</option>
-						{availableLanguages.target.map((lang) => (
-							<option key={lang} value={lang}>
-								{lang}
-							</option>
-						))}
-					</select>
-				</div>
-				<div>
-					<label
-						htmlFor="sort-by"
-						className="block text-sm font-medium text-gray-700"
-					>
-						Sort By
-					</label>
-					<select
-						id="sort-by"
-						value={sortBy}
-						onChange={(e) => handleSortChange(e.target.value)}
-						className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-					>
-						<option value="createdAt_desc">Newest</option>
-						<option value="createdAt_asc">Oldest</option>
-						<option value="likes_desc">Most Popular</option>
-						<option value="length_desc">Longest</option>
-						<option value="length_asc">Shortest</option>
-					</select>
-				</div>
+				<FilterControls
+					sourceLanguage={sourceLanguage}
+					targetLanguage={targetLanguage}
+					sortBy={sortBy}
+					availableLanguages={availableLanguages}
+					onLanguageFilterChange={handleLanguageFilterChange}
+					onSortChange={handleSortChange}
+				/>
 			</div>
 
 			{showLoginPrompt && (
@@ -400,23 +251,11 @@ const ExploreStoriesPage = () => {
 
 			{!showLoginPrompt && totalPages > 1 && (
 				<div className="flex justify-center items-center space-x-4 mt-8">
-					<button
-						onClick={() => handlePageChange(currentPage - 1)}
-						disabled={currentPage === 1}
-						variant="outline"
-					>
-						Previous
-					</button>
-					<span className="text-gray-700">
-						Page {currentPage} of {totalPages}
-					</span>
-					<button
-						onClick={() => handlePageChange(currentPage + 1)}
-						disabled={currentPage === totalPages}
-						variant="outline"
-					>
-						Next
-					</button>
+					<Pagination
+						currentPage={currentPage}
+						totalPages={totalPages}
+						onPageChange={handlePageChange}
+					/>
 				</div>
 			)}
 		</div>
