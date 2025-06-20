@@ -279,7 +279,7 @@ const ExploreStoriesPage = () => {
 								>
 									<option value="createdAt_desc">Newest</option>
 									<option value="createdAt_asc">Oldest</option>
-									<option value="likes_asc">Most Popular</option>
+									<option value="likes_desc">Most Popular</option>
 									<option value="length_desc">Longest</option>
 									<option value="length_asc">Shortest</option>
 								</select>

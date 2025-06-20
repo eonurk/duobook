@@ -254,6 +254,9 @@ function StoryViewPage() {
 						const parsedStory = JSON.parse(initialStoryData.story);
 						// Add shareId to the story content so BookView can access it
 						parsedStory.shareId = initialStoryData.shareId;
+						// Also copy language properties from the parent object, as they are not in the JSON string
+						parsedStory.sourceLanguage = initialStoryData.sourceLanguage;
+						parsedStory.targetLanguage = initialStoryData.targetLanguage;
 						setStoryContent(parsedStory);
 						setLikeCount(initialStoryData.likes || 0);
 						setIsLiked(initialStoryData.userHasLiked || false);
@@ -286,9 +289,17 @@ function StoryViewPage() {
 					if (typeof fetchedStory.story === "string") {
 						const parsedStory = JSON.parse(fetchedStory.story);
 						parsedStory.shareId = fetchedStory.shareId;
+						// Also copy language properties from the parent object, as they are not in the JSON string
+						parsedStory.sourceLanguage = fetchedStory.sourceLanguage;
+						parsedStory.targetLanguage = fetchedStory.targetLanguage;
 						setStoryContent(parsedStory);
 					} else {
-						setStoryContent(fetchedStory.story); // Assuming it's already an object
+						// If story is already an object, ensure languages are present
+						const storyObj = fetchedStory.story || {};
+						storyObj.shareId = fetchedStory.shareId;
+						storyObj.sourceLanguage = fetchedStory.sourceLanguage;
+						storyObj.targetLanguage = fetchedStory.targetLanguage;
+						setStoryContent(storyObj);
 					}
 					// Set params for book view from initial data if available
 					if (initialParams) {

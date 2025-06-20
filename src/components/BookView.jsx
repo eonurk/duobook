@@ -290,13 +290,18 @@ const getBestVoiceForLanguage = (voices, langCode) => {
 
 function BookView({
 	storyContent, // New prop: parsed JSON from Story.story
-	targetLanguage,
-	sourceLanguage,
+	targetLanguage: targetLanguageProp,
+	sourceLanguage: sourceLanguageProp,
 	onGoBack,
 	isExample = false,
 }) {
 	// Get currentUser AND userProgress from AuthContext
 	const { currentUser } = useAuth();
+
+	// --- Component State Consolidation ---
+	// Derive languages from storyContent if not passed as props, making the component more robust.
+	const targetLanguage = targetLanguageProp || storyContent?.targetLanguage;
+	const sourceLanguage = sourceLanguageProp || storyContent?.sourceLanguage;
 
 	// --- Pagination State ---
 	const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -1765,7 +1770,7 @@ function BookView({
 
 BookView.propTypes = {
 	storyContent: PropTypes.object.isRequired,
-	targetLanguage: PropTypes.string.isRequired,
+	targetLanguage: PropTypes.string,
 	sourceLanguage: PropTypes.string,
 	onGoBack: PropTypes.func,
 	isExample: PropTypes.bool,
