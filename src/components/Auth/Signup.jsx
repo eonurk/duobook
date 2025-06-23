@@ -508,188 +508,196 @@ function ModernSignup({ onSuccess }) {
 					)}
 				</div>
 
-				{/* Password Input */}
-				<div className="space-y-2">
-					<Label
-						htmlFor="password"
-						className="text-sm font-semibold text-gray-700"
-					>
-						Password
-					</Label>
-					<div className="relative">
-						<Input
-							id="password"
-							type={showPassword ? "text" : "password"}
-							placeholder="Create a strong password"
-							disabled={isLoading || isGoogleLoading}
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							required
-							className={`${inputClassName} ${
-								!passwordValidation.isValid && password
-									? "border-red-500 focus:border-red-500 bg-red-50/50"
-									: passwordValidation.isValid && password
-									? "border-emerald-500 focus:border-emerald-500 bg-emerald-50/50"
-									: "border-gray-200 focus:border-amber-500 bg-white"
-							} focus:ring-4 focus:ring-amber-500/10 shadow-lg`}
-						/>
-						<button
-							type="button"
-							onClick={() => setShowPassword(!showPassword)}
-							className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-							disabled={isLoading || isGoogleLoading}
-						>
-							<div className="w-6 h-6 flex items-center justify-center">
-								{showPassword ? (
-									<EyeOff className="h-4 w-4" />
-								) : (
-									<Eye className="h-4 w-4" />
-								)}
-							</div>
-						</button>
-					</div>
-					{!passwordValidation.isValid && password && (
-						<p className="text-sm text-red-600 flex items-center gap-2 mt-2">
-							<XCircle className="h-4 w-4" />
-							{passwordValidation.message}
-						</p>
-					)}
-				</div>
-
-				{/* Confirm Password Input */}
-				<div className="space-y-2">
-					<Label
-						htmlFor="confirmPassword"
-						className="text-sm font-semibold text-gray-700"
-					>
-						Confirm Password
-					</Label>
-					<div className="relative">
-						<Input
-							id="confirmPassword"
-							type={showConfirmPassword ? "text" : "password"}
-							placeholder="Confirm your password"
-							disabled={isLoading || isGoogleLoading}
-							value={confirmPassword}
-							onChange={(e) => setConfirmPassword(e.target.value)}
-							required
-							className={`${inputClassName} ${
-								confirmPassword && password !== confirmPassword
-									? "border-red-500 focus:border-red-500 bg-red-50/50"
-									: confirmPassword && password === confirmPassword
-									? "border-emerald-500 focus:border-emerald-500 bg-emerald-50/50"
-									: "border-gray-200 focus:border-amber-500 bg-white"
-							} focus:ring-4 focus:ring-amber-500/10 shadow-lg`}
-						/>
-						<button
-							type="button"
-							onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-							className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-							disabled={isLoading || isGoogleLoading}
-						>
-							<div className="w-6 h-6 flex items-center justify-center">
-								{showConfirmPassword ? (
-									<EyeOff className="h-4 w-4" />
-								) : (
-									<Eye className="h-4 w-4" />
-								)}
-							</div>
-						</button>
-					</div>
-					{confirmPassword && password !== confirmPassword && (
-						<p className="text-sm text-red-600 flex items-center gap-2 mt-2">
-							<XCircle className="h-4 w-4" />
-							Passwords do not match
-						</p>
-					)}
-				</div>
-
-				{/* Terms and Conditions */}
-				<div className="space-y-4">
-					<div
-						className={`flex items-start space-x-3 ${
-							isMobile ? "p-3" : "p-4"
-						} bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200`}
-					>
-						<input
-							type="checkbox"
-							id="terms"
-							checked={agreedToTerms}
-							onChange={(e) => setAgreedToTerms(e.target.checked)}
-							className={`mt-1 ${
-								isMobile ? "h-4 w-4" : "h-5 w-5"
-							} text-amber-600 focus:ring-amber-500 border-gray-300 rounded-lg flex-shrink-0 cursor-pointer`}
-							disabled={isLoading || isGoogleLoading}
-						/>
+				{/* Password Input - Only show after user starts typing email */}
+				{email && (
+					<div className="space-y-2">
 						<Label
-							className={`${
-								isMobile ? "text-xs" : "text-sm"
-							} text-gray-700 inline-flex flex-wrap items-center gap-1`}
+							htmlFor="password"
+							className="text-sm font-semibold text-gray-700"
 						>
-							I agree to
-							<a
-								href="/terms"
-								target="_blank"
-								rel="noopener noreferrer"
-								className="text-amber-700 hover:text-amber-800 underline font-semibold transition-colors"
-								onClick={(e) => e.stopPropagation()}
-							>
-								Terms of Service
-							</a>
-							and
-							<a
-								href="/privacy"
-								target="_blank"
-								rel="noopener noreferrer"
-								className="text-amber-700 hover:text-amber-800 underline font-semibold transition-colors"
-								onClick={(e) => e.stopPropagation()}
-							>
-								Privacy Policy
-							</a>
+							Password
 						</Label>
-					</div>
-
-					{/* Error Message */}
-					{error && (
-						<div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
-							<p className="text-sm text-red-700 flex items-center gap-2">
-								<XCircle className="h-4 w-4" />
-								{error}
-							</p>
+						<div className="relative">
+							<Input
+								id="password"
+								type={showPassword ? "text" : "password"}
+								placeholder="Create a strong password"
+								disabled={isLoading || isGoogleLoading}
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+								required
+								className={`${inputClassName} ${
+									!passwordValidation.isValid && password
+										? "border-red-500 focus:border-red-500 bg-red-50/50"
+										: passwordValidation.isValid && password
+										? "border-emerald-500 focus:border-emerald-500 bg-emerald-50/50"
+										: "border-gray-200 focus:border-amber-500 bg-white"
+								} focus:ring-4 focus:ring-amber-500/10 shadow-lg`}
+							/>
+							<button
+								type="button"
+								onClick={() => setShowPassword(!showPassword)}
+								className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+								disabled={isLoading || isGoogleLoading}
+							>
+								<div className="w-6 h-6 flex items-center justify-center">
+									{showPassword ? (
+										<EyeOff className="h-4 w-4" />
+									) : (
+										<Eye className="h-4 w-4" />
+									)}
+								</div>
+							</button>
 						</div>
-					)}
+						{!passwordValidation.isValid && password && (
+							<p className="text-sm text-red-600 flex items-center gap-2 mt-2">
+								<XCircle className="h-4 w-4" />
+								{passwordValidation.message}
+							</p>
+						)}
+					</div>
+				)}
 
-					{/* Submit Button */}
-					<Button
-						type="submit"
-						className={`w-full ${
-							isMobile ? "h-12 text-sm" : "h-14 text-base"
-						} bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
-						disabled={
-							isLoading ||
-							isGoogleLoading ||
-							!emailValidation.isValid ||
-							!passwordValidation.isValid ||
-							!agreedToTerms ||
-							password !== confirmPassword ||
-							!email ||
-							!password ||
-							!confirmPassword
-						}
-					>
-						{isLoading ? (
-							<div className="flex items-center gap-2">
-								<div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-								Creating account...
-							</div>
-						) : (
-							<div className="flex items-center justify-center gap-2">
-								Create Account
-								<ArrowRight className="h-5 w-5" />
+				{/* Confirm Password Input - Only show after password is entered */}
+				{email && password && (
+					<div className="space-y-2">
+						<Label
+							htmlFor="confirmPassword"
+							className="text-sm font-semibold text-gray-700"
+						>
+							Confirm Password
+						</Label>
+						<div className="relative">
+							<Input
+								id="confirmPassword"
+								type={showConfirmPassword ? "text" : "password"}
+								placeholder="Confirm your password"
+								disabled={isLoading || isGoogleLoading}
+								value={confirmPassword}
+								onChange={(e) => setConfirmPassword(e.target.value)}
+								required
+								className={`${inputClassName} ${
+									confirmPassword && password !== confirmPassword
+										? "border-red-500 focus:border-red-500 bg-red-50/50"
+										: confirmPassword && password === confirmPassword
+										? "border-emerald-500 focus:border-emerald-500 bg-emerald-50/50"
+										: "border-gray-200 focus:border-amber-500 bg-white"
+								} focus:ring-4 focus:ring-amber-500/10 shadow-lg`}
+							/>
+							<button
+								type="button"
+								onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+								className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+								disabled={isLoading || isGoogleLoading}
+							>
+								<div className="w-6 h-6 flex items-center justify-center">
+									{showConfirmPassword ? (
+										<EyeOff className="h-4 w-4" />
+									) : (
+										<Eye className="h-4 w-4" />
+									)}
+								</div>
+							</button>
+						</div>
+						{confirmPassword && password !== confirmPassword && (
+							<p className="text-sm text-red-600 flex items-center gap-2 mt-2">
+								<XCircle className="h-4 w-4" />
+								Passwords do not match
+							</p>
+						)}
+					</div>
+				)}
+
+				{/* Terms and Conditions - Only show after email is entered */}
+				{email && (
+					<div className="space-y-4">
+						<div
+							className={`flex items-start space-x-3 ${
+								isMobile ? "p-3" : "p-4"
+							} bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200`}
+						>
+							<input
+								type="checkbox"
+								id="terms"
+								checked={agreedToTerms}
+								onChange={(e) => setAgreedToTerms(e.target.checked)}
+								className={`mt-1 ${
+									isMobile ? "h-4 w-4" : "h-5 w-5"
+								} text-amber-600 focus:ring-amber-500 border-gray-300 rounded-lg flex-shrink-0 cursor-pointer`}
+								disabled={isLoading || isGoogleLoading}
+							/>
+							<Label
+								className={`${
+									isMobile ? "text-xs" : "text-sm"
+								} text-gray-700 inline-flex flex-wrap items-center gap-1`}
+							>
+								I agree to
+								<a
+									href="/terms"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="text-amber-700 hover:text-amber-800 underline font-semibold transition-colors"
+									onClick={(e) => e.stopPropagation()}
+								>
+									Terms of Service
+								</a>
+								and
+								<a
+									href="/privacy"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="text-amber-700 hover:text-amber-800 underline font-semibold transition-colors"
+									onClick={(e) => e.stopPropagation()}
+								>
+									Privacy Policy
+								</a>
+							</Label>
+						</div>
+
+						{/* Error Message */}
+						{error && (
+							<div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
+								<p className="text-sm text-red-700 flex items-center gap-2">
+									<XCircle className="h-4 w-4" />
+									{error}
+								</p>
 							</div>
 						)}
-					</Button>
-				</div>
+
+						{/* Submit Button - Only show when all fields are available */}
+						{password && confirmPassword && (
+							<Button
+								type="submit"
+								className={`w-full ${
+									isMobile ? "h-12 text-sm" : "h-14 text-base"
+								} bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-2xl shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all duration-300 transform hover:scale-[1.02] focus:ring-4 focus:ring-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+								disabled={
+									isLoading ||
+									isGoogleLoading ||
+									!emailValidation.isValid ||
+									!passwordValidation.isValid ||
+									!agreedToTerms ||
+									password !== confirmPassword ||
+									!email ||
+									!password ||
+									!confirmPassword
+								}
+							>
+								{isLoading ? (
+									<div className="flex items-center gap-2">
+										<div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+										Creating account...
+									</div>
+								) : (
+									<div className="flex items-center justify-center gap-2">
+										Create Account
+										<ArrowRight className="h-5 w-5" />
+									</div>
+								)}
+							</Button>
+						)}
+					</div>
+				)}
 			</form>
 
 			{/* Divider */}
