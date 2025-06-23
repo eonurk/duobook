@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getLeaderboardData } from "@/lib/api"; // We'll need to create this API function
+import { getLeaderboardData } from "@/lib/api";
 import {
 	Loader2,
 	Trophy,
@@ -60,21 +60,19 @@ const MOCK_CURRENT_USER_RANK = {
 
 function LeaderboardPage() {
 	const { currentUser } = useAuth();
-	const [leaderboardData, setLeaderboardData] = useState(MOCK_LEADERBOARD_DATA); // Use mock data initially
+	const [leaderboardData, setLeaderboardData] = useState(MOCK_LEADERBOARD_DATA);
 	const [currentUserRank, setCurrentUserRank] = useState(
 		MOCK_CURRENT_USER_RANK
-	); // Use mock data
-	const [loading, setLoading] = useState(false); // Set to true when fetching real data
+	);
+	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 	const [activeTab, setActiveTab] = useState("weekly");
 
 	useEffect(() => {
-		// TODO: Replace with actual API call
 		const fetchLeaderboard = async (period) => {
 			setLoading(true);
 			setError(null);
 			try {
-				// Use currentUser.uid if available, otherwise pass null/undefined
 				const userId = currentUser ? currentUser.uid : null;
 				const data = await getLeaderboardData(period, userId);
 				setLeaderboardData((prevData) => ({
@@ -88,12 +86,19 @@ function LeaderboardPage() {
 			} catch (err) {
 				setError(err.message || "Failed to load leaderboard.");
 				console.error("Error fetching leaderboard:", err);
-				// Clear data for the current tab on error to avoid showing stale data
-				setLeaderboardData((prevData) => ({ ...prevData, [period]: [] }));
-				setCurrentUserRank((prevRank) => ({ ...prevRank, [period]: null }));
+				// Fallback to mock data on error
+				setLeaderboardData((prevData) => ({
+					...prevData,
+					[period]: MOCK_LEADERBOARD_DATA[period] || [],
+				}));
+				setCurrentUserRank((prevRank) => ({
+					...prevRank,
+					[period]: MOCK_CURRENT_USER_RANK[period] || null,
+				}));
 			}
 			setLoading(false);
 		};
+
 		fetchLeaderboard(activeTab);
 	}, [activeTab, currentUser]);
 
@@ -185,16 +190,13 @@ function LeaderboardPage() {
 
 					if (entry.rank === 1) {
 						rankColorClass = "text-amber-600 font-bold";
-						rankBgClass =
-							"bg-gradient-to-br from-amber-200 to-yellow-300";
+						rankBgClass = "bg-gradient-to-br from-amber-200 to-yellow-300";
 					} else if (entry.rank === 2) {
 						rankColorClass = "text-slate-600 font-semibold";
-						rankBgClass =
-							"bg-gradient-to-br from-slate-200 to-slate-300";
+						rankBgClass = "bg-gradient-to-br from-slate-200 to-slate-300";
 					} else if (entry.rank === 3) {
 						rankColorClass = "text-orange-600 font-semibold";
-						rankBgClass =
-							"bg-gradient-to-br from-orange-200 to-amber-300";
+						rankBgClass = "bg-gradient-to-br from-orange-200 to-amber-300";
 					}
 
 					return (

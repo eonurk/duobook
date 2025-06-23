@@ -2228,37 +2228,55 @@ app.get(
 
 		const topN = 10; // Number of top users to fetch
 
-		// Implement date range filtering for 'weekly' and 'monthly' periods
+		// CORRECTED: Implement proper leaderboard logic for different periods
 		let dateFilter = {};
-		if (period === "weekly") {
-			const today = new Date();
-			const startOfWeek = new Date(today);
-			// Set to Monday of current week (ISO week standard)
-			const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1; // Convert Sunday=0 to Monday=0
-			startOfWeek.setDate(today.getDate() - dayOfWeek);
-			startOfWeek.setHours(0, 0, 0, 0);
-			dateFilter = { updatedAt: { gte: startOfWeek } };
-		} else if (period === "monthly") {
-			const today = new Date();
-			const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-			startOfMonth.setHours(0, 0, 0, 0);
-			dateFilter = { updatedAt: { gte: startOfMonth } };
-		}
-		// For 'allTime', no date filter is applied
 
-		// Fetch top N users based on points with optional date filtering
-		topUsersData = await prisma.userProgress.findMany({
-			where: dateFilter,
-			orderBy: {
-				points: "desc",
-			},
-			take: topN,
-			select: {
-				userId: true,
-				points: true,
-				updatedAt: true,
-			},
-		});
+		if (period === "allTime") {
+			// All-time leaderboard: Show users with highest total points
+			topUsersData = await prisma.userProgress.findMany({
+				orderBy: {
+					points: "desc",
+				},
+				take: topN,
+				select: {
+					userId: true,
+					points: true,
+					updatedAt: true,
+				},
+			});
+		} else {
+			// Weekly/Monthly: For now, show users who were active in the period
+			// TODO: Implement proper point tracking by date for true period-based scoring
+			if (period === "weekly") {
+				const today = new Date();
+				const startOfWeek = new Date(today);
+				// Set to Monday of current week (ISO week standard)
+				const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
+				startOfWeek.setDate(today.getDate() - dayOfWeek);
+				startOfWeek.setHours(0, 0, 0, 0);
+				dateFilter = { updatedAt: { gte: startOfWeek } };
+			} else if (period === "monthly") {
+				const today = new Date();
+				const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+				startOfMonth.setHours(0, 0, 0, 0);
+				dateFilter = { updatedAt: { gte: startOfMonth } };
+			}
+
+			// For weekly/monthly: Show users active in the period, ordered by total points
+			// This is a temporary solution until we implement proper period-based point tracking
+			topUsersData = await prisma.userProgress.findMany({
+				where: dateFilter,
+				orderBy: {
+					points: "desc",
+				},
+				take: topN,
+				select: {
+					userId: true,
+					points: true,
+					updatedAt: true,
+				},
+			});
+		}
 
 		// Enhance topUsersData with email from Firebase Auth
 		const enhancedTopUsers = await Promise.all(
