@@ -14,6 +14,7 @@ import admin from "firebase-admin"; // Import Firebase Admin SDK
 import OpenAI from "openai"; // Import OpenAI
 import fs from "fs";
 import path from "path";
+import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import rateLimit from "express-rate-limit";
 import { SubscriptionTier } from "@prisma/client"; // Import the enum
@@ -23,6 +24,26 @@ import PDFDocument from "pdfkit"; // <-- Import PDFKit
 // Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env for local development and PM2
+// 1) Try default CWD (useful when running from project root)
+dotenv.config();
+// 2) Try likely relative paths when started via PM2 or compiled build
+try {
+    const candidateEnvPaths = [
+        // When running via tsx from source: server -> project root
+        path.resolve(__dirname, "../.env"),
+        // When running compiled code: build/server -> project root
+        path.resolve(__dirname, "../../.env"),
+    ];
+    for (const p of candidateEnvPaths) {
+        if (!process.env.OPENAI_API_KEY && fs.existsSync(p)) {
+            dotenv.config({ path: p });
+        }
+    }
+} catch (e) {
+    // best-effort; ignore if not found
+}
 
 // Construct the absolute path to the JSON file
 const serviceAccountPath = path.resolve(
