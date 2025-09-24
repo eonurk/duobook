@@ -40,3 +40,5 @@ build/
 android/
 ios/
 db_backups/
+
+package-lock.json
