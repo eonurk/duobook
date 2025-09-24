@@ -3,16 +3,16 @@ import { Capacitor } from "@capacitor/core";
 
 // Latest version of the API
 // Base URL for your backend API
-// For web development: uses relative path "/api" (works with Vite proxy)
+// For web development: uses relative path "/api" (works with Vite proxy) unless VITE_API_BASE_URL is set
 // For iOS/Android: uses full server URL from environment variable
 const getApiBaseUrl = () => {
 	const isNative = Capacitor.isNativePlatform();
+	const prodUrl = import.meta.env.VITE_API_BASE_URL;
 
 	if (isNative) {
 		// For native platforms (iOS/Android), use the production server URL
 		// You can set VITE_API_BASE_URL in your .env file to your production server
 		// Example: VITE_API_BASE_URL=https://yourdomain.com/api
-		const prodUrl = import.meta.env.VITE_API_BASE_URL;
 		if (!prodUrl) {
 			console.error(
 				"VITE_API_BASE_URL environment variable is required for native platforms"
@@ -23,8 +23,12 @@ const getApiBaseUrl = () => {
 
 		return prodUrl;
 	} else {
-		// For web development, use relative path (works with Vite proxy)
-		return "/api";
+		// For web development, use production URL if set, otherwise relative path (works with Vite proxy)
+		if (prodUrl) {
+			return prodUrl;
+		} else {
+			return "/api";
+		}
 	}
 };
 
