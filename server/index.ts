@@ -940,7 +940,7 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 		try {
 			console.log("Sending request to OpenAI...");
 			console.log(
-				`Using model: ${isProStoryRequest ? "gpt-5-mini" : "gpt-5-mini"}`
+				`Using model: gpt-5-mini`
 			); // Log which model is being used
 
 			// Add retry logic for network errors
@@ -951,7 +951,7 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 			while (retries < maxRetries) {
 				try {
 					completion = await openai.chat.completions.create({
-						model: isProStoryRequest ? "gpt-5-mini" : "gpt-5-mini",
+						model: "gpt-5-mini",
 						messages: [{ role: "user", content: prompt }],
 						response_format: { type: "json_object" }, // Enforce JSON output
 					});
