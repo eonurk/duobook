@@ -38,8 +38,8 @@ try {
 		path.resolve(__dirname, "../../.env"),
 	];
 	for (const p of candidateEnvPaths) {
-		if (!process.env.OPENAI_API_KEY && fs.existsSync(p)) {
-			dotenv.config({ path: p });
+		if (fs.existsSync(p)) {
+			dotenv.config({ path: p, override: true });
 		}
 	}
 } catch (e) {
