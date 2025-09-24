@@ -30,6 +30,8 @@ Navigate to the project directory (`language-book-app`) and install the required
 npm install
 ```
 
+Note: This repo uses `react-joyride@2.9.3`, which has a peer range of `react@15-18`. The app uses React 19 and react-joyride still works in practice, but npm’s newer resolver will otherwise block install. An `.npmrc` with `legacy-peer-deps=true` is included to allow installation. If you prefer a one-off install without the config, you can run `npm install --legacy-peer-deps`.
+
 ### 3. Database Setup
 
 Initialize the local SQLite database and populate it with initial challenge/achievement data:

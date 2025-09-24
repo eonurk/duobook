@@ -26,8 +26,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env for local development and PM2
+// Prefer .env values to ensure deployments pick up updates without stale PM2 envs
 // 1) Try default CWD (useful when running from project root)
-dotenv.config();
+dotenv.config({ override: true });
 // 2) Try likely relative paths when started via PM2 or compiled build
 try {
     const candidateEnvPaths = [
@@ -37,8 +38,8 @@ try {
         path.resolve(__dirname, "../../.env"),
     ];
     for (const p of candidateEnvPaths) {
-        if (!process.env.OPENAI_API_KEY && fs.existsSync(p)) {
-            dotenv.config({ path: p });
+        if (fs.existsSync(p)) {
+            dotenv.config({ path: p, override: true });
         }
     }
 } catch (e) {
@@ -950,7 +951,7 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 			while (retries < maxRetries) {
 				try {
 					completion = await openai.chat.completions.create({
-						model: isProStoryRequest ? "gpt-4.1-mini" : "gpt-4.1-mini",
+						model: isProStoryRequest ? "gpt-5-mini" : "gpt-4.1-mini",
 						messages: [{ role: "user", content: prompt }],
 						response_format: { type: "json_object" }, // Enforce JSON output
 					});

@@ -36,3 +36,5 @@ firebase-admin-sdk.json
 
 # built files
 build/
+
+db_backups/
