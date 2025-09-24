@@ -25,8 +25,10 @@ const getApiBaseUrl = () => {
 	} else {
 		// For web development, use production URL if set, otherwise relative path (works with Vite proxy)
 		if (prodUrl) {
+			console.log("Using production URL:", prodUrl);
 			return prodUrl;
 		} else {
+			console.log("Using relative path:", "/api");
 			return "/api";
 		}
 	}
