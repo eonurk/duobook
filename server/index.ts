@@ -939,9 +939,7 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 
 		try {
 			console.log("Sending request to OpenAI...");
-			console.log(
-				`Using model: gpt-5-mini`
-			); // Log which model is being used
+			console.log(`Using model: gpt-5-mini`); // Log which model is being used
 
 			// Add retry logic for network errors
 			let completion;
