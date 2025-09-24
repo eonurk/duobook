@@ -8,6 +8,7 @@ declare global {
 }
 
 import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
 // Import Prisma namespace and specific types
 import { PrismaClient, Prisma } from "@prisma/client";
 import admin from "firebase-admin"; // Import Firebase Admin SDK
@@ -87,6 +88,15 @@ try {
 
 const app = express();
 const prisma = new PrismaClient();
+
+// Enable CORS for all routes
+app.use(
+	cors({
+		origin: true, // Allow all origins - you may want to restrict this in production
+		credentials: true,
+	})
+);
+
 app.use(express.json());
 
 // --- START ASYNC HANDLER UTILITY ---

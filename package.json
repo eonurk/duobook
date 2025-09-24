@@ -21,7 +21,6 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "dotenv": "^16.4.5",
     "@capacitor/android": "^7.4.1",
     "@capacitor/app": "^7.0.1",
     "@capacitor/cli": "^7.4.1",
@@ -44,12 +43,15 @@
     "@radix-ui/react-tooltip": "^1.2.6",
     "@tabler/icons-react": "^3.31.0",
     "@tailwindcss/vite": "^4.1.4",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.1",
     "archiver": "^7.0.1",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cors": "^2.8.5",
     "date-fns": "^4.1.0",
+    "dotenv": "^16.4.5",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "firebase": "^11.6.0",
