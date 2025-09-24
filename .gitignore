@@ -36,3 +36,6 @@ firebase-admin-sdk.json
 
 # built files
 build/
+
+android/
+ios/

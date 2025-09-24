@@ -30,19 +30,19 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 // 2) Try likely relative paths when started via PM2 or compiled build
 try {
-    const candidateEnvPaths = [
-        // When running via tsx from source: server -> project root
-        path.resolve(__dirname, "../.env"),
-        // When running compiled code: build/server -> project root
-        path.resolve(__dirname, "../../.env"),
-    ];
-    for (const p of candidateEnvPaths) {
-        if (!process.env.OPENAI_API_KEY && fs.existsSync(p)) {
-            dotenv.config({ path: p });
-        }
-    }
+	const candidateEnvPaths = [
+		// When running via tsx from source: server -> project root
+		path.resolve(__dirname, "../.env"),
+		// When running compiled code: build/server -> project root
+		path.resolve(__dirname, "../../.env"),
+	];
+	for (const p of candidateEnvPaths) {
+		if (!process.env.OPENAI_API_KEY && fs.existsSync(p)) {
+			dotenv.config({ path: p });
+		}
+	}
 } catch (e) {
-    // best-effort; ignore if not found
+	// best-effort; ignore if not found
 }
 
 // Construct the absolute path to the JSON file
@@ -950,7 +950,7 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 			while (retries < maxRetries) {
 				try {
 					completion = await openai.chat.completions.create({
-						model: isProStoryRequest ? "gpt-4.1-mini" : "gpt-4.1-mini",
+						model: isProStoryRequest ? "gpt-5-mini" : "gpt-5-mini",
 						messages: [{ role: "user", content: prompt }],
 						response_format: { type: "json_object" }, // Enforce JSON output
 					});
