@@ -758,6 +758,405 @@ app.get(
 	})
 );
 
+// --- START LEADERBOARD ENDPOINT ---
+app.get(
+	"/api/leaderboard/:period",
+	authenticateTokenMiddleware, // Re-enabled authentication
+	asyncHandler(async (req: Request, res: Response) => {
+		const { period } = req.params; // 'weekly', 'monthly', 'allTime'
+		const currentAuthenticatedUserId =
+			req.userId || (req.query.userId as string); // From authenticateTokenMiddleware or query param for testing
+
+		// The frontend sends the current user's ID also in the query to explicitly request their rank.
+		// We can use currentAuthenticatedUserId for fetching the current user's rank details.
+
+		console.log(
+			`Fetching leaderboard for period: ${period}, current auth user: ${currentAuthenticatedUserId}`
+		);
+
+		let topUsersData: any[] = [];
+		let currentUserRankData: any | null = null;
+		let activeUserIds: string[] = []; // For weekly/monthly active users
+		let startDate: Date = new Date(); // For weekly/monthly period start
+
+		const validPeriods = ["weekly", "monthly", "allTime"];
+		if (!validPeriods.includes(period)) {
+			return res.status(400).json({ error: "Invalid period specified." });
+		}
+
+		const topN = 10; // Number of top users to fetch
+
+		// CORRECTED: Implement proper leaderboard logic for different periods
+		let dateFilter = {};
+
+		if (period === "allTime") {
+			// All-time leaderboard: Show users with highest total points
+			topUsersData = await prisma.userProgress.findMany({
+				orderBy: {
+					points: "desc",
+				},
+				take: topN,
+				select: {
+					userId: true,
+					points: true,
+					updatedAt: true,
+				},
+			});
+		} else {
+			// Weekly/Monthly: Show users who have been active in the period
+			if (period === "weekly") {
+				const today = new Date();
+				startDate = new Date(today);
+				// Set to Monday of current week (ISO week standard)
+				const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
+				startDate.setDate(today.getDate() - dayOfWeek);
+				startDate.setHours(0, 0, 0, 0);
+			} else if (period === "monthly") {
+				const today = new Date();
+				startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+				startDate.setHours(0, 0, 0, 0);
+			}
+
+			// Find active users: users who have created stories, unlocked achievements, or completed challenges in the period
+			const activeUserIdsFromStories = await prisma.story.findMany({
+				where: {
+					createdAt: { gte: startDate },
+				},
+				select: { userId: true },
+				distinct: ["userId"],
+			});
+
+			const activeUserIdsFromAchievements =
+				await prisma.userAchievement.findMany({
+					where: {
+						unlockedAt: { gte: startDate },
+					},
+					select: { userId: true },
+					distinct: ["userId"],
+				});
+
+			const activeUserIdsFromChallenges =
+				await prisma.userDailyChallenge.findMany({
+					where: {
+						completedAt: { gte: startDate },
+					},
+					select: { userId: true },
+					distinct: ["userId"],
+				});
+
+			// Combine all active user IDs
+			const activeUserIdSet = new Set([
+				...activeUserIdsFromStories.map((s) => s.userId),
+				...activeUserIdsFromAchievements.map((a) => a.userId),
+				...activeUserIdsFromChallenges.map((c) => c.userId),
+			]);
+
+			activeUserIds = Array.from(activeUserIdSet);
+
+			// Calculate period-specific points for active users
+			if (activeUserIds.length > 0) {
+				// Get points from achievements unlocked in the period
+				const achievementPoints = await prisma.userAchievement.findMany({
+					where: {
+						userId: { in: activeUserIds },
+						unlockedAt: { gte: startDate },
+					},
+					include: {
+						achievement: true,
+					},
+				});
+
+				// Get points from challenges completed in the period
+				const challengePoints = await prisma.userDailyChallenge.findMany({
+					where: {
+						userId: { in: activeUserIds },
+						completedAt: { gte: startDate },
+					},
+					include: {
+						challenge: true,
+					},
+				});
+
+				// Calculate total points earned in period per user
+				const userPeriodPoints = new Map<string, number>();
+
+				// Sum achievement points
+				achievementPoints.forEach((ua) => {
+					const current = userPeriodPoints.get(ua.userId) || 0;
+					userPeriodPoints.set(
+						ua.userId,
+						current + (ua.achievement.points || 0)
+					);
+				});
+
+				// Sum challenge points
+				challengePoints.forEach((udc) => {
+					const current = userPeriodPoints.get(udc.userId) || 0;
+					userPeriodPoints.set(
+						udc.userId,
+						current + (udc.challenge.xpReward || 0)
+					);
+				});
+
+				// Convert to array and sort by period points
+				const usersWithPeriodPoints = Array.from(userPeriodPoints.entries())
+					.map(([userId, periodPoints]) => ({
+						userId,
+						periodPoints,
+						updatedAt: new Date(), // Placeholder, not used for sorting
+					}))
+					.sort((a, b) => b.periodPoints - a.periodPoints)
+					.slice(0, topN);
+
+				// Get user progress data for the top users (needed for compatibility)
+				const userProgressData = await prisma.userProgress.findMany({
+					where: {
+						userId: { in: usersWithPeriodPoints.map((u) => u.userId) },
+					},
+					select: {
+						userId: true,
+						points: true,
+						updatedAt: true,
+					},
+				});
+
+				// Combine period points with user progress data
+				topUsersData = usersWithPeriodPoints.map((userWithPoints) => {
+					const progressData = userProgressData.find(
+						(up) => up.userId === userWithPoints.userId
+					);
+					return {
+						userId: userWithPoints.userId,
+						points: userWithPoints.periodPoints, // Use period-specific points
+						updatedAt: progressData?.updatedAt || new Date(),
+					};
+				});
+			} else {
+				// No active users in the period
+				topUsersData = [];
+			}
+		}
+
+		// Enhance topUsersData with email from Firebase Auth
+		const enhancedTopUsers = await Promise.all(
+			topUsersData.map(async (up) => {
+				try {
+					const firebaseUser = await admin.auth().getUser(up.userId);
+					return {
+						...up,
+						name: firebaseUser.email || up.userId, // Use email, fallback to userId
+						avatarUrl: firebaseUser.photoURL || null, // Use photoURL if available
+					};
+				} catch (error) {
+					console.warn(
+						`Could not fetch Firebase user for ${up.userId}:`,
+						error
+					);
+					return { ...up, name: up.userId, avatarUrl: null }; // Fallback
+				}
+			})
+		);
+
+		// Format topUsers to match frontend expectations
+		const formattedTopUsers = enhancedTopUsers.map((up, index) => ({
+			rank: index + 1,
+			name: up.name,
+			score: up.points,
+			avatarUrl: up.avatarUrl,
+			change: "same", // Placeholder: Implement rank change logic later
+			userId: up.userId, // Keep userId for potential highlighting on frontend
+			isCurrentUser: false, // Initialize isCurrentUser
+		}));
+
+		// Fetch rank for the current authenticated user if they are logged in
+		if (currentAuthenticatedUserId) {
+			const currentUserIsTopUserEntry = formattedTopUsers.find(
+				(u) => u.userId === currentAuthenticatedUserId
+			);
+
+			if (currentUserIsTopUserEntry) {
+				// If current user is in top N, use that data and mark them
+				currentUserRankData = {
+					...currentUserIsTopUserEntry,
+					isCurrentUser: true,
+				};
+				const topUserIndex = formattedTopUsers.findIndex(
+					(u) => u.userId === currentAuthenticatedUserId
+				);
+				if (topUserIndex !== -1) {
+					formattedTopUsers[topUserIndex].isCurrentUser = true;
+				}
+			} else {
+				// If current user is not in top N, check if they were active in the period
+				let currentUserIsActive = false;
+
+				if (period !== "allTime") {
+					// Check if current user has been active in the period
+					const userStories = await prisma.story.count({
+						where: {
+							userId: currentAuthenticatedUserId,
+							createdAt: { gte: startDate },
+						},
+					});
+
+					const userAchievements = await prisma.userAchievement.count({
+						where: {
+							userId: currentAuthenticatedUserId,
+							unlockedAt: { gte: startDate },
+						},
+					});
+
+					const userChallenges = await prisma.userDailyChallenge.count({
+						where: {
+							userId: currentAuthenticatedUserId,
+							completedAt: { gte: startDate },
+						},
+					});
+
+					currentUserIsActive =
+						userStories > 0 || userAchievements > 0 || userChallenges > 0;
+				} else {
+					// For all-time, all users with progress are considered active
+					currentUserIsActive = true;
+				}
+
+				if (currentUserIsActive) {
+					const currentUserProgress = await prisma.userProgress.findFirst({
+						where: {
+							userId: currentAuthenticatedUserId,
+						},
+						select: { points: true, userId: true },
+					});
+
+					if (currentUserProgress) {
+						let firebaseCurrentUserName = currentUserProgress.userId; // Fallback
+						let firebaseCurrentUserAvatar = null;
+						try {
+							const fbCurrentUser = await admin
+								.auth()
+								.getUser(currentUserProgress.userId);
+							firebaseCurrentUserName =
+								fbCurrentUser.email || currentUserProgress.userId;
+							firebaseCurrentUserAvatar = fbCurrentUser.photoURL || null;
+						} catch (error) {
+							console.warn(
+								`Could not fetch Firebase user for current user ${currentUserProgress.userId}:`,
+								error
+							);
+						}
+
+						// Calculate current user's score for this period
+						let currentUserPeriodScore: number;
+						let usersAhead: number;
+
+						if (period === "allTime") {
+							currentUserPeriodScore = currentUserProgress.points;
+							usersAhead = await prisma.userProgress.count({
+								where: {
+									points: { gt: currentUserProgress.points },
+								},
+							});
+						} else {
+							// Calculate current user's period-specific points
+							const currentUserAchievements =
+								await prisma.userAchievement.findMany({
+									where: {
+										userId: currentAuthenticatedUserId,
+										unlockedAt: { gte: startDate },
+									},
+									include: {
+										achievement: true,
+									},
+								});
+
+							const currentUserChallenges =
+								await prisma.userDailyChallenge.findMany({
+									where: {
+										userId: currentAuthenticatedUserId,
+										completedAt: { gte: startDate },
+									},
+									include: {
+										challenge: true,
+									},
+								});
+
+							// Sum period points for current user
+							currentUserPeriodScore = 0;
+							currentUserAchievements.forEach((ua) => {
+								currentUserPeriodScore += ua.achievement.points || 0;
+							});
+							currentUserChallenges.forEach((udc) => {
+								currentUserPeriodScore += udc.challenge.xpReward || 0;
+							});
+
+							// Count active users with more period points than current user
+							// We need to calculate period points for all active users and count how many have more
+							const allActiveUserAchievements =
+								await prisma.userAchievement.findMany({
+									where: {
+										userId: { in: activeUserIds },
+										unlockedAt: { gte: startDate },
+									},
+									include: {
+										achievement: true,
+									},
+								});
+
+							const allActiveUserChallenges =
+								await prisma.userDailyChallenge.findMany({
+									where: {
+										userId: { in: activeUserIds },
+										completedAt: { gte: startDate },
+									},
+									include: {
+										challenge: true,
+									},
+								});
+
+							// Calculate period points for all active users
+							const activeUserPeriodPoints = new Map<string, number>();
+							allActiveUserAchievements.forEach((ua) => {
+								const current = activeUserPeriodPoints.get(ua.userId) || 0;
+								activeUserPeriodPoints.set(
+									ua.userId,
+									current + (ua.achievement.points || 0)
+								);
+							});
+							allActiveUserChallenges.forEach((udc) => {
+								const current = activeUserPeriodPoints.get(udc.userId) || 0;
+								activeUserPeriodPoints.set(
+									udc.userId,
+									current + (udc.challenge.xpReward || 0)
+								);
+							});
+
+							// Count users with more period points
+							usersAhead = Array.from(activeUserPeriodPoints.values()).filter(
+								(points) => points > currentUserPeriodScore
+							).length;
+						}
+						currentUserRankData = {
+							rank: usersAhead + 1,
+							name: firebaseCurrentUserName,
+							score: currentUserPeriodScore,
+							isCurrentUser: true,
+							avatarUrl: firebaseCurrentUserAvatar,
+							change: "same", // Placeholder
+							userId: currentUserProgress.userId,
+						};
+					}
+				}
+			}
+		}
+
+		res.status(200).json({
+			topUsers: formattedTopUsers,
+			currentUserRank: currentUserRankData,
+		});
+	})
+);
+// --- END LEADERBOARD ENDPOINT ---
+
 // --- PROTECTED ROUTES ---
 // Apply the synchronous wrapper middleware
 app.use(authenticateTokenMiddleware);
@@ -2232,271 +2631,6 @@ app.get(
 		}
 	})
 );
-
-// --- START LEADERBOARD ENDPOINT ---
-app.get(
-	"/api/leaderboard/:period",
-	authenticateTokenMiddleware, // Apply authentication middleware
-	asyncHandler(async (req: Request, res: Response) => {
-		const { period } = req.params; // 'weekly', 'monthly', 'allTime'
-		const currentAuthenticatedUserId = req.userId; // From authenticateTokenMiddleware - this is the ID of the user making the request
-
-		// The frontend sends the current user's ID also in the query to explicitly request their rank.
-		// We can use currentAuthenticatedUserId for fetching the current user's rank details.
-		// const requestedUserIdForRank = req.query.userId as string | undefined;
-
-		console.log(
-			`Fetching leaderboard for period: ${period}, current auth user: ${currentAuthenticatedUserId}`
-		);
-
-		let topUsersData: any[] = [];
-		let currentUserRankData: any | null = null;
-		let activeUserIds: string[] = []; // For weekly/monthly active users
-		let startDate: Date = new Date(); // For weekly/monthly period start
-
-		const validPeriods = ["weekly", "monthly", "allTime"];
-		if (!validPeriods.includes(period)) {
-			return res.status(400).json({ error: "Invalid period specified." });
-		}
-
-		const topN = 10; // Number of top users to fetch
-
-		// CORRECTED: Implement proper leaderboard logic for different periods
-		let dateFilter = {};
-
-		if (period === "allTime") {
-			// All-time leaderboard: Show users with highest total points
-			topUsersData = await prisma.userProgress.findMany({
-				orderBy: {
-					points: "desc",
-				},
-				take: topN,
-				select: {
-					userId: true,
-					points: true,
-					updatedAt: true,
-				},
-			});
-		} else {
-			// Weekly/Monthly: Show users who have been active in the period
-			if (period === "weekly") {
-				const today = new Date();
-				startDate = new Date(today);
-				// Set to Monday of current week (ISO week standard)
-				const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
-				startDate.setDate(today.getDate() - dayOfWeek);
-				startDate.setHours(0, 0, 0, 0);
-			} else if (period === "monthly") {
-				const today = new Date();
-				startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-				startDate.setHours(0, 0, 0, 0);
-			}
-
-			// Find active users: users who have created stories, unlocked achievements, or completed challenges in the period
-			const activeUserIdsFromStories = await prisma.story.findMany({
-				where: {
-					createdAt: { gte: startDate },
-				},
-				select: { userId: true },
-				distinct: ["userId"],
-			});
-
-			const activeUserIdsFromAchievements =
-				await prisma.userAchievement.findMany({
-					where: {
-						unlockedAt: { gte: startDate },
-					},
-					select: { userId: true },
-					distinct: ["userId"],
-				});
-
-			const activeUserIdsFromChallenges =
-				await prisma.userDailyChallenge.findMany({
-					where: {
-						completedAt: { gte: startDate },
-					},
-					select: { userId: true },
-					distinct: ["userId"],
-				});
-
-			// Combine all active user IDs
-			const activeUserIdSet = new Set([
-				...activeUserIdsFromStories.map((s) => s.userId),
-				...activeUserIdsFromAchievements.map((a) => a.userId),
-				...activeUserIdsFromChallenges.map((c) => c.userId),
-			]);
-
-			activeUserIds = Array.from(activeUserIdSet);
-
-			// Get progress data for active users, ordered by points
-			if (activeUserIds.length > 0) {
-				topUsersData = await prisma.userProgress.findMany({
-					where: {
-						userId: { in: activeUserIds },
-					},
-					orderBy: {
-						points: "desc",
-					},
-					take: topN,
-					select: {
-						userId: true,
-						points: true,
-						updatedAt: true,
-					},
-				});
-			} else {
-				// No active users in the period
-				topUsersData = [];
-			}
-		}
-
-		// Enhance topUsersData with email from Firebase Auth
-		const enhancedTopUsers = await Promise.all(
-			topUsersData.map(async (up) => {
-				try {
-					const firebaseUser = await admin.auth().getUser(up.userId);
-					return {
-						...up,
-						name: firebaseUser.email || up.userId, // Use email, fallback to userId
-						avatarUrl: firebaseUser.photoURL || null, // Use photoURL if available
-					};
-				} catch (error) {
-					console.warn(
-						`Could not fetch Firebase user for ${up.userId}:`,
-						error
-					);
-					return { ...up, name: up.userId, avatarUrl: null }; // Fallback
-				}
-			})
-		);
-
-		// Format topUsers to match frontend expectations
-		const formattedTopUsers = enhancedTopUsers.map((up, index) => ({
-			rank: index + 1,
-			name: up.name,
-			score: up.points,
-			avatarUrl: up.avatarUrl,
-			change: "same", // Placeholder: Implement rank change logic later
-			userId: up.userId, // Keep userId for potential highlighting on frontend
-			isCurrentUser: false, // Initialize isCurrentUser
-		}));
-
-		// Fetch rank for the current authenticated user if they are logged in
-		if (currentAuthenticatedUserId) {
-			const currentUserIsTopUserEntry = formattedTopUsers.find(
-				(u) => u.userId === currentAuthenticatedUserId
-			);
-
-			if (currentUserIsTopUserEntry) {
-				// If current user is in top N, use that data and mark them
-				currentUserRankData = {
-					...currentUserIsTopUserEntry,
-					isCurrentUser: true,
-				};
-				const topUserIndex = formattedTopUsers.findIndex(
-					(u) => u.userId === currentAuthenticatedUserId
-				);
-				if (topUserIndex !== -1) {
-					formattedTopUsers[topUserIndex].isCurrentUser = true;
-				}
-			} else {
-				// If current user is not in top N, check if they were active in the period
-				let currentUserIsActive = false;
-
-				if (period !== "allTime") {
-					// Check if current user has been active in the period
-					const userStories = await prisma.story.count({
-						where: {
-							userId: currentAuthenticatedUserId,
-							createdAt: { gte: startDate },
-						},
-					});
-
-					const userAchievements = await prisma.userAchievement.count({
-						where: {
-							userId: currentAuthenticatedUserId,
-							unlockedAt: { gte: startDate },
-						},
-					});
-
-					const userChallenges = await prisma.userDailyChallenge.count({
-						where: {
-							userId: currentAuthenticatedUserId,
-							completedAt: { gte: startDate },
-						},
-					});
-
-					currentUserIsActive =
-						userStories > 0 || userAchievements > 0 || userChallenges > 0;
-				} else {
-					// For all-time, all users with progress are considered active
-					currentUserIsActive = true;
-				}
-
-				if (currentUserIsActive) {
-					const currentUserProgress = await prisma.userProgress.findFirst({
-						where: {
-							userId: currentAuthenticatedUserId,
-						},
-						select: { points: true, userId: true },
-					});
-
-					if (currentUserProgress) {
-						let firebaseCurrentUserName = currentUserProgress.userId; // Fallback
-						let firebaseCurrentUserAvatar = null;
-						try {
-							const fbCurrentUser = await admin
-								.auth()
-								.getUser(currentUserProgress.userId);
-							firebaseCurrentUserName =
-								fbCurrentUser.email || currentUserProgress.userId;
-							firebaseCurrentUserAvatar = fbCurrentUser.photoURL || null;
-						} catch (error) {
-							console.warn(
-								`Could not fetch Firebase user for current user ${currentUserProgress.userId}:`,
-								error
-							);
-						}
-
-						// Count active users with more points than the current user
-						let usersAhead: number;
-						if (period === "allTime") {
-							usersAhead = await prisma.userProgress.count({
-								where: {
-									points: { gt: currentUserProgress.points },
-								},
-							});
-						} else {
-							// For weekly/monthly, count active users with more points
-							const activeUsersAhead = await prisma.userProgress.count({
-								where: {
-									userId: { in: activeUserIds },
-									points: { gt: currentUserProgress.points },
-								},
-							});
-							usersAhead = activeUsersAhead;
-						}
-						currentUserRankData = {
-							rank: usersAhead + 1,
-							name: firebaseCurrentUserName,
-							score: currentUserProgress.points,
-							isCurrentUser: true,
-							avatarUrl: firebaseCurrentUserAvatar,
-							change: "same", // Placeholder
-							userId: currentUserProgress.userId,
-						};
-					}
-				}
-			}
-		}
-
-		res.status(200).json({
-			topUsers: formattedTopUsers,
-			currentUserRank: currentUserRankData,
-		});
-	})
-);
-// --- END LEADERBOARD ENDPOINT ---
 
 // --- ERROR HANDLING ---
 // Add a basic error handler to catch errors passed via next()

@@ -284,7 +284,7 @@ export const getLeaderboardData = async (period, userId) => {
 	}
 
 	try {
-		// Replace with actual authenticatedFetch call when backend is ready
+		// Use authenticated fetch for leaderboard data
 		const data = await authenticatedFetch(endpoint);
 		return data;
 	} catch (error) {
