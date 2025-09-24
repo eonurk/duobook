@@ -26,8 +26,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env for local development and PM2
+// Prefer .env values to ensure deployments pick up updates without stale PM2 envs
 // 1) Try default CWD (useful when running from project root)
-dotenv.config();
+dotenv.config({ override: true });
 // 2) Try likely relative paths when started via PM2 or compiled build
 try {
 	const candidateEnvPaths = [
@@ -939,7 +940,7 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 		try {
 			console.log("Sending request to OpenAI...");
 			console.log(
-				`Using model: ${isProStoryRequest ? "gpt-4.1-mini" : "gpt-4.1-mini"}`
+				`Using model: ${isProStoryRequest ? "gpt-5-mini" : "gpt-5-mini"}`
 			); // Log which model is being used
 
 			// Add retry logic for network errors

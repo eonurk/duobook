@@ -47,6 +47,7 @@ const ExploreStoriesPage = () => {
 
 	const fetchStoriesCallback = useCallback(
 		async (pageToFetch, sourceLang, targetLang, sort) => {
+			// Allow first page for everyone, but require login for subsequent pages
 			if (!idToken && pageToFetch > 1) {
 				setShowLoginPrompt(true);
 				setIsLoading(false); // Ensure loading is off if we don't fetch
@@ -60,10 +61,10 @@ const ExploreStoriesPage = () => {
 			setError(null);
 			try {
 				const response = await getLatestStories(
-					idToken,
+					idToken, // This can be null for public access
 					pageToFetch,
 					12,
-					true,
+					!!idToken, // Only exclude current user if logged in
 					sourceLang,
 					targetLang,
 					sort

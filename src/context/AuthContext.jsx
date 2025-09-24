@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
 			return data;
 		} catch (error) {
 			console.error(
-				"AuthContext: Error fetching gamification data from API:",
+				"🔐 AuthContext: Error fetching gamification data from API:",
 				error
 			);
 			setUserProgress(null);
@@ -40,35 +40,51 @@ export function AuthProvider({ children }) {
 	};
 
 	useEffect(() => {
-		// Subscribe to user changes
-		const unsubscribe = onAuthStateChanged(auth, async (user) => {
-			setCurrentUser(user);
+		// Set up a timeout to force loading to false if auth state doesn't change
+		const timeoutId = setTimeout(() => {
+			setLoading(false);
+		}, 10000); // 10 second timeout
 
-			if (user) {
-				try {
-					const token = await user.getIdToken();
-					setIdToken(token);
-					console.log("AuthContext: ID Token set."); // You can log the token for debugging if needed but avoid in production
-					// Fetch user progress & achievements from API
-					await fetchApiGamificationData(user); // Pass user here
-				} catch (error) {
-					console.error("AuthContext: Error getting ID token", error);
+		// Subscribe to user changes
+		const unsubscribe = onAuthStateChanged(
+			auth,
+			async (user) => {
+				setCurrentUser(user);
+
+				if (user) {
+					try {
+						const token = await user.getIdToken();
+						setIdToken(token);
+						// Fetch user progress & achievements from API
+						await fetchApiGamificationData(user); // Pass user here
+					} catch (error) {
+						console.error("🔐 AuthContext: Error getting ID token", error);
+						setIdToken(null);
+						// Also clear user specific data if token fails
+						setUserProgress(null);
+						setUserAchievements([]);
+					}
+				} else {
 					setIdToken(null);
-					// Also clear user specific data if token fails
 					setUserProgress(null);
 					setUserAchievements([]);
 				}
-			} else {
-				setIdToken(null);
-				setUserProgress(null);
-				setUserAchievements([]);
+
+				clearTimeout(timeoutId);
+				setLoading(false);
+			},
+			(error) => {
+				console.error("🔐 AuthContext: Auth state change error:", error);
+				clearTimeout(timeoutId);
+				setLoading(false); // Ensure we don't stay stuck
 			}
+		);
 
-			setLoading(false);
-		});
-
-		// Cleanup subscription on unmount
-		return unsubscribe;
+		// Cleanup subscription and timeout on unmount
+		return () => {
+			unsubscribe();
+			clearTimeout(timeoutId);
+		};
 	}, []);
 
 	// Function to update user progress locally and via API
@@ -87,7 +103,6 @@ export function AuthProvider({ children }) {
 			// Assume updateUserProgress sends a PATCH/PUT request with the updates object
 			const updatedProgress = await updateUserProgress(updates);
 			setUserProgress(updatedProgress); // Update with response from server if needed
-			console.log("Progress updated successfully on server.");
 		} catch (error) {
 			console.error("Failed to update progress on server:", error);
 			// Revert optimistic update on failure?

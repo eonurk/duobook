@@ -23,7 +23,6 @@ import CookieConsent from "@/components/CookieConsent"; // Import Cookie Consent
 import Navbar from "@/components/Layout/Navbar"; // Use alias - Import Navbar
 import SiteFooter from "@/components/Layout/SiteFooter"; // Use alias - Import Footer
 import AchievementNotifier from "@/components/Gamification/AchievementNotifier"; // Import AchievementNotifier
-import DuoBookExplain from "@/assets/duobook-explain.webp"; // Use alias
 import DailyLimitImage from "@/assets/daily-limit.webp"; // Import daily limit image
 import steveJpeg from "@/assets/steve.jpeg";
 import elonJpeg from "@/assets/elon.jpeg";
@@ -31,6 +30,12 @@ import jeffJpeg from "@/assets/jeff.jpeg";
 import leonardoJpeg from "@/assets/leonardo.jpeg"; // Placeholder for Leonardo da Vinci image
 import FsrsEffectivenessCharts from "@/components/Gamification/FsrsEffectivenessCharts"; // ADDED: Import FSRS Charts
 import FeedbackWidget from "@/components/FeedbackWidget"; // Import Feedback Widget
+import PWAUpdateNotification from "@/components/PWAUpdateNotification"; // Import PWA Update Notification
+import PWAInstallPrompt from "@/components/PWAInstallPrompt"; // Import PWA Install Prompt
+import MobileNavbar from "@/components/Layout/MobileNavbar"; // Import Mobile Navbar
+import MobileHomepage from "@/components/MobileHomepage"; // Import Mobile Homepage
+import { isNativeMobile } from "@/lib/capacitor"; // Import Capacitor detection
+import { Capacitor } from "@capacitor/core"; // Import Capacitor for platform detection
 
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
@@ -106,62 +111,6 @@ import {
 	CardFooter,
 } from "@/components/ui/card"; // Import Card component
 import PostStoryGuidance from "@/components/PostStoryGuidance"; // Import PostStoryGuidance
-
-// Static Example Story Data for the interactive demo on the main page
-const interactiveExampleStoryData = {
-	sentencePairs: [
-		{
-			id: 1,
-			target: "DuoBook te ayuda a aprender idiomas de manera natural.",
-			source: "DuoBook helps you learn languages naturally.",
-		},
-		{
-			id: 2,
-			target: "Cada historia tiene texto paralelo en dos idiomas.",
-			source: "Each story has parallel text in two languages.",
-		},
-		{
-			id: 3,
-			target: "Toca una frase para avanzar en la historia.",
-			source: "Tap a sentence to progress through the story.",
-		},
-		{
-			id: 4,
-			target: "Toca las traducciones borrosas para revelarlas.",
-			source: "Tap blurred translations to reveal them.",
-		},
-		{
-			id: 5,
-			target:
-				"Las palabras subrayadas muestran traducciones al pasar el cursor.",
-			source: "Underlined words show translations on hover.",
-		},
-		{
-			id: 6,
-			target: "Puedes escuchar la pronunciación con el botón de audio.",
-			source: "You can hear pronunciation with the audio button.",
-		},
-		{
-			id: 7,
-			target: "¡Crea tu propia historia y comienza a aprender ahora!",
-			source: "Create your own story and start learning now!",
-		},
-	],
-	vocabulary: [
-		{ word: "naturally", translation: "manera natural" },
-		{ word: "parallel text", translation: "texto paralelo" },
-		{ word: "to progress", translation: "avanzar" },
-		{ word: "to reveal them", translation: "revelarlas" },
-		{ word: "underlined", translation: "subrayadas" },
-		{ word: "on hover", translation: "al pasar el cursor" },
-		{ word: "pronunciation", translation: "pronunciación" },
-		{ word: "to hear/listen", translation: "escuchar" },
-		{ word: "own", translation: "propia" },
-		{ word: "to start", translation: "comenzar" },
-	],
-	targetLanguage: "Spanish",
-	sourceLanguage: "English",
-};
 
 // ADDED: Array of external book examples for the new section
 const externalBookExamples = [
@@ -283,7 +232,6 @@ function StoryViewPage() {
 				setIsLoading(false);
 			} else if (shareId) {
 				// No valid state data, or shareId mismatch, fetch from API using shareId
-				console.log(`StoryViewPage: Fetching story with shareId: ${shareId}`);
 				try {
 					const fetchedStory = await getStoryById(shareId);
 					if (typeof fetchedStory.story === "string") {
@@ -824,36 +772,6 @@ function MainAppView({ generateStory }) {
 					</div>
 				)}
 
-				{!isGenerating && (
-					<div className="mt-12 pt-8 border-t">
-						<div className="flex justify-center mb-8">
-							<img
-								src={DuoBookExplain}
-								alt="DuoBook Interface Example"
-								className="max-w-xs md:max-w-sm h-auto"
-							/>
-						</div>
-
-						<div className="text-center mb-6">
-							<p className="text-base font-medium mb-2">
-								Try this interactive example
-							</p>
-							<ArrowDown
-								className="h-6 w-6 mx-auto text-muted-foreground"
-								aria-hidden="true"
-							/>
-						</div>
-
-						<BookView
-							storyContent={interactiveExampleStoryData} // MODIFIED: Renamed variable
-							targetLanguage={interactiveExampleStoryData.targetLanguage} // MODIFIED: Renamed variable
-							sourceLanguage={interactiveExampleStoryData.sourceLanguage} // MODIFIED: Renamed variable
-							isExample={true}
-							onGoBack={() => {}}
-						/>
-					</div>
-				)}
-
 				{/* Key Features Section */}
 				{!isGenerating && (
 					<div className="mt-16 pt-12 border-t">
@@ -1351,7 +1269,6 @@ function App() {
 				);
 			}
 
-			console.log("Saving generated story to database...");
 			const savedStory = await createStory({
 				story: JSON.stringify(generatedStoryContent),
 				description: description,
@@ -1487,11 +1404,16 @@ function App() {
 		);
 	}
 
+	// Check if running in mobile app
+	const isMobileApp = isNativeMobile();
+
 	return (
 		<div className="app-container flex flex-col min-h-screen bg-background text-foreground">
 			<Toaster position="top-center" reverseOrder={false} />
 			<AchievementNotifier />
-			<Navbar ref={navbarRef} />
+
+			{/* Conditional Navbar - Mobile vs Web */}
+			{isMobileApp ? <MobileNavbar /> : <Navbar ref={navbarRef} />}
 
 			{/* Post-Story Guidance Modal */}
 			<PostStoryGuidance
@@ -1512,11 +1434,15 @@ function App() {
 					<Route
 						path="/"
 						element={
-							<MainAppView
-								generateStory={generateStory}
-								keyFeaturesData={keyFeaturesData}
-								testimonialsData={testimonialsData}
-							/>
+							isMobileApp ? (
+								<MobileHomepage generateStory={generateStory} />
+							) : (
+								<MainAppView
+									generateStory={generateStory}
+									keyFeaturesData={keyFeaturesData}
+									testimonialsData={testimonialsData}
+								/>
+							)
 						}
 					/>
 					<Route path="/story/:shareId" element={<StoryViewPage />} />
@@ -1578,9 +1504,17 @@ function App() {
 					<Route path="*" element={<Navigate to="/" replace />} />
 				</Routes>
 			</Suspense>
-			<SiteFooter />
-			<CookieConsent />
-			<FeedbackWidget />
+
+			{/* Hide footer and some widgets in mobile app */}
+			{!isMobileApp && (
+				<>
+					<SiteFooter />
+					<CookieConsent />
+					<FeedbackWidget />
+					<PWAUpdateNotification />
+					<PWAInstallPrompt />
+				</>
+			)}
 		</div>
 	);
 }

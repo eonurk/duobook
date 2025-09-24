@@ -219,63 +219,63 @@ function InputForm({
 	const [selectedGenre, setSelectedGenre] = useState(""); // State for selected genre
 	const [selectedGrammarFocus, setSelectedGrammarFocus] = useState([]); // State for selected grammar focus (can be multiple)
 
-	// Joyride (guided tour) state
-	const [runTour, setRunTour] = useState(false);
-	const tourSteps = [
-		{
-			target: "body", // Welcome step overlays the whole page
-			title: "👋 Welcome to DuoBook!",
-			content:
-				"Let's go on a quick adventure to create your first storybook! 🚀",
-			disableBeacon: true,
-			placement: "center",
-		},
-		{
-			target: "#story-input-area",
-			title: "📝 Describe Your Story!",
-			content:
-				"Type your wildest story idea here, or pick a fun example below! Need inspiration? Click the 🎲 Random Idea button!",
-		},
-		{
-			target: "#language-select-area",
-			title: "🌍 Choose Your Languages!",
-			content: "Pick the language you know and the one you want to learn. 🧠",
-		},
-		{
-			target: "#story-settings-section",
-			title: "🎯 Set the Difficulty Level!",
-			content: "Pick how challenging and long you want your story to be. 📖",
-		},
-		{
-			target: "#signup-cta",
-			title: "🎉 Sign Up to Create!",
-			content: "Sign up for free to create and save your magical story! 🏆",
-		},
-		{
-			target: "#input-form-button",
-			title: "✨ You're Ready!",
-			content: "Press 'Create Book' and let your story magically appear! 📚",
-			placement: "center",
-		},
-	];
+	// Joyride (guided tour) state - DISABLED
+	// const [runTour, setRunTour] = useState(false);
+	// const tourSteps = [
+	// 	{
+	// 		target: "body", // Welcome step overlays the whole page
+	// 		title: "👋 Welcome to DuoBook!",
+	// 		content:
+	// 			"Let's go on a quick adventure to create your first storybook! 🚀",
+	// 		disableBeacon: true,
+	// 		placement: "center",
+	// 	},
+	// 	{
+	// 		target: "#story-input-area",
+	// 		title: "📝 Describe Your Story!",
+	// 		content:
+	// 			"Type your wildest story idea here, or pick a fun example below! Need inspiration? Click the 🎲 Random Idea button!",
+	// 	},
+	// 	{
+	// 		target: "#language-select-area",
+	// 		title: "🌍 Choose Your Languages!",
+	// 		content: "Pick the language you know and the one you want to learn. 🧠",
+	// 	},
+	// 	{
+	// 		target: "#story-settings-section",
+	// 		title: "🎯 Set the Difficulty Level!",
+	// 		content: "Pick how challenging and long you want your story to be. 📖",
+	// 	},
+	// 	{
+	// 		target: "#signup-cta",
+	// 		title: "🎉 Sign Up to Create!",
+	// 		content: "Sign up for free to create and save your magical story! 🏆",
+	// 	},
+	// 	{
+	// 		target: "#input-form-button",
+	// 		title: "✨ You're Ready!",
+	// 		content: "Press 'Create Book' and let your story magically appear! 📚",
+	// 		placement: "center",
+	// 	},
+	// ];
 
-	// Show tour for first-time users
-	useEffect(() => {
-		if (typeof window !== "undefined") {
-			const seen = localStorage.getItem("bookedly_tour_seen");
-			if (!seen) setRunTour(true);
-		}
-	}, []);
+	// Show tour for first-time users - DISABLED
+	// useEffect(() => {
+	// 	if (typeof window !== "undefined") {
+	// 		const seen = localStorage.getItem("bookedly_tour_seen");
+	// 		if (!seen) setRunTour(true);
+	// 	}
+	// }, []);
 
-	const handleTourCallback = (data) => {
-		const { status } = data;
-		if (status === "finished" || status === "skipped") {
-			setRunTour(false);
-			if (typeof window !== "undefined") {
-				localStorage.setItem("bookedly_tour_seen", "1");
-			}
-		}
-	};
+	// const handleTourCallback = (data) => {
+	// 	const { status } = data;
+	// 	if (status === "finished" || status === "skipped") {
+	// 		setRunTour(false);
+	// 		if (typeof window !== "undefined") {
+	// 			localStorage.setItem("bookedly_tour_seen", "1");
+	// 		}
+	// 	}
+	// };
 
 	// Dynamically define lengthMap based on subscription tier, memoized
 	const lengthMap = useMemo(() => {
@@ -369,6 +369,7 @@ function InputForm({
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
+
 		if (!currentUser) {
 			setShowAuthDialog(true);
 			return;
@@ -377,18 +378,29 @@ function InputForm({
 			toast.error("Please enter a story description.");
 			return;
 		}
+		if (sourceLang === targetLang) {
+			toast.error("Please select different languages.");
+			return;
+		}
+
 		const difficulty = difficultyMap[difficultyIndex];
 		const storyLength = lengthMap[lengthIndex];
-		onSubmit(
-			description,
-			sourceLang,
-			targetLang,
-			difficulty,
-			storyLength,
-			isPublic,
-			selectedGenre, // Pass selected genre
-			selectedGrammarFocus // Pass selected grammar focus
-		);
+
+		try {
+			onSubmit(
+				description,
+				sourceLang,
+				targetLang,
+				difficulty,
+				storyLength,
+				isPublic,
+				selectedGenre, // Pass selected genre
+				selectedGrammarFocus // Pass selected grammar focus
+			);
+		} catch (error) {
+			console.error("Error calling onSubmit:", error);
+			toast.error("Failed to submit form: " + error.message);
+		}
 	};
 
 	// Function to handle example button click
@@ -404,7 +416,8 @@ function InputForm({
 
 	return (
 		<>
-			<Joyride
+			{/* Joyride tour - DISABLED */}
+			{/* <Joyride
 				run={runTour}
 				steps={tourSteps}
 				continuous
@@ -467,7 +480,7 @@ function InputForm({
 					},
 				}}
 				callback={handleTourCallback}
-			/>
+			/> */}
 			{/* Site Stats and Badge Section */}
 
 			<style>{`
@@ -1097,6 +1110,10 @@ function InputForm({
 							sourceLang === targetLang ||
 							!currentUser
 						}
+						onClick={(e) => {
+							e.preventDefault();
+							handleSubmit(e);
+						}}
 						className={`button button-primary submit-button py-3 px-6 rounded-lg shadow-md transition-all duration-300 relative group ${
 							// Updated className logic
 							isLoading ||

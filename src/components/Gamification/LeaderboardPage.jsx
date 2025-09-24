@@ -237,6 +237,11 @@ function LeaderboardPage() {
 											`https://avatar.vercel.sh/${originalName}.png`
 										}
 										alt={displayName}
+										onError={(e) => {
+											// Hide broken images (e.g., Google profile images blocked by CORS)
+											// to prevent console errors and show fallback avatar instead
+											e.target.style.display = "none";
+										}}
 									/>
 									<AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 font-semibold">
 										{originalName ? (
@@ -316,6 +321,11 @@ function LeaderboardPage() {
 												`https://avatar.vercel.sh/${currentUserData.name}.png`
 											}
 											alt={formatUserEmailForDisplay(currentUserData.name)}
+											onError={(e) => {
+												// Hide broken images (e.g., Google profile images blocked by CORS)
+												// to prevent console errors and show fallback avatar instead
+												e.target.style.display = "none";
+											}}
 										/>
 										<AvatarFallback className="bg-gradient-to-br from-blue-200 to-indigo-300 text-blue-700 font-bold">
 											{currentUserData.name ? (

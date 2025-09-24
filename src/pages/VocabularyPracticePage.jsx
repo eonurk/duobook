@@ -272,11 +272,6 @@ function VocabularyPracticePage() {
 		isQuizActive,
 	]);
 
-	// Debug logging for quiz mode
-	React.useEffect(() => {
-		console.log("Quiz Mode Debug:", { quizMode });
-	}, [quizMode]);
-
 	// Effect to fetch data on mount or user change
 	useEffect(() => {
 		if (currentUser) {

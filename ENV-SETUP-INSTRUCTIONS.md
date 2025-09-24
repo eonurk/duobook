@@ -13,6 +13,12 @@ VITE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
 VITE_FIREBASE_APP_ID=your-app-id
 
+# === API Base URL (for iOS/Android deployment) ===
+# For mobile apps, set this to your production server URL
+# Example: VITE_API_BASE_URL=https://yourdomain.com/api
+# Leave empty or comment out for web development (uses relative paths)
+VITE_API_BASE_URL=https://yourdomain.com/api
+
 # === Backend OpenAI API Key ===
 # This key is used by the backend server ONLY.
 OPENAI_API_KEY=your-openai-api-key

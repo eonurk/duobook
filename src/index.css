@@ -5,3 +5,47 @@
 @import "tailwindcss";
 /* Only keep this if you actually use tw-animate-css and it's v4 compatible */
 /* @import "tw-animate-css"; */
+
+/* Mobile App Safe Areas */
+@supports (padding: max(0px)) {
+	.pt-safe-area-inset-top {
+		padding-top: max(env(safe-area-inset-top), 0px);
+	}
+
+	.pb-safe-area-inset-bottom {
+		padding-bottom: max(env(safe-area-inset-bottom), 0px);
+	}
+
+	.pl-safe-area-inset-left {
+		padding-left: max(env(safe-area-inset-left), 0px);
+	}
+
+	.pr-safe-area-inset-right {
+		padding-right: max(env(safe-area-inset-right), 0px);
+	}
+}
+
+/* Mobile App Optimizations */
+@media (max-width: 768px) {
+	.mobile-app-container {
+		-webkit-overflow-scrolling: touch;
+		overscroll-behavior: none;
+	}
+
+	/* Prevent zoom on input focus */
+	input[type="text"],
+	input[type="email"],
+	input[type="password"],
+	textarea,
+	select {
+		font-size: 16px;
+	}
+
+	/* Better touch targets */
+	button,
+	a,
+	.clickable {
+		min-height: 44px;
+		min-width: 44px;
+	}
+}

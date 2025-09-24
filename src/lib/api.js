@@ -1,10 +1,36 @@
 import { auth } from "../firebaseConfig";
+import { Capacitor } from "@capacitor/core";
 
 // Latest version of the API
 // Base URL for your backend API
-// Ensure this matches where your server is running (e.g., http://localhost:3000)
-// You might want to use environment variables for this in a real app
-const API_BASE_URL = "/api"; // Using relative path assuming Vite proxy or same origin
+// For web development: uses relative path "/api" (works with Vite proxy)
+// For iOS/Android: uses full server URL from environment variable
+const getApiBaseUrl = () => {
+	const isNative = Capacitor.isNativePlatform();
+
+	if (isNative) {
+		// For native platforms (iOS/Android), use the production server URL
+		// You can set VITE_API_BASE_URL in your .env file to your production server
+		// Example: VITE_API_BASE_URL=https://yourdomain.com/api
+		const prodUrl = import.meta.env.VITE_API_BASE_URL;
+		if (!prodUrl) {
+			console.error(
+				"VITE_API_BASE_URL environment variable is required for native platforms"
+			);
+			// Fallback to localhost - this won't work but will show clear error
+			return "http://localhost:3000/api";
+		}
+
+		return prodUrl;
+	} else {
+		// For web development, use relative path (works with Vite proxy)
+		return "/api";
+	}
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// API Configuration - Debug logs removed
 
 /**
  * Makes an authenticated request to the backend API.
@@ -18,6 +44,7 @@ const API_BASE_URL = "/api"; // Using relative path assuming Vite proxy or same 
 const authenticatedFetch = async (endpoint, options = {}) => {
 	const user = auth.currentUser;
 	if (!user) {
+		console.error("User not authenticated");
 		throw new Error("User not authenticated.");
 	}
 
@@ -38,8 +65,8 @@ const authenticatedFetch = async (endpoint, options = {}) => {
 			let errorData;
 			try {
 				errorData = await response.json();
-			} catch {
-				// Ignore if response is not JSON
+			} catch (parseError) {
+				console.error("Error parsing error data:", parseError);
 			}
 
 			// Construct the error message, prioritizing backend message
@@ -69,12 +96,19 @@ const authenticatedFetch = async (endpoint, options = {}) => {
 		}
 
 		// Assume response is JSON for other successful statuses
-		return response.json();
+		const result = await response.json();
+
+		return result;
 	} catch (error) {
 		console.error(
 			`API call failed: ${options.method || "GET"} ${endpoint}`,
 			error
 		);
+		console.error("Error details:", {
+			message: error.message,
+			name: error.name,
+			stack: error.stack,
+		});
 		// Re-throw the error to be handled by the caller
 		throw error;
 	}
@@ -113,6 +147,15 @@ const publicGetFetch = async (endpoint) => {
 		return response.json();
 	} catch (error) {
 		console.error(`Public API call failed: GET ${endpoint}`, error);
+		console.error("Full URL attempted:", fullUrl);
+		console.error("Error name:", error.name);
+		console.error("Error message:", error.message);
+		console.error("Error stack:", error.stack);
+		console.error("Network error details:", {
+			type: error.constructor.name,
+			code: error.code,
+			status: error.status,
+		});
 		throw error; // Re-throw
 	}
 };
@@ -148,16 +191,11 @@ export const deleteStory = (storyId) =>
 
 // Story Generation Proxy
 export const generateStoryViaBackend = (generationParams) => {
-	console.log("Sending story generation request:", generationParams);
 	return authenticatedFetch("/generate-story", {
 		method: "POST",
 		body: JSON.stringify(generationParams), // e.g., { description, sourceLanguage, targetLanguage, difficulty, length }
 	})
 		.then((result) => {
-			console.log(
-				"Story generation successful, response size:",
-				JSON.stringify(result).length
-			);
 			return result;
 		})
 		.catch((error) => {
@@ -166,6 +204,7 @@ export const generateStoryViaBackend = (generationParams) => {
 				message: error.message,
 				status: error.status,
 				data: error.data,
+				stack: error.stack,
 			});
 			throw error;
 		});
