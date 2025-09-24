@@ -21,12 +21,21 @@ const getApiBaseUrl = () => {
 			return "http://localhost:3000/api";
 		}
 
-		return prodUrl;
+		// Ensure no trailing slash for native platforms
+		return prodUrl.replace(/\/$/, "");
 	} else {
-		// For web development, use production URL if set, otherwise relative path (works with Vite proxy)
-		if (prodUrl) {
-			console.log("Using production URL:", prodUrl);
-			return prodUrl;
+		// For web development and production, prefer relative paths (works with Vite proxy and nginx)
+		// Only use absolute URLs if explicitly set and the URL includes the full path to API
+		if (prodUrl && prodUrl.includes("/api")) {
+			console.log("Using production URL with full API path:", prodUrl);
+			// Ensure no trailing slash for web platforms too
+			return prodUrl.replace(/\/$/, "");
+		} else if (prodUrl) {
+			console.warn(
+				"VITE_API_BASE_URL set but doesn't include '/api'. Using relative path instead."
+			);
+			console.log("Using relative path:", "/api");
+			return "/api";
 		} else {
 			console.log("Using relative path:", "/api");
 			return "/api";
