@@ -26,22 +26,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env for local development and PM2
+// Prefer .env values to ensure deployments pick up updates without stale PM2 envs
 // 1) Try default CWD (useful when running from project root)
-dotenv.config();
+dotenv.config({ override: true });
 // 2) Try likely relative paths when started via PM2 or compiled build
 try {
-	const candidateEnvPaths = [
-		// When running via tsx from source: server -> project root
-		path.resolve(__dirname, "../.env"),
-		// When running compiled code: build/server -> project root
-		path.resolve(__dirname, "../../.env"),
-	];
-	for (const p of candidateEnvPaths) {
-		if (!process.env.OPENAI_API_KEY && fs.existsSync(p)) {
-			dotenv.config({ path: p });
-		}
-	}
+    const candidateEnvPaths = [
+        // When running via tsx from source: server -> project root
+        path.resolve(__dirname, "../.env"),
+        // When running compiled code: build/server -> project root
+        path.resolve(__dirname, "../../.env"),
+    ];
+    for (const p of candidateEnvPaths) {
+        if (!process.env.OPENAI_API_KEY && fs.existsSync(p)) {
+            dotenv.config({ path: p });
+        }
+    }
 } catch (e) {
+	// best-effort; ignore if not found
+}} catch (e) {
 	// best-effort; ignore if not found
 }
 
@@ -950,8 +953,20 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 			while (retries < maxRetries) {
 				try {
 					completion = await openai.chat.completions.create({
-						model: isProStoryRequest ? "gpt-5-mini" : "gpt-5-mini",
-						messages: [{ role: "user", content: prompt }],
+    const candidateEnvPaths = [
+        // When running via tsx from source: server -> project root
+        path.resolve(__dirname, "../.env"),
+        // When running compiled code: build/server -> project root
+        path.resolve(__dirname, "../../.env"),
+    ];
+    for (const p of candidateEnvPaths) {
+        if (!process.env.OPENAI_API_KEY && fs.existsSync(p)) {
+            dotenv.config({ path: p });
+        }
+    }
+} catch (e) {
+	// best-effort; ignore if not found
+}						messages: [{ role: "user", content: prompt }],
 						response_format: { type: "json_object" }, // Enforce JSON output
 					});
 					break; // Success, exit retry loop
