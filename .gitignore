@@ -44,3 +44,5 @@ db_backups/
 package-lock.json
 duobook_db.dump
 duobook_db/
+
+.vscode/
