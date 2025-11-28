@@ -1622,8 +1622,18 @@ Format: JSON
   "title": "...",
   "outline": ["Page 1 summary", "Page 2 summary", ...],
   "page1": {
-    "sentencePairs": [{"source": "...", "target": "..."}],
-    "vocabulary": [{"word": "...", "translation": "..."}]
+    "sentencePairs": [
+      {
+        "source": "Sentence in ${source} (Native)",
+        "target": "Sentence in ${target} (Target)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "Word in ${source}",
+        "translation": "Translation in ${target}"
+      }
+    ]
   }
 }
 If unsafe: { "safe": false, "reason": "..." }
@@ -1668,7 +1678,21 @@ Current Page Focus: ${pageOutline}
 Page Number: ${pageIndex + 1} of ${numPages}
 
 Generate Page ${pageIndex + 1}.
-Format: JSON with "sentencePairs" (array of {source, target}) and "vocabulary" (array of {word, translation}).
+Format: JSON
+{
+  "sentencePairs": [
+    {
+      "source": "Sentence in ${source} (Native)",
+      "target": "Sentence in ${target} (Target)"
+    }
+  ],
+  "vocabulary": [
+    {
+      "word": "Word in ${source}",
+      "translation": "Translation in ${target}"
+    }
+  ]
+}
 Ensure 10-12 sentence pairs. Simple language for ${story_difficulty}.
 Focus on:
 - Natural dialogue between characters.
