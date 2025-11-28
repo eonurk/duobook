@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DuoBook Updates - Mobile App & New Features</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            padding: 40px 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #212529;
+            margin-bottom: 20px;
+        }
+        .intro {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #495057;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 35px;
+        }
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .feature-block {
+            background-color: #f8f9fa;
+            border-left: 4px solid #F59E0B;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .feature-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #212529;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        .feature-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        .feature-list {
+            margin: 10px 0 0 0;
+            padding-left: 20px;
+        }
+        .feature-list li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+            color: #495057;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF3D1 100%);
+            border: 2px solid #F59E0B;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .highlight-box h3 {
+            color: #212529;
+            font-size: 22px;
+            margin: 0 0 15px 0;
+        }
+        .highlight-box p {
+            color: #495057;
+            font-size: 16px;
+            margin: 0;
+            line-height: 1.6;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background-color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #0056b3;
+        }
+        .cta-button.secondary {
+            background-color: #F59E0B;
+        }
+        .cta-button.secondary:hover {
+            background-color: #d97706;
+        }
+        .feature-grid {
+            display: table;
+            width: 100%;
+            margin: 20px 0;
+        }
+        .feature-item {
+            display: table-cell;
+            width: 50%;
+            padding: 15px;
+            vertical-align: top;
+        }
+        .feature-item-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .feature-item-title {
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .feature-item-desc {
+            font-size: 14px;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+        .divider {
+            height: 1px;
+            background-color: #dee2e6;
+            margin: 30px 0;
+        }
+        .footer {
+            background-color: #212529;
+            color: #adb5bd;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #F59E0B;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .footer-logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+        .social-links {
+            margin: 20px 0;
+        }
+        .social-links a {
+            color: #adb5bd;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .unsubscribe {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .unsubscribe a {
+            color: #6c757d;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 30px 20px;
+            }
+            .header h1 {
+                font-size: 26px;
+            }
+            .feature-item {
+                display: block;
+                width: 100%;
+                padding: 10px 0;
+            }
+            .cta-button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 DuoBook Just Got Better!</h1>
+            <p>Exciting Updates to Transform Your Language Learning</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi there! 👋
+            </div>
+
+            <div class="intro">
+                We're thrilled to share some major updates to DuoBook that will take your language learning experience to the next level!
+            </div>
+
+            <!-- Mobile App Announcement -->
+            <div class="section">
+                <h2 class="section-title">🎉 What's New</h2>
+
+                
+                <div class="feature-block">
+                    <h3 class="feature-title">
+                        <span class="feature-icon">🌟</span>
+                        Enhanced AI Story Generation
+                    </h3>
+                    <ul class="feature-list">
+                        <li>Now powered by the latest <strong>GPT-5-mini</strong> model for all users</li>
+                        <li>Faster, more creative, and contextually accurate stories</li>
+                        <li>Available to both Free and Pro users</li>
+                    </ul>
+                </div>
+
+                <div class="feature-block">
+                    <h3 class="feature-title">
+                        <span class="feature-icon">🎯</span>
+                        New Features
+                    </h3>
+                    <ul class="feature-list">
+                        <li><strong>Genre Selection:</strong> Choose from various story genres to match your interests</li>
+                        <li><strong>Grammar Focus:</strong> Target specific grammar points you want to practice</li>
+                        <li><strong>Story Privacy Settings:</strong> Keep your stories private or share them with the community</li>
+                        <li><strong>Improved Vocabulary Practice:</strong> Enhanced spaced repetition system (FSRS) for better retention</li>
+                        <li><strong>Post-Story Guidance:</strong> New user onboarding to help you make the most of DuoBook</li>
+                    </ul>
+                </div>
+
+                <div class="feature-block">
+                    <h3 class="feature-title">
+                        <span class="feature-icon">⚡</span>
+                        Performance & Stability Improvements
+                    </h3>
+                    <ul class="feature-list">
+                        <li>Better API handling</li>
+                        <li>Enhanced CORS support</li>
+                        <li>Improved environment configuration for more reliable service</li>
+                        <li>Optimized story generation workflow</li>
+                    </ul>
+                </div>
+            </div>
+
+           
+
+            <div class="divider"></div>
+
+            <!-- Feature Grid -->
+            <div class="section">
+                <h2 class="section-title">💡 What Makes DuoBook Special?</h2>
+                
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <div class="feature-item-icon">📚</div>
+                        <div class="feature-item-title">Bilingual Stories</div>
+                        <div class="feature-item-desc">Read engaging stories with parallel text in your target and source languages</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-item-icon">📈</div>
+                        <div class="feature-item-title">Track Your Progress</div>
+                        <div class="feature-item-desc">Monitor your learning journey with streaks, levels, and XP</div>
+                    </div>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <div class="feature-item-icon">🏆</div>
+                        <div class="feature-item-title">Earn Achievements</div>
+                        <div class="feature-item-desc">Stay motivated by unlocking achievements as you progress</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-item-icon">🎯</div>
+                        <div class="feature-item-title">Practice & Reinforce</div>
+                        <div class="feature-item-desc">Solidify your knowledge with scientifically-proven spaced repetition</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+         
+
+            <!-- Feedback Section -->
+            <div class="section">
+                <h2 class="section-title">🙏 We Need Your Feedback!</h2>
+                <p style="line-height: 1.6; color: #495057;">
+                    As we continue to improve DuoBook, your input is invaluable. We'd love to hear:
+                </p>
+                <ul class="feature-list">
+                    <li>What features are you enjoying the most?</li>
+                    <li>What would you like to see next?</li>
+                    <li>How can we make your learning experience even better?</li>
+                </ul>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="mailto:support@duobook.co" class="cta-button">Send Us Feedback</a>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Closing -->
+            <div class="section" style="text-align: center;">
+                <h2 style="color: #212529; font-size: 24px; margin-bottom: 15px;">📚 Keep Learning!</h2>
+                <p style="font-size: 16px; line-height: 1.6; color: #495057;">
+                    We're committed to making language learning accessible, engaging, and effective for everyone. Thank you for being part of the DuoBook community!
+                </p>
+                <p style="font-size: 18px; font-weight: 600; color: #007bff; margin-top: 25px;">
+                    Happy learning! 🌟
+                </p>
+                <p style="color: #6c757d; margin-top: 20px;">
+                    The DuoBook Team
+                </p>
+            </div>
+
+            <div style="background-color: #FFF9E6; border-radius: 8px; padding: 20px; text-align: center; margin-top: 30px;">
+                <p style="margin: 0; font-size: 14px; color: #495057;">
+                    <strong>P.S.</strong> If you haven't created a story yet, now's the perfect time! Log in and generate your first bilingual story today.
+                </p>
+                <div style="margin-top: 15px;">
+                    <a href="https://duobook.co" class="cta-button">Create Your First Story</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-logo">DuoBook</div>
+            <p>Language Learning Made Simple</p>
+            
+            <div class="social-links">
+                <a href="https://duobook.co">Website</a> • 
+                <a href="https://www.instagram.com/duobook.co">Instagram</a> • 
+            </div>
+
+            <div style="margin-top: 20px;">
+                <p>Need Help? <a href="mailto:support@duobook.co">Contact Support</a></p>
+            </div>
+
+            <div class="unsubscribe">
+                <p>
+                    You're receiving this email because you have an account with DuoBook.<br>
+                    <a href="duobook.co/settings">Update email preferences</a> or <a href="duobook.co/unsubscribe">Unsubscribe</a>
+                </p>
+                <p style="margin-top: 15px; font-size: 11px;">
+                    © 2025 DuoBook. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

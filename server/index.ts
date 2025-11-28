@@ -103,9 +103,9 @@ app.use(express.json());
 // Utility function to wrap async route handlers and catch errors
 const asyncHandler =
 	(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
-	(req: Request, res: Response, next: NextFunction) => {
-		Promise.resolve(fn(req, res, next)).catch(next); // Pass errors to Express error handler
-	};
+		(req: Request, res: Response, next: NextFunction) => {
+			Promise.resolve(fn(req, res, next)).catch(next); // Pass errors to Express error handler
+		};
 // --- END ASYNC HANDLER UTILITY ---
 
 // --- START AUTH MIDDLEWARE ---
@@ -258,9 +258,8 @@ const storyGenerationLimiter = asyncHandler(
 					);
 
 					return res.status(429).json({
-						error: `You've reached your daily story generation limit of ${proLimit} for the PRO tier. You've used ${currentWeightedCount}/${proLimit} weighted generations, and this ${
-							length || "short"
-						} story (weight: ${proposedStoryWeight}) would exceed your limit. Please try again tomorrow.`,
+						error: `You've reached your daily story generation limit of ${proLimit} for the PRO tier. You've used ${currentWeightedCount}/${proLimit} weighted generations, and this ${length || "short"
+							} story (weight: ${proposedStoryWeight}) would exceed your limit. Please try again tomorrow.`,
 					});
 				}
 
@@ -295,9 +294,8 @@ const storyGenerationLimiter = asyncHandler(
 				);
 
 				return res.status(429).json({
-					error: `Too many story generation requests today for free users. You've used ${currentWeightedCount}/3 weighted generations, and this ${
-						length || "short"
-					} story (weight: ${proposedStoryWeight}) would exceed your limit. Upgrade to premium or try again tomorrow.`,
+					error: `Too many story generation requests today for free users. You've used ${currentWeightedCount}/3 weighted generations, and this ${length || "short"
+						} story (weight: ${proposedStoryWeight}) would exceed your limit. Upgrade to premium or try again tomorrow.`,
 				});
 			}
 
@@ -390,9 +388,8 @@ app.post(
 
 		// Set up email data
 		const mailOptions = {
-			from: `"${process.env.EMAIL_FROM_NAME || "DuoBook Contact Form"}" <${
-				process.env.EMAIL_FROM_ADDRESS || "help.indicatorinsights@gmail.com"
-			}>`,
+			from: `"${process.env.EMAIL_FROM_NAME || "DuoBook Contact Form"}" <${process.env.EMAIL_FROM_ADDRESS || "help.indicatorinsights@gmail.com"
+				}>`,
 			to: process.env.EMAIL_TO_ADDRESS || "support@duobook.co",
 			replyTo: email,
 			subject: `Contact Form: ${subject || "New message from DuoBook website"}`,
@@ -1298,7 +1295,8 @@ If the description contains profanity, hate speech, incitement to violence, or o
 If the description is acceptable, proceed to generate a story as requested below. 
 
 Create an interesting story based on this description. The story should have exactly ${numPages} pages.
-The story should be suitable for a ${story_difficulty} learner of ${target} whose native language is ${source}. 
+The story should be suitable for a ${story_difficulty} learner of ${target} whose native language is ${source}.
+IMPORTANT: The story should be grounded in real-life events or plausible scenarios. Avoid overly fantastical, childish, or cartoonish elements unless the user's description explicitly requests them. Treat the story as if it could happen in the real world or is based on current events.
 `;
 
 		// Add genre if provided
@@ -1349,7 +1347,8 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 
 		try {
 			console.log("Sending request to OpenAI...");
-			console.log(`Using model: gpt-5-mini`); // Log which model is being used
+			const modelToUse = isProStoryRequest ? "gpt-5.1" : "gpt-5-mini";
+			console.log(`Using model: ${modelToUse}`); // Log which model is being used
 
 			// Add retry logic for network errors
 			let completion;
@@ -1359,7 +1358,7 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 			while (retries < maxRetries) {
 				try {
 					completion = await openai.chat.completions.create({
-						model: "gpt-5-mini",
+						model: modelToUse,
 						messages: [{ role: "user", content: prompt }],
 						response_format: { type: "json_object" }, // Enforce JSON output
 					});
@@ -1402,8 +1401,7 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 				// START MODERATION CHECK
 				if (parsedStory.moderation_error) {
 					console.warn(
-						`Moderation error for user ${req.userId || "unknown"}: ${
-							parsedStory.moderation_error
+						`Moderation error for user ${req.userId || "unknown"}: ${parsedStory.moderation_error
 						}`
 					);
 
@@ -2078,8 +2076,7 @@ app.get(
 				});
 
 				console.log(
-					`Returning ${
-						finalDailyChallenges.length
+					`Returning ${finalDailyChallenges.length
 					} daily challenges for user ${userId} for day ${todayStart.toISOString()}`
 				);
 				res.status(200).json(finalDailyChallenges); // Return all challenges for the day

@@ -19,6 +19,7 @@ dist-ssr
 
 # Editor directories and files
 .vscode/*
+.vscode/
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -42,3 +43,6 @@ ios/
 db_backups/
 
 package-lock.json
+duobook_db.dump
+duobook_db/
+
