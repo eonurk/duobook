@@ -357,9 +357,8 @@ function StoryViewPage() {
 						className="flex items-center gap-1 text-slate-600 hover:text-red-500"
 					>
 						<Heart
-							className={`w-5 h-5 ${
-								isLiked ? "text-red-500 fill-current" : ""
-							}`}
+							className={`w-5 h-5 ${isLiked ? "text-red-500 fill-current" : ""
+								}`}
 						/>
 						<span className="text-sm font-medium">{likeCount}</span>
 					</Button>
@@ -371,14 +370,14 @@ function StoryViewPage() {
 				sourceLanguage={paramsForBookView.sourceLanguage}
 				onGoBack={handleGoBackToForm}
 				isExample={false} // MODIFIED: Always false now for internal stories
-				// title={paramsForBookView.title} // Pass title if BookView uses it
+			// title={paramsForBookView.title} // Pass title if BookView uses it
 			/>
 		</main>
 	);
 }
 
 // Component for the logged-in main view (story generation)
-function MainAppView({ generateStory }) {
+function MainAppView({ generateStory, generationProgress }) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [formError, setFormError] = useState(null);
 	const [formParams, setFormParams] = useState(null);
@@ -552,11 +551,10 @@ function MainAppView({ generateStory }) {
 		<>
 			{formError && (
 				<div
-					className={`mb-6 rounded-lg ${
-						formError.type === "rateLimit" // Changed from formError.isRateLimit
-							? "bg-amber-50 border border-amber-100"
-							: "bg-red-50 text-red-800"
-					}`}
+					className={`mb-6 rounded-lg ${formError.type === "rateLimit" // Changed from formError.isRateLimit
+						? "bg-amber-50 border border-amber-100"
+						: "bg-red-50 text-red-800"
+						}`}
 					role="alert"
 				>
 					<div className="flex">
@@ -671,7 +669,7 @@ function MainAppView({ generateStory }) {
 										<Brain className="w-3 h-3 text-white animate-pulse" />
 									</div>
 									<span className="text-sm text-blue-700 font-medium">
-										AI crafting your story
+										{generationProgress || "AI crafting your story"}
 									</span>
 								</div>
 
@@ -912,7 +910,7 @@ function MainAppView({ generateStory }) {
 								target="_blank"
 								rel="noopener noreferrer"
 								className="inline-block"
-								// Classes for a more badge-like appearance: smaller, rounded, specific colors
+							// Classes for a more badge-like appearance: smaller, rounded, specific colors
 							>
 								<img
 									src="https://hackerbadge.vercel.app/api?id=43886381"
@@ -998,11 +996,10 @@ function MainAppView({ generateStory }) {
 											{[...Array(5)].map((_, i) => (
 												<StarIcon
 													key={i}
-													className={`w-4 h-4 ${
-														i < testimonial.stars
-															? "text-amber-400"
-															: "text-gray-300"
-													}`}
+													className={`w-4 h-4 ${i < testimonial.stars
+														? "text-amber-400"
+														: "text-gray-300"
+														}`}
 													fill={i < testimonial.stars ? "currentColor" : "none"}
 												/>
 											))}
@@ -1110,6 +1107,7 @@ function App() {
 	const [showPostStoryGuidance, setShowPostStoryGuidance] = useState(false);
 	const [guidanceStoryData, setGuidanceStoryData] = useState(null);
 	const [isFirstStory, setIsFirstStory] = useState(false);
+	const [generationProgress, setGenerationProgress] = useState(""); // ADDED: Progress state
 
 	// Optional: Firebase init check (if auth might not be ready)
 	// useEffect(() => {
@@ -1203,14 +1201,15 @@ function App() {
 			return;
 		}
 
+		setGenerationProgress("Initiating..."); // Reset progress
+
 		const params = {
 			description,
 			source: sourceLang,
 			target: targetLang,
 			difficulty,
 			length: storyLength,
-			// These are not directly part of `params` for `generateStoryViaBackend` yet
-			// but will be used for `createStory` and potentially later for backend generation params
+			isPublic,
 			genre: selectedGenre,
 			grammarFocus: selectedGrammarFocus,
 		};
@@ -1219,17 +1218,12 @@ function App() {
 			const limitData = await getStoryGenerationLimit();
 
 			// Check if user has reached their generation limit
-			// Applies to FREE users (isPremium: false) OR PRO users (isPremium: true, but might have a specific limit)
 			if (limitData.remaining <= 0) {
 				let message =
 					"You've reached your daily story generation limit. Please upgrade or try again tomorrow.";
 				if (limitData.isPremium && limitData.subscriptionTier === "PRO") {
 					message = `You've reached your daily story generation limit of ${limitData.limit} for the PRO tier. Please try again tomorrow.`;
 				} else if (limitData.isPremium) {
-					// For other premium tiers that might still be unlimited, this condition won't be met if remaining is positive or not applicable
-					// If a premium tier (not PRO) somehow has remaining <= 0 and a limit, this message would show.
-					// This case should ideally be handled by the backend ensuring 'remaining' is always positive for truly unlimited tiers, or not sending 'limit'.
-					// For now, we assume if isPremium is true and remaining <=0, it's a capped premium tier like PRO.
 					message = `You've reached your daily story generation limit of ${limitData.limit} for your current plan. Please try again tomorrow.`;
 				}
 
@@ -1242,115 +1236,98 @@ function App() {
 				return; // Stop execution
 			}
 
-			// Pass through genre and grammarFocus to generateStoryViaBackend if the backend supports them
-			// For now, we'll assume generateStoryViaBackend takes the original `params` object which might not yet include these.
-			// If your backend IS updated to use these for generation, modify the params passed to generateStoryViaBackend.
-			const generatedStoryContent = await generateStoryViaBackend({
-				description: params.description,
-				source: params.source,
-				target: params.target,
-				difficulty: params.difficulty,
-				length: params.length,
-				// If backend supports these in generation, uncomment and pass:
-				genre: selectedGenre,
-				grammarFocus: selectedGrammarFocus,
+			// Use the new streaming endpoint
+			const token = await currentUser.getIdToken();
+			// Determine API Base URL (using logic similar to api.js but inline for now or import it if exported)
+			// For simplicity, we assume relative path works as per existing setup or use the same logic
+			// We'll use a relative path which works with the Vite proxy
+			const response = await fetch("/api/generate-story/stream", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify(params),
 			});
 
-			if (!generatedStoryContent) {
-				throw new Error("No story data received from backend.");
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || "Failed to start generation");
 			}
 
-			if (
-				!generatedStoryContent.pages ||
-				!Array.isArray(generatedStoryContent.pages)
-			) {
-				throw new Error(
-					"Invalid paginated story data received from backend (missing 'pages' array)."
-				);
-			}
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder();
+			let buffer = "";
 
-			const savedStory = await createStory({
-				story: JSON.stringify(generatedStoryContent),
-				description: description,
-				sourceLanguage: sourceLang,
-				targetLanguage: targetLang,
-				difficulty: difficulty,
-				length: storyLength,
-				isPublic: isPublic,
-				genre: selectedGenre, // Pass the genre
-				grammarFocus: selectedGrammarFocus, // Pass the grammar focus (array)
-			});
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
 
-			// Check if this is the user's first story
-			try {
-				const userStories = await fetch("/api/stories", {
-					headers: {
-						Authorization: `Bearer ${await currentUser.getIdToken()}`,
-					},
-				}).then((res) => res.json());
+				buffer += decoder.decode(value, { stream: true });
+				const lines = buffer.split("\n\n");
+				buffer = lines.pop(); // Keep the last incomplete chunk
 
-				const isUserFirstStory = userStories.length === 1; // Just created their first story
+				for (const line of lines) {
+					if (line.startsWith("event: ")) {
+						const eventName = line.split("\n")[0].replace("event: ", "").trim();
+						const dataLine = line.split("\n")[1];
+						if (dataLine && dataLine.startsWith("data: ")) {
+							const dataStr = dataLine.replace("data: ", "").trim();
+							try {
+								const data = JSON.parse(dataStr);
 
-				setIsFirstStory(isUserFirstStory);
-				setGuidanceStoryData(generatedStoryContent);
+								if (eventName === "progress") {
+									setGenerationProgress(data.message);
+								} else if (eventName === "error") {
+									throw new Error(data.message);
+								} else if (eventName === "done") {
+									// Story is finished and saved
+									setGenerationProgress("Finalizing...");
 
-				if (isUserFirstStory) {
-					setTimeout(() => {
-						setShowPostStoryGuidance(true);
-					}, 1000); // Delay to allow story page to load}
-				}
-				// Show guidance after navigation
-			} catch (error) {
-				console.error("Error checking story count:", error);
-				// Still show guidance even if check fails
-				setIsFirstStory(false);
-				setGuidanceStoryData(generatedStoryContent);
-				setTimeout(() => {
-					setShowPostStoryGuidance(true);
-				}, 1500);
-			}
+									// Refresh navbar limit
+									if (navbarRef.current) {
+										navbarRef.current.refreshStoryLimit();
+									}
 
-			// Refresh navbar limit
-			if (navbarRef.current) {
-				navbarRef.current.refreshStoryLimit();
-			}
+									// Check if first story (simplified logic)
+									if (!isFirstStory) { // Only check if we don't think it is yet
+										try {
+											const userStories = await fetch("/api/stories", {
+												headers: { Authorization: `Bearer ${token}` },
+											}).then((res) => res.json());
+											if (userStories.length === 1) {
+												setIsFirstStory(true);
+												setTimeout(() => setShowPostStoryGuidance(true), 1000);
+											}
+										} catch (e) { console.error(e); }
+									}
 
-			// Navigation (use navigate from App scope)
-			navigate(`/story/${savedStory.shareId}`, {
-				state: { storyData: generatedStoryContent, params: params },
-			});
-
-			// Optional: Tracking
-			// trackStoryGeneration(description, sourceLang, targetLang, difficulty, storyLength); // Requires import
-		} catch (error) {
-			console.error("Error in generateStory (App.jsx):", error);
-
-			// Moderation error check
-			if (error.isModerationError) {
-				let toastMessage;
-				if (error.userBanned) {
-					// For banned users, the message from backend (error.message) is likely specific to the ban.
-					toastMessage =
-						error.message ||
-						"Your account has been banned due to content policy violations.";
-				} else {
-					// For non-ban moderation flags, provide a more descriptive default if backend message is generic or missing.
-					if (
-						error.message &&
-						error.message.toLowerCase() !== "content moderation" &&
-						error.message.toLowerCase() !== "moderation event triggered"
-					) {
-						toastMessage = error.message;
-					} else {
-						toastMessage =
-							"Your story input was flagged for potentially violating our content policy. Please revise your description and try again. Repeated violations may lead to account restrictions.";
+									// Navigate
+									navigate(`/story/${data.shareId}`, {
+										state: { storyData: { id: data.storyId, ...params }, params: params }, // We don't have full content here but StoryView fetches it
+									});
+									return; // Done
+								}
+							} catch (e) {
+								console.error("Error parsing SSE data:", e);
+							}
+						}
 					}
 				}
+			}
 
+		} catch (error) {
+			console.error("Error in generateStory (App.jsx):", error);
+			setGenerationProgress(""); // Clear progress
+
+			// Reuse existing error handling logic
+			// Moderation error check
+			if (error.isModerationError || error.message.includes("policy")) {
+				let toastMessage = error.message;
 				if (setFormError) {
 					setFormError({
 						type: "moderation",
-						message: toastMessage, // This message will be used by InputForm.jsx
+						message: toastMessage,
 						userBanned: error.userBanned || false,
 					});
 				}
@@ -1363,8 +1340,6 @@ function App() {
 					(error.message.includes("limit") ||
 						error.message.includes("Too many")))
 			) {
-				// Removed direct toast.error call from here
-				// trackDailyLimitReached(); // Requires import
 				if (setFormError) {
 					setFormError({
 						type: "rateLimit",
@@ -1373,17 +1348,14 @@ function App() {
 							"You've reached your daily story generation limit. Upgrade or try again tomorrow.",
 					});
 				}
-				// Do not re-throw, error is handled by form error state
 			} else {
 				// For other errors, set a generic form error
 				const genericErrorMessage =
 					error.message ||
 					"An unexpected error occurred during story generation.";
-				// Removed direct toast.error call from here
 				if (setFormError) {
 					setFormError({ type: "general", message: genericErrorMessage });
 				}
-				// Error is handled by form error state
 			}
 		}
 	};
@@ -1435,10 +1407,14 @@ function App() {
 						path="/"
 						element={
 							isMobileApp ? (
-								<MobileHomepage generateStory={generateStory} />
+								<MobileHomepage
+									generateStory={generateStory}
+									generationProgress={generationProgress}
+								/>
 							) : (
 								<MainAppView
 									generateStory={generateStory}
+									generationProgress={generationProgress}
 									keyFeaturesData={keyFeaturesData}
 									testimonialsData={testimonialsData}
 								/>

@@ -105,8 +105,10 @@ export default defineConfig({
 		host: "0.0.0.0", // Allow external connections
 		proxy: {
 			"/api": {
-				target: "http://localhost:3000",
-				changeOrigin: true,
+				target: "http://127.0.0.1:3000",
+				changeOrigin: false,
+				secure: false,
+				ws: true,
 				timeout: 120000, // 2 minutes timeout for large story generation responses
 				proxyTimeout: 120000,
 			},

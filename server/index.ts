@@ -1542,6 +1542,211 @@ Example page object: { "sentencePairs": [{ "source": "...", "target": "..." } /*
 	})
 );
 
+// === STREAMING STORY GENERATION ENDPOINT ===
+app.post(
+	"/api/generate-story/stream",
+	storyGenerationLimiter,
+	asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+		const userId = req.userId;
+		if (!userId) {
+			res.status(401).json({ error: "Authentication required." });
+			return;
+		}
+
+		const {
+			description,
+			source,
+			target,
+			difficulty,
+			length,
+			isPublic,
+			genre,
+			grammarFocus,
+		} = req.body;
+
+		// Basic validation
+		if (!description || !source || !target || !difficulty || !length) {
+			res.status(400).json({ error: "Missing required parameters." });
+			return;
+		}
+
+		// Set headers for SSE
+		res.setHeader("Content-Type", "text/event-stream");
+		res.setHeader("Cache-Control", "no-cache");
+		res.setHeader("Connection", "keep-alive");
+		res.flushHeaders();
+
+		const sendEvent = (event: string, data: any) => {
+			res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+		};
+
+		// Send immediate connection confirmation
+		sendEvent("connected", { message: "Connection established" });
+
+		try {
+			// 1. Determine parameters
+			let story_difficulty = "A1/A2";
+			if (difficulty == "Beginner") story_difficulty = "A1/A2";
+			else if (difficulty == "Intermediate") story_difficulty = "B1/B2";
+			else if (difficulty == "Advanced") story_difficulty = "C1/C2";
+
+			const isProStoryRequest = length === "very_long_pro";
+			let numPages = 1;
+			if (isProStoryRequest) numPages = 10;
+			else if (length === "Long") numPages = 4;
+			else if (length === "Medium") numPages = 2;
+
+			const modelToUse = isProStoryRequest ? "gpt-5.1" : "gpt-5-mini";
+
+			// 2. Generate Plan AND Page 1 (Optimization: Reduce latency)
+			sendEvent("progress", { message: "Drafting story outline and first page..." });
+
+			const SYSTEM_PROMPT = `You are an award-winning short story author and expert language teacher. 
+Your goal is to write captivating, immersive stories that are also perfect for language learners. 
+Avoid generic tropes, repetitive sentence structures, and "textbook" style writing. 
+Use vivid imagery, realistic dialogue, and emotional depth. 
+Even at beginner levels, the story must have a compelling plot and interesting characters.`;
+
+			const initialPrompt = `
+Analyze the user's description: "${description}".
+Target Language: ${target}, Native Language: ${source}, Level: ${story_difficulty}.
+Genre: ${genre || "General"}, Grammar Focus: ${grammarFocus ? grammarFocus[0] : "None"}.
+
+1. Check for content policy violations.
+2. If safe, create a title and a ${numPages}-page outline. The story should be plausible but dramatic and engaging.
+3. Generate Page 1 IMMEDIATELY based on the outline. Start with a strong hook.
+
+Format: JSON
+{
+  "safe": true,
+  "title": "...",
+  "outline": ["Page 1 summary", "Page 2 summary", ...],
+  "page1": {
+    "sentencePairs": [{"source": "...", "target": "..."}],
+    "vocabulary": [{"word": "...", "translation": "..."}]
+  }
+}
+If unsafe: { "safe": false, "reason": "..." }
+Ensure 10-12 sentence pairs for Page 1.
+`;
+
+			const initialCompletion = await openai.chat.completions.create({
+				model: modelToUse,
+				messages: [
+					{ role: "system", content: SYSTEM_PROMPT },
+					{ role: "user", content: initialPrompt }
+				],
+				response_format: { type: "json_object" },
+			});
+
+			const initialContent = initialCompletion.choices[0].message.content;
+			if (!initialContent) throw new Error("Failed to generate initial content");
+			const initialData = JSON.parse(initialContent);
+
+			if (!initialData.safe) {
+				sendEvent("error", { message: initialData.reason, type: "moderation" });
+				res.end();
+				return;
+			}
+
+			// Send Page 1 immediately
+			const generatedPages = [];
+			const page1Data = initialData.page1;
+			generatedPages.push(page1Data);
+			sendEvent("page", { pageIndex: 0, pageData: page1Data });
+			sendEvent("progress", { message: "Page 1 ready! Generating the rest..." });
+
+			// 3. Generate Remaining Pages in Batches (Concurrency Control)
+			const generatePage = async (pageIndex: number, pageOutline: string) => {
+				let retries = 0;
+				while (retries < 3) {
+					try {
+						const pagePrompt = `
+Title: ${initialData.title}
+Story Outline: ${JSON.stringify(initialData.outline)}
+Current Page Focus: ${pageOutline}
+Page Number: ${pageIndex + 1} of ${numPages}
+
+Generate Page ${pageIndex + 1}.
+Format: JSON with "sentencePairs" (array of {source, target}) and "vocabulary" (array of {word, translation}).
+Ensure 10-12 sentence pairs. Simple language for ${story_difficulty}.
+Focus on:
+- Natural dialogue between characters.
+- "Show, don't tell" (describe actions and feelings).
+- Moving the plot forward meaningfully.
+`;
+						const completion = await openai.chat.completions.create({
+							model: modelToUse,
+							messages: [
+								{ role: "system", content: SYSTEM_PROMPT },
+								{ role: "user", content: pagePrompt }
+							],
+							response_format: { type: "json_object" },
+						});
+						const content = completion.choices[0].message.content;
+						if (!content) throw new Error("Empty response");
+						return { ...JSON.parse(content), pageIndex };
+					} catch (err) {
+						retries++;
+						console.error(`Error generating page ${pageIndex + 1} (Attempt ${retries}):`, err);
+						if (retries >= 3) throw err;
+						await new Promise(r => setTimeout(r, 1000 * retries)); // Backoff
+					}
+				}
+			};
+
+			// Process remaining pages in batches of 3 to avoid rate limits
+			const BATCH_SIZE = 3;
+			const remainingIndices = Array.from({ length: numPages - 1 }, (_, i) => i + 1);
+
+			for (let i = 0; i < remainingIndices.length; i += BATCH_SIZE) {
+				const batch = remainingIndices.slice(i, i + BATCH_SIZE);
+				sendEvent("progress", { message: `Generating pages ${batch[0] + 1}-${Math.min(batch[batch.length - 1] + 1, numPages)}...` });
+
+				const batchPromises = batch.map(idx =>
+					generatePage(idx, initialData.outline[idx] || "Continue story")
+				);
+
+				const batchResults = await Promise.all(batchPromises);
+				batchResults.forEach(page => {
+					if (page) {
+						generatedPages.push(page);
+						sendEvent("page", { pageIndex: page.pageIndex, pageData: page });
+					}
+				});
+			}
+
+			// Sort and Save
+			generatedPages.sort((a, b) => (a.pageIndex || 0) - (b.pageIndex || 0));
+			const cleanPages = generatedPages.map(({ pageIndex, ...data }) => data);
+
+			sendEvent("progress", { message: "Saving your story..." });
+
+			const savedStory = await prisma.story.create({
+				data: {
+					userId,
+					description,
+					sourceLanguage: source,
+					targetLanguage: target,
+					difficulty,
+					length,
+					isPublic: isPublic ?? true,
+					story: JSON.stringify({ pages: cleanPages }),
+					// title: initialData.title, // Schema doesn't support title yet
+				},
+			});
+
+			sendEvent("done", { shareId: savedStory.shareId, storyId: savedStory.id });
+			res.end();
+
+		} catch (error: any) {
+			console.error("Streaming error:", error);
+			sendEvent("error", { message: error.message || "Unknown error" });
+			res.end();
+		}
+	})
+);
+
 // === STORY ROUTES ===
 
 // GET all stories for the logged-in user - Wrapped with asyncHandler

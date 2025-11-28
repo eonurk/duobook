@@ -14,7 +14,7 @@ import {
 	Sparkles,
 } from "lucide-react";
 
-export default function MobileHomepage({ generateStory }) {
+export default function MobileHomepage({ generateStory, generationProgress }) {
 	const { currentUser } = useAuth();
 	const [showAuthDialog, setShowAuthDialog] = useState(false);
 	const [showStoryForm, setShowStoryForm] = useState(false);
@@ -169,6 +169,7 @@ export default function MobileHomepage({ generateStory }) {
 							onSubmit={handleGenerateStory}
 							isLoading={isGenerating}
 							apiErrorDetails={formError}
+							generationProgress={generationProgress}
 						/>
 					</div>
 				</div>
@@ -187,9 +188,8 @@ export default function MobileHomepage({ generateStory }) {
 						return (
 							<Card
 								key={index}
-								className={`cursor-pointer transition-transform hover:scale-105 ${
-									action.disabled ? "opacity-50" : ""
-								}`}
+								className={`cursor-pointer transition-transform hover:scale-105 ${action.disabled ? "opacity-50" : ""
+									}`}
 								onClick={action.disabled ? undefined : action.onClick}
 							>
 								<CardContent className="p-4 text-center">
@@ -209,9 +209,8 @@ export default function MobileHomepage({ generateStory }) {
 				{/* Secondary Actions */}
 				<div className="grid grid-cols-2 gap-3 mb-8">
 					<Card
-						className={`cursor-pointer transition-transform hover:scale-105 ${
-							!currentUser ? "opacity-50" : ""
-						}`}
+						className={`cursor-pointer transition-transform hover:scale-105 ${!currentUser ? "opacity-50" : ""
+							}`}
 						onClick={!currentUser ? undefined : () => navigate("/progress")}
 					>
 						<CardContent className="p-4 text-center">
@@ -225,9 +224,8 @@ export default function MobileHomepage({ generateStory }) {
 						</CardContent>
 					</Card>
 					<Card
-						className={`cursor-pointer transition-transform hover:scale-105 ${
-							!currentUser ? "opacity-50" : ""
-						}`}
+						className={`cursor-pointer transition-transform hover:scale-105 ${!currentUser ? "opacity-50" : ""
+							}`}
 						onClick={!currentUser ? undefined : () => navigate("/achievements")}
 					>
 						<CardContent className="p-4 text-center">
