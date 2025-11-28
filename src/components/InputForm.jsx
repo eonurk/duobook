@@ -206,8 +206,31 @@ function InputForm({
 	// Added apiErrorDetails prop
 	const { currentUser } = useAuth(); // Get current user
 	const [description, setDescription] = useState("");
-	const [sourceLang, setSourceLang] = useState("English"); // Default source: English
-	const [targetLang, setTargetLang] = useState("Spanish"); // Default target: Spanish
+	const [sourceLang, setSourceLang] = useState(() => {
+		if (typeof window !== "undefined") {
+			return localStorage.getItem("sourceLang") || "English";
+		}
+		return "English";
+	});
+	const [targetLang, setTargetLang] = useState(() => {
+		if (typeof window !== "undefined") {
+			return localStorage.getItem("targetLang") || "Spanish";
+		}
+		return "Spanish";
+	});
+
+	// Update localStorage when languages change
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			localStorage.setItem("sourceLang", sourceLang);
+		}
+	}, [sourceLang]);
+
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			localStorage.setItem("targetLang", targetLang);
+		}
+	}, [targetLang]);
 	// Use numeric state for sliders, map back to string for submission
 	const [difficultyIndex, setDifficultyIndex] = useState(0); // 0: Beginner, 1: Intermediate, 2: Advanced
 	const [lengthIndex, setLengthIndex] = useState(0); // 0: Short, 1: Medium, 2: Long
@@ -342,7 +365,7 @@ function InputForm({
 			if (apiErrorDetails.userBanned) {
 				toast.error(
 					apiErrorDetails.message ||
-						"Your account has been banned due to content policy violations.",
+					"Your account has been banned due to content policy violations.",
 					{
 						duration: 10000,
 					}
@@ -350,9 +373,9 @@ function InputForm({
 			} else if (apiErrorDetails.warningMessage) {
 				toast(
 					apiErrorDetails.warningMessage +
-						(apiErrorDetails.moderationWarnings
-							? ` (Total warnings: ${apiErrorDetails.moderationWarnings})`
-							: ""),
+					(apiErrorDetails.moderationWarnings
+						? ` (Total warnings: ${apiErrorDetails.moderationWarnings})`
+						: ""),
 					{
 						duration: 8000,
 						// icon: '⚠️', // Example: You can add an icon for warnings
@@ -741,9 +764,8 @@ function InputForm({
 							<div className="flex justify-between items-center mb-3">
 								<label
 									htmlFor="difficulty"
-									className={`block font-medium ${
-										isMobile ? "text-base" : "text-sm"
-									}`}
+									className={`block font-medium ${isMobile ? "text-base" : "text-sm"
+										}`}
 								>
 									Difficulty:
 								</label>
@@ -764,15 +786,14 @@ function InputForm({
 									style={
 										isMobile
 											? {
-													WebkitTapHighlightColor: "transparent",
-											  }
+												WebkitTapHighlightColor: "transparent",
+											}
 											: {}
 									}
 								/>
 								<div
-									className={`flex justify-between text-gray-500 ${
-										isMobile ? "text-sm mt-3" : "text-xs mt-1.5"
-									}`}
+									className={`flex justify-between text-gray-500 ${isMobile ? "text-sm mt-3" : "text-xs mt-1.5"
+										}`}
 								>
 									<span
 										className={
@@ -808,9 +829,8 @@ function InputForm({
 							<div className="flex justify-between items-center mb-3">
 								<label
 									htmlFor="storyLength"
-									className={`block font-medium ${
-										isMobile ? "text-base" : "text-sm"
-									}`}
+									className={`block font-medium ${isMobile ? "text-base" : "text-sm"
+										}`}
 								>
 									Story Length:
 								</label>
@@ -828,16 +848,15 @@ function InputForm({
 									style={
 										isMobile
 											? {
-													WebkitTapHighlightColor: "transparent",
-											  }
+												WebkitTapHighlightColor: "transparent",
+											}
 											: {}
 									}
 								/>
 								{/* Story Length Labels - Mobile-Optimized Implementation */}
 								<div
-									className={`relative w-full text-gray-500 ${
-										isMobile ? "text-sm mt-3 h-7" : "text-xs mt-1.5 h-6"
-									}`}
+									className={`relative w-full text-gray-500 ${isMobile ? "text-sm mt-3 h-7" : "text-xs mt-1.5 h-6"
+										}`}
 								>
 									{lengthMap.map((label, index) => {
 										const numLabels = lengthMap.length;
@@ -871,26 +890,23 @@ function InputForm({
 										return (
 											<span
 												key={label}
-												className={`absolute ${textAlignmentClass} transition-all duration-200 ${
-													isSelected ? "font-semibold text-blue-600" : ""
-												}`}
+												className={`absolute ${textAlignmentClass} transition-all duration-200 ${isSelected ? "font-semibold text-blue-600" : ""
+													}`}
 												style={style}
 											>
 												{label === "very_long_pro" ? (
 													<span
-														className={`bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-md shadow-md whitespace-nowrap ${
-															isMobile ? "px-3 py-1.5 text-sm" : "px-2.5 py-1"
-														} ${isSelected ? "ring-2 ring-purple-300" : ""}`}
+														className={`bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-md shadow-md whitespace-nowrap ${isMobile ? "px-3 py-1.5 text-sm" : "px-2.5 py-1"
+															} ${isSelected ? "ring-2 ring-purple-300" : ""}`}
 													>
 														XL
 													</span>
 												) : (
 													<span
-														className={`whitespace-nowrap ${
-															isSelected && isMobile
-																? "px-2 py-1 bg-blue-50 rounded-md"
-																: ""
-														}`}
+														className={`whitespace-nowrap ${isSelected && isMobile
+															? "px-2 py-1 bg-blue-50 rounded-md"
+															: ""
+															}`}
 													>
 														{label}
 													</span>
@@ -1039,9 +1055,8 @@ function InputForm({
 				{!currentUser && (
 					<div className={`text-center mt-6 mb-4`} id="signup-cta">
 						<div
-							className={`bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl ${
-								isMobile ? "p-4" : "p-6"
-							} shadow-sm`}
+							className={`bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl ${isMobile ? "p-4" : "p-6"
+								} shadow-sm`}
 						>
 							<div className="flex flex-col items-center space-y-3">
 								<div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
@@ -1049,26 +1064,23 @@ function InputForm({
 								</div>
 								<div className="text-center">
 									<h3
-										className={`font-semibold text-amber-800 ${
-											isMobile ? "text-base" : "text-lg"
-										} mb-2`}
+										className={`font-semibold text-amber-800 ${isMobile ? "text-base" : "text-lg"
+											} mb-2`}
 									>
 										Ready to Create Your Story?
 									</h3>
 									<p
-										className={`text-amber-700 ${
-											isMobile ? "text-sm" : "text-base"
-										} mb-4`}
+										className={`text-amber-700 ${isMobile ? "text-sm" : "text-base"
+											} mb-4`}
 									>
 										Sign up to create and save personalized stories. It's
 										completely free!
 									</p>
 									<div
-										className={`flex ${
-											isMobile
-												? "flex-col space-y-2"
-												: "flex-row justify-center space-x-3"
-										}`}
+										className={`flex ${isMobile
+											? "flex-col space-y-2"
+											: "flex-row justify-center space-x-3"
+											}`}
 									>
 										<button
 											type="button"
@@ -1076,9 +1088,8 @@ function InputForm({
 												setActiveTab("signup");
 												setShowAuthDialog(true);
 											}}
-											className={`${
-												isMobile ? "w-full" : ""
-											} px-6 py-3 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 transition-all duration-200 transform hover:scale-105 shadow-md`}
+											className={`${isMobile ? "w-full" : ""
+												} px-6 py-3 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 transition-all duration-200 transform hover:scale-105 shadow-md`}
 										>
 											Sign Up Free
 										</button>
@@ -1088,9 +1099,8 @@ function InputForm({
 												setActiveTab("login");
 												setShowAuthDialog(true);
 											}}
-											className={`${
-												isMobile ? "w-full" : ""
-											} px-6 py-3 border border-amber-300 text-amber-700 font-medium rounded-lg hover:bg-amber-50 transition-all duration-200`}
+											className={`${isMobile ? "w-full" : ""
+												} px-6 py-3 border border-amber-300 text-amber-700 font-medium rounded-lg hover:bg-amber-50 transition-all duration-200`}
 										>
 											Log In
 										</button>
@@ -1117,20 +1127,20 @@ function InputForm({
 						className={`button button-primary submit-button py-3 px-6 rounded-lg shadow-md transition-all duration-300 relative group ${
 							// Updated className logic
 							isLoading ||
-							!description.trim() ||
-							sourceLang === targetLang ||
-							!currentUser
+								!description.trim() ||
+								sourceLang === targetLang ||
+								!currentUser
 								? "bg-gray-100 text-gray-400 border border-gray-300 cursor-not-allowed"
 								: "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-amber-900 font-medium"
-						}`}
+							}`}
 						aria-label={
 							!description.trim()
 								? "Please enter a story description"
 								: !currentUser
-								? "Please log in to create a book"
-								: sourceLang === targetLang
-								? "Please select different languages"
-								: "Create Book"
+									? "Please log in to create a book"
+									: sourceLang === targetLang
+										? "Please select different languages"
+										: "Create Book"
 						}
 					>
 						{isLoading ? (
@@ -1168,9 +1178,8 @@ function InputForm({
 												<Heart className="w-5 h-5 text-amber-600 opacity-70" />
 											) : null}
 											<span
-												className={`absolute inset-0 rounded-full ${
-													!description.trim() ? "bg-amber-200" : "bg-pink-200"
-												} animate-ping opacity-30`}
+												className={`absolute inset-0 rounded-full ${!description.trim() ? "bg-amber-200" : "bg-pink-200"
+													} animate-ping opacity-30`}
 											></span>
 										</span>
 									)}
